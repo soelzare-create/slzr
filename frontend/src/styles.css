@@ -1,0 +1,94 @@
+/* DaranX brand palette (taken from the blueprint document) */
+:root {
+  --navy: #153a62;
+  --navy-soft: #e7eef5;
+  --ink: #2c2c2a;
+  --line: #d3d1c7;
+  --line-soft: #e7e5de;
+  --bg: #f7f6f2;
+  --white: #ffffff;
+  --danger: #b3261e;
+  --ok: #2e7d32;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Vazirmatn", "Segoe UI", Tahoma, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  direction: rtl;
+}
+
+a { color: var(--navy); }
+
+.app-header {
+  background: var(--navy);
+  color: var(--white);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-header .brand { font-weight: 700; font-size: 18px; }
+.app-header .motto { opacity: 0.8; font-size: 13px; }
+
+.container { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.login-wrap {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+.login-card { width: 360px; }
+
+label { display: block; margin: 12px 0 6px; font-size: 14px; }
+input, select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+button {
+  margin-top: 16px;
+  width: 100%;
+  padding: 11px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+button.secondary { background: var(--navy-soft); color: var(--navy); }
+button:disabled { opacity: 0.6; cursor: default; }
+
+.error { color: var(--danger); font-size: 13px; margin-top: 10px; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--line-soft); }
+th { background: var(--navy); color: var(--white); }
+tr:nth-child(even) td { background: var(--navy-soft); }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--navy-soft);
+  color: var(--navy);
+  font-size: 12px;
+}
+.row { display: flex; gap: 12px; align-items: center; }
+h1, h2 { color: var(--navy); }

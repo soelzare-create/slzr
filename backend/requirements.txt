@@ -1,0 +1,13 @@
+# Pins use lower bounds so pip can pick wheels built for the local Python
+# (this project was bootstrapped on Python 3.14, which needs recent releases).
+fastapi>=0.115.6
+uvicorn[standard]>=0.34.0
+sqlalchemy>=2.0.36
+pydantic>=2.11
+pydantic-settings>=2.7.0
+python-multipart>=0.0.20
+PyJWT>=2.10.1
+bcrypt>=4.2.1
+email-validator>=2.2.0
+# PostgreSQL driver (used when DATABASE_URL points at Postgres)
+psycopg[binary]>=3.2.10
