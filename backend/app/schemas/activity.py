@@ -5,7 +5,41 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from pydantic import model_validator
+
 from app.models.enums import ActivityStatus, ActivityType, ProjectStage
+
+
+# --- Activity items (sales lines) -----------------------------------------
+
+class ActivityItemCreate(BaseModel):
+    # A line is either one serialized unit OR a quantity of a bulk model.
+    unit_item_id: int | None = None
+    product_model_id: int | None = None
+    quantity: float | None = Field(default=None, gt=0)
+    price: float = Field(ge=0)
+
+    @model_validator(mode="after")
+    def one_kind_of_good(self) -> "ActivityItemCreate":
+        has_serial = self.unit_item_id is not None
+        has_bulk = self.product_model_id is not None
+        if has_serial == has_bulk:
+            raise ValueError("هر قلم باید یا تک‌کالای سریال‌دار باشد یا مدل کالای مقداری")
+        if has_bulk and not self.quantity:
+            raise ValueError("برای کالای مقداری، مقدار لازم است")
+        return self
+
+
+class ActivityItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    activity_id: int
+    unit_item_id: int | None
+    product_model_id: int | None
+    quantity: float | None
+    price: float
+    created_at: datetime
 
 
 # --- Project stages --------------------------------------------------------

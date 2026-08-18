@@ -12,7 +12,7 @@ from sqlalchemy import Date, Enum, ForeignKey, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
-from app.models.enums import InvoiceStatus
+from app.models.enums import InvoiceKind, InvoiceStatus
 from app.models.mixins import TimestampMixin
 
 
@@ -28,6 +28,11 @@ class Invoice(Base, TimestampMixin):
     issuer_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"), nullable=False, index=True
     )  # صادرکننده (برای پورسانت)
+    kind: Mapped[InvoiceKind] = mapped_column(
+        Enum(InvoiceKind, native_enum=False, length=20),
+        default=InvoiceKind.final,
+        nullable=False,
+    )  # پیش‌فاکتور یا فاکتور نهایی
     total_amount: Mapped[float] = mapped_column(
         Numeric(14, 2), default=0, nullable=False
     )  # مبلغ کل

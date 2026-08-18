@@ -18,7 +18,7 @@ models. Current stock is *computed*, never stored:
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import case, func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user, require_roles
@@ -40,42 +40,13 @@ from app.schemas.inventory import (
     UnitItemOut,
     UnitItemUpdate,
 )
+from app.services.inventory_service import bulk_stock as _bulk_stock
+from app.services.inventory_service import serial_stock as _serial_stock
+from app.services.inventory_service import stock_for as _stock_for
 
 router = APIRouter(tags=["inventory"])
 
 can_write = require_roles(UserRole.manager, UserRole.warehouse)
-
-
-# --- stock helpers ---------------------------------------------------------
-
-def _serial_stock(db: Session, model_id: int | None = None) -> dict[int, float]:
-    stmt = (
-        select(UnitItem.model_id, func.count())
-        .where(UnitItem.status == UnitItemStatus.warehouse)
-        .group_by(UnitItem.model_id)
-    )
-    if model_id is not None:
-        stmt = stmt.where(UnitItem.model_id == model_id)
-    return {mid: float(n) for mid, n in db.execute(stmt)}
-
-
-def _bulk_stock(db: Session, model_id: int | None = None) -> dict[int, float]:
-    signed = func.sum(
-        case(
-            (InventoryMovement.direction == MovementDirection.in_, InventoryMovement.quantity),
-            else_=-InventoryMovement.quantity,
-        )
-    )
-    stmt = select(InventoryMovement.model_id, signed).group_by(InventoryMovement.model_id)
-    if model_id is not None:
-        stmt = stmt.where(InventoryMovement.model_id == model_id)
-    return {mid: float(total or 0) for mid, total in db.execute(stmt)}
-
-
-def _stock_for(db: Session, model: ProductModel) -> float:
-    if model.tracking_type == TrackingType.serial:
-        return _serial_stock(db, model.id).get(model.id, 0.0)
-    return _bulk_stock(db, model.id).get(model.id, 0.0)
 
 
 def _to_out(model: ProductModel, stock: float) -> ProductModelOut:

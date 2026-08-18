@@ -64,6 +64,13 @@ class MovementDirection(str, enum.Enum):
     out = "out"   # خروج
 
 
+class InvoiceKind(str, enum.Enum):
+    """نوع سند فروش — پیش‌فاکتور یا فاکتور نهایی."""
+
+    proforma = "proforma"  # پیش‌فاکتور (سند غیرقطعی، بدون اثر روی انبار/حساب)
+    final = "final"        # فاکتور فروش (قطعی؛ کالا خارج و درآمد ثبت می‌شود)
+
+
 class InvoiceStatus(str, enum.Enum):
     """وضعیت فاکتور — پرداخت‌شده یا معوق."""
 
