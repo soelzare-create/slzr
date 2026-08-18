@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api import auth, users
+from app.api import activities, auth, customers, team, users
 from app.config import settings
 from app.database import Base, engine
 
@@ -43,6 +43,9 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(team.router)
+app.include_router(customers.router)
+app.include_router(activities.router)
 
 
 @app.get("/", tags=["meta"])

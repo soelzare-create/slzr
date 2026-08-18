@@ -36,10 +36,36 @@ async function request(path, { method = "GET", body, form } = {}) {
   return res.json();
 }
 
+function qs(params) {
+  const clean = Object.fromEntries(
+    Object.entries(params || {}).filter(([, v]) => v !== "" && v != null)
+  );
+  const s = new URLSearchParams(clean).toString();
+  return s ? `?${s}` : "";
+}
+
 export const api = {
+  // auth
   login: (phone, password) =>
     request("/auth/login", { method: "POST", form: { username: phone, password } }),
   me: () => request("/auth/me"),
+
+  // users
   listUsers: () => request("/users"),
   createUser: (user) => request("/users", { method: "POST", body: user }),
+
+  // team directory (any authenticated user — for assignment dropdowns)
+  listTeam: () => request("/team"),
+
+  // customers (CRM)
+  listCustomers: (params) => request(`/customers${qs(params)}`),
+  createCustomer: (c) => request("/customers", { method: "POST", body: c }),
+  updateCustomer: (id, c) => request(`/customers/${id}`, { method: "PATCH", body: c }),
+
+  // activities (core)
+  listActivities: (params) => request(`/activities${qs(params)}`),
+  getActivity: (id) => request(`/activities/${id}`),
+  createActivity: (a) => request("/activities", { method: "POST", body: a }),
+  updateActivity: (id, a) => request(`/activities/${id}`, { method: "PATCH", body: a }),
+  addStage: (id, s) => request(`/activities/${id}/stages`, { method: "POST", body: s }),
 };

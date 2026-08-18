@@ -5,6 +5,8 @@ import "./styles.css";
 import { getToken } from "./api";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Customers from "./pages/Customers";
+import Activities from "./pages/Activities";
 
 function RequireAuth({ children }) {
   return getToken() ? children : <Navigate to="/login" replace />;
@@ -20,6 +22,22 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           element={
             <RequireAuth>
               <Dashboard />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/customers"
+          element={
+            <RequireAuth>
+              <Customers />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/activities"
+          element={
+            <RequireAuth>
+              <Activities />
             </RequireAuth>
           }
         />

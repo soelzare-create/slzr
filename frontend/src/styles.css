@@ -92,3 +92,28 @@ tr:nth-child(even) td { background: var(--navy-soft); }
 }
 .row { display: flex; gap: 12px; align-items: center; }
 h1, h2 { color: var(--navy); }
+
+/* Dashboard stat cards */
+.stat {
+  display: block;
+  text-decoration: none;
+  color: var(--navy);
+  background: var(--navy-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 24px;
+  text-align: center;
+  min-width: 120px;
+}
+.stat-num { font-size: 30px; font-weight: 700; }
+
+/* Two-column form grid */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+}
+@media (max-width: 560px) {
+  .grid2 { grid-template-columns: 1fr; }
+}
