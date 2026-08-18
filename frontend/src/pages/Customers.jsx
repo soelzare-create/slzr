@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "../api";
 import { useMe } from "../hooks/useMe";
 import Layout from "../components/Layout";
-import { WRITE_ROLES } from "../labels";
+import { REFERRAL_SOURCES, WRITE_ROLES } from "../labels";
 
 const EMPTY = { name: "", phone: "", address: "", referral_source: "" };
 
@@ -80,7 +80,7 @@ export default function Customers() {
                 <td>{c.name}</td>
                 <td>{c.phone || "—"}</td>
                 <td>{c.address || "—"}</td>
-                <td>{c.referral_source || "—"}</td>
+                <td>{REFERRAL_SOURCES[c.referral_source] || c.referral_source || "—"}</td>
               </tr>
             ))}
             {customers.length === 0 && (
@@ -122,11 +122,17 @@ export default function Customers() {
             </div>
             <div>
               <label>مدل آشنایی</label>
-              <input
-                placeholder="تبلیغات، معرفی، تماس مستقیم"
+              <select
                 value={form.referral_source}
                 onChange={(e) => setForm({ ...form, referral_source: e.target.value })}
-              />
+              >
+                <option value="">— انتخاب —</option>
+                {Object.entries(REFERRAL_SOURCES).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           {error && <div className="error">{error}</div>}

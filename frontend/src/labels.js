@@ -28,5 +28,15 @@ export const STAGE_FA = {
   support: "پشتیبانی",
 };
 
+// How the customer got to know the company (مدل آشنایی).
+// Stored as the key; shown with the Persian label.
+export const REFERRAL_SOURCES = {
+  website: "وبسایت",
+  instagram: "اینستاگرام",
+  linkedin: "لینکدین",
+  past_customer: "معرفی توسط مشتری‌های سابق",
+  other: "سایر",
+};
+
 // Roles allowed to create/edit CRM + activities (mirrors backend RBAC).
 export const WRITE_ROLES = ["manager", "sales"];
