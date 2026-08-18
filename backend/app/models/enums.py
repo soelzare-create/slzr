@@ -72,6 +72,14 @@ class InvoiceStatus(str, enum.Enum):
     overdue = "overdue"  # معوق
 
 
+class PurchaseStatus(str, enum.Enum):
+    """وضعیت سند خرید — پرداخت‌شده به تأمین‌کننده یا معوق."""
+
+    unpaid = "unpaid"    # ثبت‌شده / پرداخت‌نشده
+    paid = "paid"        # پرداخت‌شده
+    overdue = "overdue"  # معوق
+
+
 class FinancialType(str, enum.Enum):
     """نوع سند مالی — دخل یا خرج."""
 

@@ -7,14 +7,26 @@ import { ROLE_FA } from "../labels";
 
 export default function Dashboard() {
   const { me, loading } = useMe();
-  const [counts, setCounts] = useState({ customers: null, activities: null });
+  const [counts, setCounts] = useState({
+    customers: null,
+    suppliers: null,
+    activities: null,
+  });
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
     if (!me) return;
-    Promise.all([api.listCustomers(), api.listActivities()])
-      .then(([customers, activities]) =>
-        setCounts({ customers: customers.length, activities: activities.length })
+    Promise.all([
+      api.listParties({ role: "customer" }),
+      api.listParties({ role: "supplier" }),
+      api.listActivities(),
+    ])
+      .then(([customers, suppliers, activities]) =>
+        setCounts({
+          customers: customers.length,
+          suppliers: suppliers.length,
+          activities: activities.length,
+        })
       )
       .catch(() => {});
     if (me.role === "manager") api.listUsers().then(setUsers).catch(() => {});
@@ -33,6 +45,10 @@ export default function Dashboard() {
           <Link to="/customers" className="stat">
             <div className="stat-num">{counts.customers ?? "—"}</div>
             <div>مشتری‌ها</div>
+          </Link>
+          <Link to="/suppliers" className="stat">
+            <div className="stat-num">{counts.suppliers ?? "—"}</div>
+            <div>تأمین‌کننده‌ها</div>
           </Link>
           <Link to="/activities" className="stat">
             <div className="stat-num">{counts.activities ?? "—"}</div>

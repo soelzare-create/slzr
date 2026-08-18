@@ -18,8 +18,8 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, require_roles
 from app.database import get_db
 from app.models.activity import Activity, ProjectStage
-from app.models.customer import Customer
 from app.models.enums import ActivityType, UserRole
+from app.models.party import Party
 from app.models.user import User
 from app.schemas.activity import (
     ActivityCreate,
@@ -70,7 +70,8 @@ def list_activities(
 )
 def create_activity(payload: ActivityCreate, db: Session = Depends(get_db)) -> Activity:
     # Validate the cross-context references exist before linking.
-    if db.get(Customer, payload.customer_id) is None:
+    party = db.get(Party, payload.customer_id)
+    if party is None or not party.is_customer:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "مشتری معتبر نیست")
     if db.get(User, payload.owner_id) is None:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "کاربر مسئول معتبر نیست")

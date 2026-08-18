@@ -27,8 +27,8 @@ class Activity(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     customer_id: Mapped[int] = mapped_column(
-        ForeignKey("customers.id"), nullable=False, index=True
-    )  # مشتری
+        ForeignKey("parties.id"), nullable=False, index=True
+    )  # مشتری (طرف‌حساب با نقش مشتری)
     owner_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"), nullable=False, index=True
     )  # مسئول

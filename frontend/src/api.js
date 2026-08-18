@@ -57,10 +57,10 @@ export const api = {
   // team directory (any authenticated user — for assignment dropdowns)
   listTeam: () => request("/team"),
 
-  // customers (CRM)
-  listCustomers: (params) => request(`/customers${qs(params)}`),
-  createCustomer: (c) => request("/customers", { method: "POST", body: c }),
-  updateCustomer: (id, c) => request(`/customers/${id}`, { method: "PATCH", body: c }),
+  // parties (customers and/or suppliers — one table, filter by role)
+  listParties: (params) => request(`/parties${qs(params)}`),
+  createParty: (p) => request("/parties", { method: "POST", body: p }),
+  updateParty: (id, p) => request(`/parties/${id}`, { method: "PATCH", body: p }),
 
   // activities (core)
   listActivities: (params) => request(`/activities${qs(params)}`),

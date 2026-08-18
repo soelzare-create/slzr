@@ -35,7 +35,7 @@ export default function Activities() {
 
   useEffect(() => {
     if (!me) return;
-    api.listCustomers().then(setCustomers).catch(() => {});
+    api.listParties({ role: "customer" }).then(setCustomers).catch(() => {});
     api.listTeam().then(setTeam).catch(() => {});
   }, [me]);
 

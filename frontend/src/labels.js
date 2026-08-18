@@ -42,5 +42,8 @@ export const REFERRAL_SOURCES = {
   other: "سایر",
 };
 
-// Roles allowed to create/edit CRM + activities (mirrors backend RBAC).
+// Roles allowed to create/edit activities (mirrors backend RBAC).
 export const WRITE_ROLES = ["manager", "sales"];
+
+// Roles allowed to create/edit parties (customers + suppliers).
+export const PARTY_WRITE_ROLES = ["manager", "sales", "warehouse"];

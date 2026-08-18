@@ -53,28 +53,28 @@ def _h(phone: str) -> dict:
 
 def test_customer_crud_and_rbac():
     # technical (not sales/manager) cannot create a customer
-    blocked = client.post("/api/customers", headers=_h("0912"),
+    blocked = client.post("/api/parties", headers=_h("0912"),
                           json={"name": "شرکت الف"})
     assert blocked.status_code == 403
 
     # sales can
-    created = client.post("/api/customers", headers=_h("0911"),
+    created = client.post("/api/parties", headers=_h("0911"),
                           json={"name": "شرکت الف", "phone": "02100"})
     assert created.status_code == 201, created.text
     cid = created.json()["id"]
 
     # everyone authenticated can read
-    got = client.get(f"/api/customers/{cid}", headers=_h("0912"))
+    got = client.get(f"/api/parties/{cid}", headers=_h("0912"))
     assert got.status_code == 200 and got.json()["name"] == "شرکت الف"
 
     # search
-    found = client.get("/api/customers", headers=_h("0910"), params={"q": "الف"})
+    found = client.get("/api/parties", headers=_h("0910"), params={"q": "الف"})
     assert any(c["id"] == cid for c in found.json())
 
 
 def test_activity_flow_and_stage_rule():
     # a customer + owner to attach to
-    cid = client.post("/api/customers", headers=_h("0911"),
+    cid = client.post("/api/parties", headers=_h("0911"),
                       json={"name": "مشتری پروژه"}).json()["id"]
 
     # create a PROJECT activity
@@ -110,7 +110,7 @@ def test_activity_invalid_references():
 
 
 def test_activity_status_update():
-    cid = client.post("/api/customers", headers=_h("0911"),
+    cid = client.post("/api/parties", headers=_h("0911"),
                       json={"name": "برای تغییر وضعیت"}).json()["id"]
     aid = client.post("/api/activities", headers=_h("0911"),
                      json={"customer_id": cid, "owner_id": 2, "type": "sale"}).json()["id"]

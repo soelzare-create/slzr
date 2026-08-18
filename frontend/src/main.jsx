@@ -5,7 +5,7 @@ import "./styles.css";
 import { getToken } from "./api";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Customers from "./pages/Customers";
+import Parties from "./pages/Parties";
 import Activities from "./pages/Activities";
 
 function RequireAuth({ children }) {
@@ -29,7 +29,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           path="/customers"
           element={
             <RequireAuth>
-              <Customers />
+              <Parties role="customer" />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/suppliers"
+          element={
+            <RequireAuth>
+              <Parties role="supplier" />
             </RequireAuth>
           }
         />

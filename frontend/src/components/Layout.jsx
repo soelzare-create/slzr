@@ -34,6 +34,9 @@ export default function Layout({ me, children }) {
             <NavLink to="/customers" style={link}>
               مشتری‌ها
             </NavLink>
+            <NavLink to="/suppliers" style={link}>
+              تأمین‌کننده‌ها
+            </NavLink>
             <NavLink to="/activities" style={link}>
               فعالیت‌ها
             </NavLink>
