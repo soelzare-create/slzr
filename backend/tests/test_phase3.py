@@ -1,4 +1,4 @@
-"""Phase 3 smoke tests — inventory: product models, serial units, bulk movements."""
+"""Phase 3 smoke tests — inventory over the single stock-items table."""
 from __future__ import annotations
 
 import os
@@ -50,26 +50,32 @@ def test_rbac_sales_cannot_write_inventory():
     assert r.status_code == 403
 
 
-def test_serial_model_stock_tracks_warehouse_units():
+def test_product_model_has_unit_of_measure():
+    m = client.post("/api/product-models", headers=_h("0913"),
+                    json={"name": "کابل", "tracking_type": "quantity",
+                          "unit_of_measure": "متر"}).json()
+    assert m["unit_of_measure"] == "متر"
+    assert m["current_stock"] == 0
+
+
+def test_serial_stock_tracks_warehouse_units():
     m = client.post("/api/product-models", headers=_h("0913"),
                     json={"name": "سوییچ سیسکو X", "tracking_type": "serial",
                           "base_price": 5000000}).json()
     mid = m["id"]
-    assert m["current_stock"] == 0
+    assert m["unit_of_measure"] == "عدد"  # default
 
-    # add two units in warehouse
     for sn in ("SN-1", "SN-2"):
-        r = client.post("/api/unit-items", headers=_h("0913"),
+        r = client.post("/api/stock-items", headers=_h("0913"),
                         json={"model_id": mid, "serial_number": sn})
         assert r.status_code == 201, r.text
 
     got = client.get(f"/api/product-models/{mid}", headers=_h("0910"))
     assert got.json()["current_stock"] == 2
 
-    # sell one -> stock drops to 1
-    unit_id = client.get("/api/unit-items", headers=_h("0913"),
+    unit_id = client.get("/api/stock-items", headers=_h("0913"),
                          params={"model_id": mid}).json()[0]["id"]
-    client.patch(f"/api/unit-items/{unit_id}", headers=_h("0913"),
+    client.patch(f"/api/stock-items/{unit_id}", headers=_h("0913"),
                  json={"status": "sold"})
     got = client.get(f"/api/product-models/{mid}", headers=_h("0910"))
     assert got.json()["current_stock"] == 1
@@ -78,42 +84,41 @@ def test_serial_model_stock_tracks_warehouse_units():
 def test_duplicate_serial_rejected():
     mid = client.post("/api/product-models", headers=_h("0913"),
                       json={"name": "روتر", "tracking_type": "serial"}).json()["id"]
-    client.post("/api/unit-items", headers=_h("0913"),
+    client.post("/api/stock-items", headers=_h("0913"),
                 json={"model_id": mid, "serial_number": "DUP-1"})
-    dup = client.post("/api/unit-items", headers=_h("0913"),
+    dup = client.post("/api/stock-items", headers=_h("0913"),
                       json={"model_id": mid, "serial_number": "DUP-1"})
     assert dup.status_code == 409
 
 
-def test_unit_on_quantity_model_rejected():
+def test_serial_model_requires_serial_number():
     mid = client.post("/api/product-models", headers=_h("0913"),
-                      json={"name": "کابل شبکه", "tracking_type": "quantity"}).json()["id"]
-    bad = client.post("/api/unit-items", headers=_h("0913"),
-                      json={"model_id": mid, "serial_number": "X"})
+                      json={"name": "سرور", "tracking_type": "serial"}).json()["id"]
+    bad = client.post("/api/stock-items", headers=_h("0913"),
+                      json={"model_id": mid, "quantity": 3, "direction": "in"})
     assert bad.status_code == 400
 
 
-def test_bulk_movements_and_negative_guard():
+def test_non_serial_movements_and_negative_guard():
     mid = client.post("/api/product-models", headers=_h("0913"),
-                      json={"name": "فیبر نوری", "tracking_type": "quantity"}).json()["id"]
+                      json={"name": "فیبر نوری", "tracking_type": "quantity",
+                            "unit_of_measure": "متر"}).json()["id"]
 
-    # in 100, out 30 -> stock 70
-    client.post("/api/inventory-movements", headers=_h("0913"),
+    client.post("/api/stock-items", headers=_h("0913"),
                 json={"model_id": mid, "quantity": 100, "direction": "in"})
-    client.post("/api/inventory-movements", headers=_h("0913"),
+    client.post("/api/stock-items", headers=_h("0913"),
                 json={"model_id": mid, "quantity": 30, "direction": "out"})
     got = client.get(f"/api/product-models/{mid}", headers=_h("0910"))
     assert got.json()["current_stock"] == 70
 
-    # cannot go negative
-    bad = client.post("/api/inventory-movements", headers=_h("0913"),
+    bad = client.post("/api/stock-items", headers=_h("0913"),
                       json={"model_id": mid, "quantity": 999, "direction": "out"})
     assert bad.status_code == 400
 
 
-def test_movement_on_serial_model_rejected():
+def test_non_serial_rejects_serial_number():
     mid = client.post("/api/product-models", headers=_h("0913"),
-                      json={"name": "سرور", "tracking_type": "serial"}).json()["id"]
-    bad = client.post("/api/inventory-movements", headers=_h("0913"),
-                      json={"model_id": mid, "quantity": 5, "direction": "in"})
+                      json={"name": "پیچ", "tracking_type": "quantity"}).json()["id"]
+    bad = client.post("/api/stock-items", headers=_h("0913"),
+                      json={"model_id": mid, "serial_number": "X"})
     assert bad.status_code == 400

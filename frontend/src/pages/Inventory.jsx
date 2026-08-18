@@ -6,10 +6,17 @@ import {
   TRACKING_TYPE_FA,
   UNIT_STATUS_FA,
   MOVEMENT_DIRECTION_FA,
+  UNITS_OF_MEASURE,
   INVENTORY_WRITE_ROLES,
 } from "../labels";
 
-const EMPTY = { name: "", tracking_type: "serial", base_price: "", specs: "" };
+const EMPTY = {
+  name: "",
+  tracking_type: "serial",
+  unit_of_measure: "عدد",
+  base_price: "",
+  specs: "",
+};
 
 export default function Inventory() {
   const { me, loading } = useMe();
@@ -37,6 +44,7 @@ export default function Inventory() {
       await api.createProductModel({
         name: form.name,
         tracking_type: form.tracking_type,
+        unit_of_measure: form.unit_of_measure,
         base_price: form.base_price ? Number(form.base_price) : 0,
         specs: form.specs || null,
       });
@@ -60,7 +68,8 @@ export default function Inventory() {
             <tr>
               <th>شناسه</th>
               <th>نام مدل</th>
-              <th>نوع ردیابی</th>
+              <th>نوع</th>
+              <th>واحد شمارش</th>
               <th>قیمت پایه</th>
               <th>موجودی</th>
               <th></th>
@@ -72,9 +81,12 @@ export default function Inventory() {
                 <td>{m.id}</td>
                 <td>{m.name}</td>
                 <td>{TRACKING_TYPE_FA[m.tracking_type]}</td>
+                <td>{m.unit_of_measure}</td>
                 <td>{Number(m.base_price).toLocaleString("fa-IR")}</td>
                 <td>
-                  <span className="badge">{Number(m.current_stock).toLocaleString("fa-IR")}</span>
+                  <span className="badge">
+                    {Number(m.current_stock).toLocaleString("fa-IR")} {m.unit_of_measure}
+                  </span>
                 </td>
                 <td>
                   <button
@@ -89,7 +101,7 @@ export default function Inventory() {
             ))}
             {models.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ textAlign: "center", opacity: 0.6 }}>
+                <td colSpan={7} style={{ textAlign: "center", opacity: 0.6 }}>
                   موردی نیست
                 </td>
               </tr>
@@ -121,7 +133,7 @@ export default function Inventory() {
               />
             </div>
             <div>
-              <label>نوع ردیابی *</label>
+              <label>نوع *</label>
               <select
                 value={form.tracking_type}
                 onChange={(e) => setForm({ ...form, tracking_type: e.target.value })}
@@ -132,6 +144,20 @@ export default function Inventory() {
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label>واحد شمارش *</label>
+              <input
+                list="uom-list"
+                required
+                value={form.unit_of_measure}
+                onChange={(e) => setForm({ ...form, unit_of_measure: e.target.value })}
+              />
+              <datalist id="uom-list">
+                {UNITS_OF_MEASURE.map((u) => (
+                  <option key={u} value={u} />
+                ))}
+              </datalist>
             </div>
             <div>
               <label>قیمت پایه</label>
@@ -175,7 +201,7 @@ function SerialUnits({ model, canWrite, onChanged }) {
   const [error, setError] = useState("");
 
   function reload() {
-    api.listUnitItems({ model_id: model.id }).then(setUnits).catch(() => {});
+    api.listStockItems({ model_id: model.id }).then(setUnits).catch(() => {});
   }
   useEffect(() => {
     reload();
@@ -186,7 +212,7 @@ function SerialUnits({ model, canWrite, onChanged }) {
     e.preventDefault();
     setError("");
     try {
-      await api.createUnitItem({ model_id: model.id, serial_number: serial });
+      await api.createStockItem({ model_id: model.id, serial_number: serial });
       setSerial("");
       reload();
       onChanged();
@@ -196,7 +222,7 @@ function SerialUnits({ model, canWrite, onChanged }) {
   }
 
   async function setStatus(id, status) {
-    await api.updateUnitItem(id, { status });
+    await api.updateStockItem(id, { status });
     reload();
     onChanged();
   }
@@ -271,7 +297,7 @@ function BulkMovements({ model, canWrite, onChanged }) {
   const [error, setError] = useState("");
 
   function reload() {
-    api.listMovements({ model_id: model.id }).then(setMovements).catch(() => {});
+    api.listStockItems({ model_id: model.id }).then(setMovements).catch(() => {});
   }
   useEffect(() => {
     reload();
@@ -282,7 +308,7 @@ function BulkMovements({ model, canWrite, onChanged }) {
     e.preventDefault();
     setError("");
     try {
-      await api.createMovement({
+      await api.createStockItem({
         model_id: model.id,
         quantity: Number(qty),
         direction,
@@ -297,13 +323,15 @@ function BulkMovements({ model, canWrite, onChanged }) {
 
   return (
     <div className="card" style={{ marginTop: 20 }}>
-      <h2 style={{ marginTop: 0 }}>حرکت‌های انبار «{model.name}» (مقداری)</h2>
+      <h2 style={{ marginTop: 0 }}>
+        حرکت‌های انبار «{model.name}» (بدون سریال — {model.unit_of_measure})
+      </h2>
       <table>
         <thead>
           <tr>
             <th>شناسه</th>
             <th>جهت</th>
-            <th>مقدار</th>
+            <th>مقدار ({model.unit_of_measure})</th>
           </tr>
         </thead>
         <tbody>
@@ -338,10 +366,10 @@ function BulkMovements({ model, canWrite, onChanged }) {
             type="number"
             min="0"
             step="any"
-            placeholder="مقدار"
+            placeholder={`مقدار (${model.unit_of_measure})`}
             value={qty}
             onChange={(e) => setQty(e.target.value)}
-            style={{ width: 160 }}
+            style={{ width: 180 }}
             required
           />
           <button type="submit" style={{ width: "auto", marginTop: 0 }}>

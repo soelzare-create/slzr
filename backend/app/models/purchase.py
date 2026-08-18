@@ -66,14 +66,14 @@ class PurchaseItem(Base, TimestampMixin):
     purchase_id: Mapped[int] = mapped_column(
         ForeignKey("purchases.id"), nullable=False, index=True
     )  # خرید
-    # A line is either one serialized unit OR a quantity of a bulk model.
-    unit_item_id: Mapped[int | None] = mapped_column(
-        ForeignKey("unit_items.id")
-    )  # کالای سریال‌دار دریافتی
+    # A line is either one serialized stock item OR a quantity of a bulk model.
+    stock_item_id: Mapped[int | None] = mapped_column(
+        ForeignKey("stock_items.id")
+    )  # تک‌کالای سریال‌دار دریافتی
     product_model_id: Mapped[int | None] = mapped_column(
         ForeignKey("product_models.id")
-    )  # مدل کالای فله‌ای
-    quantity: Mapped[float | None] = mapped_column(Numeric(14, 2))  # مقدار (فله‌ای)
+    )  # مدل کالای بدون‌سریال
+    quantity: Mapped[float | None] = mapped_column(Numeric(14, 2))  # مقدار (بدون‌سریال)
     unit_cost: Mapped[float] = mapped_column(
         Numeric(14, 2), nullable=False
     )  # بهای تمام‌شدهٔ این قلم

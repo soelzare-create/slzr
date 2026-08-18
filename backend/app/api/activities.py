@@ -19,7 +19,7 @@ from app.core.deps import get_current_user, require_roles
 from app.database import get_db
 from app.models.activity import Activity, ActivityItem, ProjectStage
 from app.models.enums import ActivityType, TrackingType, UnitItemStatus, UserRole
-from app.models.inventory import ProductModel, UnitItem
+from app.models.inventory import ProductModel, StockItem
 from app.models.party import Party
 from app.models.user import User
 from app.schemas.activity import (
@@ -181,9 +181,9 @@ def add_item(
 ) -> ActivityItem:
     _load_activity(activity_id, db)
 
-    if payload.unit_item_id is not None:
-        unit = db.get(UnitItem, payload.unit_item_id)
-        if unit is None:
+    if payload.stock_item_id is not None:
+        unit = db.get(StockItem, payload.stock_item_id)
+        if unit is None or unit.serial_number is None:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "تک‌کالا یافت نشد")
         if unit.status != UnitItemStatus.warehouse:
             raise HTTPException(
@@ -191,7 +191,7 @@ def add_item(
             )
         # A given physical unit can appear on only one activity line.
         taken = db.scalar(
-            select(ActivityItem).where(ActivityItem.unit_item_id == unit.id)
+            select(ActivityItem).where(ActivityItem.stock_item_id == unit.id)
         )
         if taken:
             raise HTTPException(

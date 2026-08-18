@@ -79,14 +79,14 @@ class ActivityItem(Base, TimestampMixin):
     activity_id: Mapped[int] = mapped_column(
         ForeignKey("activities.id"), nullable=False, index=True
     )  # فعالیت
-    # A line refers either to one serialized unit item OR to a quantity of a model.
-    unit_item_id: Mapped[int | None] = mapped_column(
-        ForeignKey("unit_items.id")
-    )  # کالای سریال‌دار
+    # A line refers either to one serialized stock item OR to a quantity of a model.
+    stock_item_id: Mapped[int | None] = mapped_column(
+        ForeignKey("stock_items.id")
+    )  # تک‌کالای سریال‌دار
     product_model_id: Mapped[int | None] = mapped_column(
         ForeignKey("product_models.id")
-    )  # مدل کالای فله‌ای
-    quantity: Mapped[float | None] = mapped_column(Numeric(14, 2))  # مقدار (فله‌ای)
+    )  # مدل کالای بدون‌سریال
+    quantity: Mapped[float | None] = mapped_column(Numeric(14, 2))  # مقدار (بدون‌سریال)
     price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)  # قیمت این قلم
 
     activity: Mapped["Activity"] = relationship(back_populates="items")

@@ -4,7 +4,7 @@ Importing this package registers every table on the declarative ``Base``.
 """
 from app.models.accounting import FinancialDocument
 from app.models.activity import Activity, ActivityItem, ProjectStage
-from app.models.inventory import InventoryMovement, ProductModel, UnitItem
+from app.models.inventory import ProductModel, StockItem
 from app.models.invoice import Invoice
 from app.models.party import Party
 from app.models.purchase import Purchase, PurchaseItem
@@ -18,8 +18,7 @@ __all__ = [
     "ProjectStage",
     "ActivityItem",
     "ProductModel",
-    "UnitItem",
-    "InventoryMovement",
+    "StockItem",
     "Purchase",
     "PurchaseItem",
     "Invoice",

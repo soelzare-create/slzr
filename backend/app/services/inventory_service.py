@@ -1,7 +1,7 @@
 """Inventory service — stock computation and stock adjustments.
 
-This is the only place stock is calculated or changed. Other modules (sales,
-purchasing) call these functions rather than touching inventory tables.
+The only place stock is calculated or changed, over the single `stock_items`
+table. Serial rows carry a `status`; non-serial rows carry a `direction`.
 """
 from __future__ import annotations
 
@@ -10,34 +10,38 @@ from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
 from app.models.enums import MovementDirection, TrackingType, UnitItemStatus
-from app.models.inventory import InventoryMovement, ProductModel, UnitItem
+from app.models.inventory import ProductModel, StockItem
 
 
 # --- stock computation -----------------------------------------------------
 
 def serial_stock(db: Session, model_id: int | None = None) -> dict[int, float]:
-    """In-warehouse unit count per serial model."""
+    """In-warehouse unit count per serial model (rows with status=warehouse)."""
     stmt = (
-        select(UnitItem.model_id, func.count())
-        .where(UnitItem.status == UnitItemStatus.warehouse)
-        .group_by(UnitItem.model_id)
+        select(StockItem.model_id, func.coalesce(func.sum(StockItem.quantity), 0))
+        .where(StockItem.status == UnitItemStatus.warehouse)
+        .group_by(StockItem.model_id)
     )
     if model_id is not None:
-        stmt = stmt.where(UnitItem.model_id == model_id)
+        stmt = stmt.where(StockItem.model_id == model_id)
     return {mid: float(n) for mid, n in db.execute(stmt)}
 
 
 def bulk_stock(db: Session, model_id: int | None = None) -> dict[int, float]:
-    """Net quantity (sum of ins minus outs) per quantity model."""
+    """Net quantity (ins minus outs) per non-serial model."""
     signed = func.sum(
         case(
-            (InventoryMovement.direction == MovementDirection.in_, InventoryMovement.quantity),
-            else_=-InventoryMovement.quantity,
+            (StockItem.direction == MovementDirection.in_, StockItem.quantity),
+            else_=-StockItem.quantity,
         )
     )
-    stmt = select(InventoryMovement.model_id, signed).group_by(InventoryMovement.model_id)
+    stmt = (
+        select(StockItem.model_id, signed)
+        .where(StockItem.direction.is_not(None))
+        .group_by(StockItem.model_id)
+    )
     if model_id is not None:
-        stmt = stmt.where(InventoryMovement.model_id == model_id)
+        stmt = stmt.where(StockItem.model_id == model_id)
     return {mid: float(total or 0) for mid, total in db.execute(stmt)}
 
 
@@ -52,18 +56,18 @@ def stock_for(db: Session, model: ProductModel) -> float:
 def consume_item(
     db: Session,
     *,
-    unit_item_id: int | None,
+    stock_item_id: int | None,
     product_model_id: int | None,
     quantity: float | None,
 ) -> None:
-    """Take one line's worth of goods OUT of stock (a sale is being finalized).
+    """Take one sale line's worth of goods OUT of stock.
 
-    Serial line: mark the specific unit as sold. Bulk line: record an outbound
+    Serial line: mark the specific unit sold. Non-serial line: append an outbound
     movement, guarding against negative stock. Flushes but does not commit.
     """
-    if unit_item_id is not None:
-        unit = db.get(UnitItem, unit_item_id)
-        if unit is None:
+    if stock_item_id is not None:
+        unit = db.get(StockItem, stock_item_id)
+        if unit is None or unit.serial_number is None:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "تک‌کالا یافت نشد")
         if unit.status != UnitItemStatus.warehouse:
             raise HTTPException(
@@ -82,7 +86,7 @@ def consume_item(
                 f"موجودی کافی نیست (موجودی فعلی: {available})",
             )
         db.add(
-            InventoryMovement(
+            StockItem(
                 model_id=product_model_id,
                 quantity=quantity,
                 direction=MovementDirection.out,
@@ -94,3 +98,26 @@ def consume_item(
     raise HTTPException(
         status.HTTP_422_UNPROCESSABLE_ENTITY, "قلم فاقد کالای معتبر است"
     )
+
+
+def receive_serial(db: Session, *, model_id: int, serial_number: str) -> StockItem:
+    """Add one serialized unit into the warehouse."""
+    item = StockItem(
+        model_id=model_id,
+        serial_number=serial_number,
+        quantity=1,
+        status=UnitItemStatus.warehouse,
+    )
+    db.add(item)
+    db.flush()
+    return item
+
+
+def add_movement(
+    db: Session, *, model_id: int, quantity: float, direction: MovementDirection
+) -> StockItem:
+    """Add one in/out movement for a non-serial model."""
+    item = StockItem(model_id=model_id, quantity=quantity, direction=direction)
+    db.add(item)
+    db.flush()
+    return item

@@ -62,7 +62,7 @@ def _apply_effects(db: Session, invoice: Invoice, activity: Activity) -> None:
     for it in items:
         inventory_service.consume_item(
             db,
-            unit_item_id=it.unit_item_id,
+            stock_item_id=it.stock_item_id,
             product_model_id=it.product_model_id,
             quantity=float(it.quantity) if it.quantity is not None else None,
         )

@@ -68,11 +68,9 @@ export const api = {
   createProductModel: (m) => request("/product-models", { method: "POST", body: m }),
   updateProductModel: (id, m) =>
     request(`/product-models/${id}`, { method: "PATCH", body: m }),
-  listUnitItems: (params) => request(`/unit-items${qs(params)}`),
-  createUnitItem: (u) => request("/unit-items", { method: "POST", body: u }),
-  updateUnitItem: (id, u) => request(`/unit-items/${id}`, { method: "PATCH", body: u }),
-  listMovements: (params) => request(`/inventory-movements${qs(params)}`),
-  createMovement: (m) => request("/inventory-movements", { method: "POST", body: m }),
+  listStockItems: (params) => request(`/stock-items${qs(params)}`),
+  createStockItem: (s) => request("/stock-items", { method: "POST", body: s }),
+  updateStockItem: (id, s) => request(`/stock-items/${id}`, { method: "PATCH", body: s }),
 
   // activities (core)
   listActivities: (params) => request(`/activities${qs(params)}`),

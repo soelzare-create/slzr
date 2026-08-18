@@ -1,19 +1,13 @@
 """Inventory routes — bounded context: warehouse.
 
-Covers three tables:
-- product_models      : the catalog (serial-tracked or quantity-tracked)
-- unit_items          : one physical serialized unit
-- inventory_movements : in/out movements for quantity (bulk) models
+Over a single stock table:
+- product_models : the catalog (serial-tracked or not, with a unit of measure)
+- stock_items    : one serialized unit (serial goods) OR one in/out movement
+                   (non-serial goods)
 
 Access model:
 - Read  : any authenticated user.
 - Write : manager or warehouse.
-
-Rules (blueprint): inventory only raises/lowers stock; pricing is not its job.
-Serialized units belong only to serial models; bulk movements only to quantity
-models. Current stock is *computed*, never stored:
-- serial model  -> number of units whose status is `warehouse` (on hand)
-- quantity model -> sum(in) − sum(out)
 """
 from __future__ import annotations
 
@@ -29,17 +23,16 @@ from app.models.enums import (
     UnitItemStatus,
     UserRole,
 )
-from app.models.inventory import InventoryMovement, ProductModel, UnitItem
+from app.models.inventory import ProductModel, StockItem
 from app.schemas.inventory import (
-    InventoryMovementCreate,
-    InventoryMovementOut,
     ProductModelCreate,
     ProductModelOut,
     ProductModelUpdate,
-    UnitItemCreate,
-    UnitItemOut,
-    UnitItemUpdate,
+    StockItemCreate,
+    StockItemOut,
+    StockItemStatusUpdate,
 )
+from app.services import inventory_service
 from app.services.inventory_service import bulk_stock as _bulk_stock
 from app.services.inventory_service import serial_stock as _serial_stock
 from app.services.inventory_service import stock_for as _stock_for
@@ -50,9 +43,7 @@ can_write = require_roles(UserRole.manager, UserRole.warehouse)
 
 
 def _to_out(model: ProductModel, stock: float) -> ProductModelOut:
-    return ProductModelOut.model_validate(
-        {**model.__dict__, "current_stock": stock}
-    )
+    return ProductModelOut.model_validate({**model.__dict__, "current_stock": stock})
 
 
 # --- product models --------------------------------------------------------
@@ -133,115 +124,95 @@ def update_product_model(
     return _to_out(model, _stock_for(db, model))
 
 
-# --- serialized units ------------------------------------------------------
+# --- stock items -----------------------------------------------------------
 
 @router.get(
-    "/api/unit-items",
-    response_model=list[UnitItemOut],
+    "/api/stock-items",
+    response_model=list[StockItemOut],
     dependencies=[Depends(get_current_user)],
 )
-def list_unit_items(
+def list_stock_items(
     db: Session = Depends(get_db),
     model_id: int | None = None,
     status_: UnitItemStatus | None = Query(default=None, alias="status"),
-) -> list[UnitItem]:
-    stmt = select(UnitItem).order_by(UnitItem.id.desc())
+) -> list[StockItem]:
+    stmt = select(StockItem).order_by(StockItem.id.desc())
     if model_id is not None:
-        stmt = stmt.where(UnitItem.model_id == model_id)
+        stmt = stmt.where(StockItem.model_id == model_id)
     if status_ is not None:
-        stmt = stmt.where(UnitItem.status == status_)
+        stmt = stmt.where(StockItem.status == status_)
     return list(db.scalars(stmt))
 
 
 @router.post(
-    "/api/unit-items",
-    response_model=UnitItemOut,
+    "/api/stock-items",
+    response_model=StockItemOut,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(can_write)],
 )
-def create_unit_item(payload: UnitItemCreate, db: Session = Depends(get_db)) -> UnitItem:
+def create_stock_item(
+    payload: StockItemCreate, db: Session = Depends(get_db)
+) -> StockItem:
     model = db.get(ProductModel, payload.model_id)
     if model is None:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "مدل کالا معتبر نیست")
-    if model.tracking_type != TrackingType.serial:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "تک‌کالا فقط برای مدل کالای سریال‌دار قابل ثبت است",
+
+    if model.tracking_type == TrackingType.serial:
+        if not payload.serial_number:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "برای کالای سریال‌دار، شماره سریال لازم است"
+            )
+        dup = db.scalar(
+            select(StockItem).where(StockItem.serial_number == payload.serial_number)
         )
-    exists = db.scalar(
-        select(UnitItem).where(UnitItem.serial_number == payload.serial_number)
-    )
-    if exists:
-        raise HTTPException(status.HTTP_409_CONFLICT, "این شماره سریال قبلاً ثبت شده است")
-
-    unit = UnitItem(**payload.model_dump())
-    db.add(unit)
-    db.commit()
-    db.refresh(unit)
-    return unit
-
-
-@router.patch(
-    "/api/unit-items/{unit_id}",
-    response_model=UnitItemOut,
-    dependencies=[Depends(can_write)],
-)
-def update_unit_item(
-    unit_id: int, payload: UnitItemUpdate, db: Session = Depends(get_db)
-) -> UnitItem:
-    unit = db.get(UnitItem, unit_id)
-    if unit is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "تک‌کالا یافت نشد")
-    unit.status = payload.status
-    db.commit()
-    db.refresh(unit)
-    return unit
-
-
-# --- bulk movements --------------------------------------------------------
-
-@router.get(
-    "/api/inventory-movements",
-    response_model=list[InventoryMovementOut],
-    dependencies=[Depends(get_current_user)],
-)
-def list_movements(
-    db: Session = Depends(get_db), model_id: int | None = None
-) -> list[InventoryMovement]:
-    stmt = select(InventoryMovement).order_by(InventoryMovement.id.desc())
-    if model_id is not None:
-        stmt = stmt.where(InventoryMovement.model_id == model_id)
-    return list(db.scalars(stmt))
-
-
-@router.post(
-    "/api/inventory-movements",
-    response_model=InventoryMovementOut,
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(can_write)],
-)
-def create_movement(
-    payload: InventoryMovementCreate, db: Session = Depends(get_db)
-) -> InventoryMovement:
-    model = db.get(ProductModel, payload.model_id)
-    if model is None:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "مدل کالا معتبر نیست")
-    if model.tracking_type != TrackingType.quantity:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "حرکت انبار فقط برای مدل کالای مقداری قابل ثبت است",
+        if dup:
+            raise HTTPException(status.HTTP_409_CONFLICT, "این شماره سریال قبلاً ثبت شده است")
+        item = inventory_service.receive_serial(
+            db, model_id=model.id, serial_number=payload.serial_number
         )
-    # Prevent stock from going negative on an outbound movement.
+        db.commit()
+        db.refresh(item)
+        return item
+
+    # non-serial: needs quantity + direction
+    if payload.serial_number:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "این کالا بدون‌سریال است؛ شماره سریال نپذیرید"
+        )
+    if not payload.quantity or payload.direction is None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "برای کالای بدون‌سریال، مقدار و جهت لازم است"
+        )
     if payload.direction == MovementDirection.out:
         current = _bulk_stock(db, model.id).get(model.id, 0.0)
         if payload.quantity > current:
             raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                f"موجودی کافی نیست (موجودی فعلی: {current})",
+                status.HTTP_400_BAD_REQUEST, f"موجودی کافی نیست (موجودی فعلی: {current})"
             )
-
-    movement = InventoryMovement(**payload.model_dump())
-    db.add(movement)
+    item = inventory_service.add_movement(
+        db, model_id=model.id, quantity=payload.quantity, direction=payload.direction
+    )
     db.commit()
-    db.refresh(movement)
-    return movement
+    db.refresh(item)
+    return item
+
+
+@router.patch(
+    "/api/stock-items/{item_id}",
+    response_model=StockItemOut,
+    dependencies=[Depends(can_write)],
+)
+def update_stock_item_status(
+    item_id: int, payload: StockItemStatusUpdate, db: Session = Depends(get_db)
+) -> StockItem:
+    item = db.get(StockItem, item_id)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "ردیف انبار یافت نشد")
+    if item.serial_number is None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "وضعیت فقط برای کالای سریال‌دار معنا دارد"
+        )
+    item.status = payload.status
+    db.commit()
+    db.refresh(item)
+    return item

@@ -23,8 +23,8 @@ class Ticket(Base, TimestampMixin):
         ForeignKey("parties.id"), nullable=False, index=True
     )  # مشتری (طرف‌حساب با نقش مشتری)
     device_unit_id: Mapped[int | None] = mapped_column(
-        ForeignKey("unit_items.id"), index=True
-    )  # سریال دستگاه (تک‌کالا)
+        ForeignKey("stock_items.id"), index=True
+    )  # سریال دستگاه (تک‌کالای سریال‌دار)
     owner_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id"), index=True
     )  # مسئول پیگیری

@@ -105,7 +105,7 @@ daranx/
 ## نقشه داده (خلاصه)
 
 `users` · `parties` · `activities` · `project_stages` · `activity_items` ·
-`product_models` · `unit_items` · `inventory_movements` · `purchases` ·
+`product_models` · `stock_items` · `purchases` ·
 `purchase_items` · `invoices` · `financial_documents` · `tickets`
 
 > **طرف‌حساب واحد:** `parties` جای «مشتری‌ها» را گرفته؛ هر رکورد می‌تواند مشتری،

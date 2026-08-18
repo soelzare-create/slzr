@@ -65,10 +65,10 @@ def _setup_sale():
     mid = client.post("/api/product-models", headers=wh,
                       json={"name": "سوییچ", "tracking_type": "serial",
                             "base_price": 5_000_000}).json()["id"]
-    uid = client.post("/api/unit-items", headers=wh,
+    uid = client.post("/api/stock-items", headers=wh,
                       json={"model_id": mid, "serial_number": _next_serial()}).json()["id"]
     line = client.post(f"/api/activities/{aid}/items", headers=sales,
-                       json={"unit_item_id": uid, "price": 6_000_000})
+                       json={"stock_item_id": uid, "price": 6_000_000})
     assert line.status_code == 201, line.text
     return dict(cid=cid, aid=aid, mid=mid, uid=uid)
 
@@ -134,7 +134,7 @@ def test_bulk_line_reduces_stock_on_finalize():
                      json={"customer_id": cid, "owner_id": 2, "type": "sale"}).json()["id"]
     mid = client.post("/api/product-models", headers=wh,
                       json={"name": "کابل", "tracking_type": "quantity"}).json()["id"]
-    client.post("/api/inventory-movements", headers=wh,
+    client.post("/api/stock-items", headers=wh,
                 json={"model_id": mid, "quantity": 50, "direction": "in"})
     client.post(f"/api/activities/{aid}/items", headers=sales,
                 json={"product_model_id": mid, "quantity": 20, "price": 2_000_000})
@@ -152,7 +152,7 @@ def test_cannot_sell_more_bulk_than_in_stock():
                      json={"customer_id": cid, "owner_id": 2, "type": "sale"}).json()["id"]
     mid = client.post("/api/product-models", headers=wh,
                       json={"name": "فیبر", "tracking_type": "quantity"}).json()["id"]
-    client.post("/api/inventory-movements", headers=wh,
+    client.post("/api/stock-items", headers=wh,
                 json={"model_id": mid, "quantity": 5, "direction": "in"})
     client.post(f"/api/activities/{aid}/items", headers=sales,
                 json={"product_model_id": mid, "quantity": 10, "price": 1})

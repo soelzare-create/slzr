@@ -1,21 +1,26 @@
 """Inventory models — bounded context: warehouse.
 
-Contains:
-- ProductModel      : مدل کالا — a catalog entry (a type of product)
-- UnitItem          : تک‌کالا — one physical, serialized unit of a serial model
-- InventoryMovement : حرکت انبار — in/out movements for quantity (bulk) models
+A single stock table holds ALL goods:
+- ProductModel : مدل کالا — a catalog entry, serial-tracked or not, with a unit
+  of measure (واحد شمارش: عدد/متر/…).
+- StockItem    : یک ردیف انبار. For serial goods it is one physical unit
+  (serial_number set, quantity 1) whose lifecycle is tracked by `status`. For
+  non-serial goods it is one in/out movement (`direction` set, `quantity` in the
+  model's unit of measure) — so the full in/out history is preserved.
 
-Rule (blueprint): inventory only increases/decreases stock. Pricing is not its
-job, and it never decrements itself — it acts on a message from the invoice
-module.
+Current stock is computed, never stored:
+- serial model     -> number of units whose status is `warehouse`
+- non-serial model -> sum(in quantities) − sum(out quantities)
+
+Rule (blueprint): inventory only raises/lowers stock; pricing is not its job.
 """
 from __future__ import annotations
 
 from sqlalchemy import Enum, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
 from app.models.enums import MovementDirection, TrackingType, UnitItemStatus
+from app.database import Base
 from app.models.mixins import TimestampMixin
 
 
@@ -28,57 +33,48 @@ class ProductModel(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(300), nullable=False)  # نام مدل
     tracking_type: Mapped[TrackingType] = mapped_column(
         Enum(TrackingType, native_enum=False, length=20), nullable=False
-    )  # نوع ردیابی: سریال‌دار یا مقداری
+    )  # سریال‌دار یا بدون سریال
+    unit_of_measure: Mapped[str] = mapped_column(
+        String(30), default="عدد", nullable=False
+    )  # واحد شمارش: عدد، متر، کیلوگرم، …
     base_price: Mapped[float] = mapped_column(
         Numeric(14, 2), default=0, nullable=False
     )  # قیمت پایه
     specs: Mapped[str | None] = mapped_column(String(2000))  # مشخصات فنی
 
-    units: Mapped[list["UnitItem"]] = relationship(back_populates="model")
-    movements: Mapped[list["InventoryMovement"]] = relationship(
-        back_populates="model"
-    )
+    stock_items: Mapped[list["StockItem"]] = relationship(back_populates="model")
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<ProductModel {self.id} {self.name} ({self.tracking_type.value})>"
 
 
-class UnitItem(Base, TimestampMixin):
-    """تک‌کالا (کالای سریال‌دار)."""
+class StockItem(Base, TimestampMixin):
+    """ردیف انبار — یا تک‌کالای سریال‌دار، یا یک حرکت کالای بدون‌سریال."""
 
-    __tablename__ = "unit_items"
+    __tablename__ = "stock_items"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     model_id: Mapped[int] = mapped_column(
         ForeignKey("product_models.id"), nullable=False, index=True
-    )  # مدل
-    serial_number: Mapped[str] = mapped_column(
-        String(120), unique=True, index=True, nullable=False
-    )  # شماره سریال یکتا
-    status: Mapped[UnitItemStatus] = mapped_column(
-        Enum(UnitItemStatus, native_enum=False, length=20),
-        default=UnitItemStatus.warehouse,
-        nullable=False,
-    )  # وضعیت
+    )  # مدل کالا
+    serial_number: Mapped[str | None] = mapped_column(
+        String(120), unique=True, index=True
+    )  # شماره سریال (فقط کالای سریال‌دار)
+    quantity: Mapped[float] = mapped_column(
+        Numeric(14, 2), default=1, nullable=False
+    )  # مقدار (سریال‌دار = ۱؛ بدون‌سریال = مقدار حرکت به واحد شمارش)
 
-    model: Mapped["ProductModel"] = relationship(back_populates="units")
+    # Serial goods use `status`; non-serial goods use `direction`.
+    status: Mapped[UnitItemStatus | None] = mapped_column(
+        Enum(UnitItemStatus, native_enum=False, length=20)
+    )  # وضعیت تک‌کالا: انبار/فروخته/نصب‌شده/خراب
+    direction: Mapped[MovementDirection | None] = mapped_column(
+        Enum(MovementDirection, native_enum=False, length=10)
+    )  # جهت حرکت کالای بدون‌سریال: ورود/خروج
+
+    model: Mapped["ProductModel"] = relationship(back_populates="stock_items")
 
     def __repr__(self) -> str:  # pragma: no cover
-        return f"<UnitItem {self.id} sn={self.serial_number} {self.status.value}>"
-
-
-class InventoryMovement(Base, TimestampMixin):
-    """حرکت انبار (کالای مقداری/فله‌ای)."""
-
-    __tablename__ = "inventory_movements"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    model_id: Mapped[int] = mapped_column(
-        ForeignKey("product_models.id"), nullable=False, index=True
-    )  # مدل
-    quantity: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)  # مقدار
-    direction: Mapped[MovementDirection] = mapped_column(
-        Enum(MovementDirection, native_enum=False, length=10), nullable=False
-    )  # جهت: ورود/خروج
-
-    model: Mapped["ProductModel"] = relationship(back_populates="movements")
+        if self.serial_number:
+            return f"<StockItem {self.id} sn={self.serial_number} {self.status}>"
+        return f"<StockItem {self.id} {self.direction} qty={self.quantity}>"

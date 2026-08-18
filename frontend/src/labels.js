@@ -51,8 +51,11 @@ export const PARTY_WRITE_ROLES = ["manager", "sales", "warehouse"];
 // Inventory (warehouse) vocabulary + write roles.
 export const TRACKING_TYPE_FA = {
   serial: "سریال‌دار",
-  quantity: "مقداری",
+  quantity: "بدون سریال",
 };
+
+// Common units of measure (واحد شمارش) offered in the product form.
+export const UNITS_OF_MEASURE = ["عدد", "متر", "کیلوگرم", "بسته", "رول", "لیتر"];
 
 export const UNIT_STATUS_FA = {
   warehouse: "انبار",
