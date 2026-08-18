@@ -78,4 +78,17 @@ export const api = {
   createActivity: (a) => request("/activities", { method: "POST", body: a }),
   updateActivity: (id, a) => request(`/activities/${id}`, { method: "PATCH", body: a }),
   addStage: (id, s) => request(`/activities/${id}/stages`, { method: "POST", body: s }),
+  // activity items (sales lines)
+  listActivityItems: (id) => request(`/activities/${id}/items`),
+  addActivityItem: (id, it) =>
+    request(`/activities/${id}/items`, { method: "POST", body: it }),
+  deleteActivityItem: (id, itemId) =>
+    request(`/activities/${id}/items/${itemId}`, { method: "DELETE" }),
+
+  // invoices (sales: proforma / final)
+  listInvoices: (params) => request(`/invoices${qs(params)}`),
+  createInvoice: (inv) => request("/invoices", { method: "POST", body: inv }),
+  finalizeInvoice: (id) =>
+    request(`/invoices/${id}/finalize`, { method: "POST" }),
+  updateInvoice: (id, inv) => request(`/invoices/${id}`, { method: "PATCH", body: inv }),
 };

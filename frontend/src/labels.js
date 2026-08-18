@@ -70,3 +70,15 @@ export const MOVEMENT_DIRECTION_FA = {
 };
 
 export const INVENTORY_WRITE_ROLES = ["manager", "warehouse"];
+
+// Invoices (sales)
+export const INVOICE_KIND_FA = {
+  proforma: "پیش‌فاکتور",
+  final: "فاکتور نهایی",
+};
+
+export const INVOICE_STATUS_FA = {
+  unpaid: "پرداخت‌نشده",
+  paid: "پرداخت‌شده",
+  overdue: "معوق",
+};

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { api } from "../api";
 import { useMe } from "../hooks/useMe";
 import Layout from "../components/Layout";
+import SalesPanel from "../components/SalesPanel";
 import {
   ACTIVITY_TYPE_FA,
   ACTIVITY_STATUS_FA,
@@ -21,6 +22,7 @@ export default function Activities() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [openId, setOpenId] = useState(null);
+  const [salesId, setSalesId] = useState(null);
 
   const canWrite = me && WRITE_ROLES.includes(me.role);
   const custName = (id) => customers.find((c) => c.id === id)?.name || `#${id}`;
@@ -109,15 +111,24 @@ export default function Activities() {
                   <span className="badge">{ACTIVITY_STATUS_FA[a.status]}</span>
                 </td>
                 <td>
-                  {a.type === "project" && (
+                  <div className="row" style={{ gap: 6 }}>
+                    {a.type === "project" && (
+                      <button
+                        className="secondary"
+                        style={{ width: "auto", marginTop: 0, padding: "4px 10px" }}
+                        onClick={() => setOpenId(openId === a.id ? null : a.id)}
+                      >
+                        مراحل
+                      </button>
+                    )}
                     <button
                       className="secondary"
                       style={{ width: "auto", marginTop: 0, padding: "4px 10px" }}
-                      onClick={() => setOpenId(openId === a.id ? null : a.id)}
+                      onClick={() => setSalesId(salesId === a.id ? null : a.id)}
                     >
-                      مراحل
+                      اقلام/فاکتور
                     </button>
-                  )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -137,6 +148,10 @@ export default function Activities() {
           activityId={openId}
           canWrite={me && ["manager", "sales", "technical"].includes(me.role)}
         />
+      )}
+
+      {salesId && (
+        <SalesPanel activityId={salesId} canWrite={canWrite} onChanged={reload} />
       )}
 
       {canWrite && (
