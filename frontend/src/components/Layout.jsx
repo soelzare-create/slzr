@@ -40,6 +40,9 @@ export default function Layout({ me, children }) {
             <NavLink to="/activities" style={link}>
               فعالیت‌ها
             </NavLink>
+            <NavLink to="/inventory" style={link}>
+              انبار
+            </NavLink>
           </nav>
         </div>
         <div className="row">

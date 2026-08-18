@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Parties from "./pages/Parties";
 import Activities from "./pages/Activities";
+import Inventory from "./pages/Inventory";
 
 function RequireAuth({ children }) {
   return getToken() ? children : <Navigate to="/login" replace />;
@@ -46,6 +47,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           element={
             <RequireAuth>
               <Activities />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/inventory"
+          element={
+            <RequireAuth>
+              <Inventory />
             </RequireAuth>
           }
         />

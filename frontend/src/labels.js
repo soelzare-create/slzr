@@ -47,3 +47,23 @@ export const WRITE_ROLES = ["manager", "sales"];
 
 // Roles allowed to create/edit parties (customers + suppliers).
 export const PARTY_WRITE_ROLES = ["manager", "sales", "warehouse"];
+
+// Inventory (warehouse) vocabulary + write roles.
+export const TRACKING_TYPE_FA = {
+  serial: "سریال‌دار",
+  quantity: "مقداری",
+};
+
+export const UNIT_STATUS_FA = {
+  warehouse: "انبار",
+  sold: "فروخته",
+  installed: "نصب‌شده",
+  broken: "خراب",
+};
+
+export const MOVEMENT_DIRECTION_FA = {
+  in: "ورود",
+  out: "خروج",
+};
+
+export const INVENTORY_WRITE_ROLES = ["manager", "warehouse"];

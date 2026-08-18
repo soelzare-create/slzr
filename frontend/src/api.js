@@ -62,6 +62,18 @@ export const api = {
   createParty: (p) => request("/parties", { method: "POST", body: p }),
   updateParty: (id, p) => request(`/parties/${id}`, { method: "PATCH", body: p }),
 
+  // inventory (warehouse)
+  listProductModels: (params) => request(`/product-models${qs(params)}`),
+  getProductModel: (id) => request(`/product-models/${id}`),
+  createProductModel: (m) => request("/product-models", { method: "POST", body: m }),
+  updateProductModel: (id, m) =>
+    request(`/product-models/${id}`, { method: "PATCH", body: m }),
+  listUnitItems: (params) => request(`/unit-items${qs(params)}`),
+  createUnitItem: (u) => request("/unit-items", { method: "POST", body: u }),
+  updateUnitItem: (id, u) => request(`/unit-items/${id}`, { method: "PATCH", body: u }),
+  listMovements: (params) => request(`/inventory-movements${qs(params)}`),
+  createMovement: (m) => request("/inventory-movements", { method: "POST", body: m }),
+
   // activities (core)
   listActivities: (params) => request(`/activities${qs(params)}`),
   getActivity: (id) => request(`/activities/${id}`),

@@ -11,6 +11,7 @@ export default function Dashboard() {
     customers: null,
     suppliers: null,
     activities: null,
+    products: null,
   });
   const [users, setUsers] = useState([]);
 
@@ -20,12 +21,14 @@ export default function Dashboard() {
       api.listParties({ role: "customer" }),
       api.listParties({ role: "supplier" }),
       api.listActivities(),
+      api.listProductModels(),
     ])
-      .then(([customers, suppliers, activities]) =>
+      .then(([customers, suppliers, activities, products]) =>
         setCounts({
           customers: customers.length,
           suppliers: suppliers.length,
           activities: activities.length,
+          products: products.length,
         })
       )
       .catch(() => {});
@@ -39,7 +42,7 @@ export default function Dashboard() {
       <div className="card">
         <h2 style={{ marginTop: 0 }}>خوش آمدید، {me.name}</h2>
         <p style={{ opacity: 0.75 }}>
-          فاز ۱ (پایه) و فاز ۲ (هسته: مشتری، فعالیت، مراحل پروژه) فعال هستند.
+          فازهای ۱ تا ۳ فعال‌اند: پایه، هسته (طرف‌حساب/فعالیت/پروژه)، و انبار.
         </p>
         <div className="row" style={{ gap: 16, marginTop: 8 }}>
           <Link to="/customers" className="stat">
@@ -53,6 +56,10 @@ export default function Dashboard() {
           <Link to="/activities" className="stat">
             <div className="stat-num">{counts.activities ?? "—"}</div>
             <div>فعالیت‌ها</div>
+          </Link>
+          <Link to="/inventory" className="stat">
+            <div className="stat-num">{counts.products ?? "—"}</div>
+            <div>کالاها</div>
           </Link>
         </div>
       </div>
