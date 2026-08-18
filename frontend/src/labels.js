@@ -33,7 +33,11 @@ export const STAGE_FA = {
 export const REFERRAL_SOURCES = {
   website: "وبسایت",
   instagram: "اینستاگرام",
+  telegram: "تلگرام",
   linkedin: "لینکدین",
+  google: "جستجوی گوگل / وبگردی",
+  exhibition: "نمایشگاه / رویداد تخصصی",
+  tender: "مناقصه",
   past_customer: "معرفی توسط مشتری‌های سابق",
   other: "سایر",
 };
