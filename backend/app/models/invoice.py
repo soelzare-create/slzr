@@ -6,7 +6,9 @@ amount") to accounting. The issuer is stored for commission calculation.
 """
 from __future__ import annotations
 
-from sqlalchemy import Enum, ForeignKey, Numeric
+from datetime import date
+
+from sqlalchemy import Date, Enum, ForeignKey, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -34,6 +36,9 @@ class Invoice(Base, TimestampMixin):
         default=InvoiceStatus.unpaid,
         nullable=False,
     )  # وضعیت
+    settlement_due_date: Mapped[date | None] = mapped_column(
+        Date
+    )  # تاریخ تصفیه حساب — زمانی که باید حساب تسویه شود (هنگام صدور درج می‌شود)
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Invoice {self.id} amount={self.total_amount} {self.status.value}>"

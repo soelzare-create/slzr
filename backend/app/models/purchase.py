@@ -14,7 +14,9 @@ does not itself mutate inventory or the ledger — those react to it.
 """
 from __future__ import annotations
 
-from sqlalchemy import Enum, ForeignKey, Numeric, String
+from datetime import date
+
+from sqlalchemy import Date, Enum, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -43,6 +45,9 @@ class Purchase(Base, TimestampMixin):
         default=PurchaseStatus.unpaid,
         nullable=False,
     )  # وضعیت پرداخت
+    settlement_due_date: Mapped[date | None] = mapped_column(
+        Date
+    )  # تاریخ تصفیه حساب با تأمین‌کننده (هنگام ثبت سند خرید درج می‌شود)
 
     items: Mapped[list["PurchaseItem"]] = relationship(
         back_populates="purchase", cascade="all, delete-orphan"
