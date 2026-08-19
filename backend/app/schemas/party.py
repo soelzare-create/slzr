@@ -5,6 +5,28 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.models.enums import ContactPosition
+
+
+class PartyContactBase(BaseModel):
+    name: str = Field(min_length=1, max_length=200)  # نام فرد
+    phone: str | None = Field(default=None, max_length=30)
+    position: ContactPosition  # سمت — اجباری، از فهرست انتخابی
+
+
+class PartyContactCreate(PartyContactBase):
+    pass
+
+
+class PartyContactOut(PartyContactBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    party_id: int
+    created_by_id: int
+    created_by_name: str | None = None
+    created_at: datetime
+
 
 class PartyBase(BaseModel):
     name: str = Field(min_length=1, max_length=200)
@@ -39,3 +61,4 @@ class PartyOut(PartyBase):
 
     id: int
     created_at: datetime
+    contacts: list[PartyContactOut] = []

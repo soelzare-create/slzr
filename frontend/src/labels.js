@@ -48,6 +48,18 @@ export const WRITE_ROLES = ["manager", "sales"];
 // Roles allowed to create/edit parties (customers + suppliers).
 export const PARTY_WRITE_ROLES = ["manager", "sales", "warehouse"];
 
+// سمتِ فرد رابط در سازمان طرف‌حساب. Stored as the key; shown with the label.
+export const CONTACT_POSITIONS = {
+  ceo: "مدیرعامل",
+  procurement: "خرید / بازرگانی",
+  sales: "فروش",
+  finance: "مالی / حسابداری",
+  technical: "فنی / مهندسی",
+  warehouse: "انباردار",
+  staff: "کارشناس / کارمند",
+  other: "سایر",
+};
+
 // Inventory (warehouse) vocabulary + write roles.
 export const TRACKING_TYPE_FA = {
   serial: "سریال‌دار",

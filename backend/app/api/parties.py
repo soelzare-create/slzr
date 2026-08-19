@@ -18,8 +18,15 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, require_roles
 from app.database import get_db
 from app.models.enums import UserRole
-from app.models.party import Party
-from app.schemas.party import PartyCreate, PartyOut, PartyUpdate
+from app.models.party import Party, PartyContact
+from app.models.user import User
+from app.schemas.party import (
+    PartyContactCreate,
+    PartyContactOut,
+    PartyCreate,
+    PartyOut,
+    PartyUpdate,
+)
 
 router = APIRouter(prefix="/api/parties", tags=["parties"])
 
@@ -97,3 +104,60 @@ def update_party(
     db.commit()
     db.refresh(party)
     return party
+
+
+# ── افراد رابط (contact people inside the party's organization) ──────────────
+
+
+def _get_party_or_404(db: Session, party_id: int) -> Party:
+    party = db.get(Party, party_id)
+    if party is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "طرف‌حساب یافت نشد")
+    return party
+
+
+@router.get(
+    "/{party_id}/contacts",
+    response_model=list[PartyContactOut],
+    dependencies=[Depends(get_current_user)],
+)
+def list_contacts(party_id: int, db: Session = Depends(get_db)) -> list[PartyContact]:
+    return _get_party_or_404(db, party_id).contacts
+
+
+@router.post(
+    "/{party_id}/contacts",
+    response_model=PartyContactOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def add_contact(
+    party_id: int,
+    payload: PartyContactCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(can_write),
+) -> PartyContact:
+    _get_party_or_404(db, party_id)
+    # `created_by_id` is taken from the authenticated user, never the client —
+    # so it's always clear who added each contact.
+    contact = PartyContact(
+        party_id=party_id, created_by_id=user.id, **payload.model_dump()
+    )
+    db.add(contact)
+    db.commit()
+    db.refresh(contact)
+    return contact
+
+
+@router.delete(
+    "/{party_id}/contacts/{contact_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(can_write)],
+)
+def delete_contact(
+    party_id: int, contact_id: int, db: Session = Depends(get_db)
+) -> None:
+    contact = db.get(PartyContact, contact_id)
+    if contact is None or contact.party_id != party_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "فرد رابط یافت نشد")
+    db.delete(contact)
+    db.commit()

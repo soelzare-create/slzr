@@ -81,8 +81,9 @@ npm run dev        # http://localhost:5173  (به بک‌اند روی 8000 پر
 - [ ] **فاز ۶ — پشتیبانی:** تیکتینگ متصل به سریال دستگاه.
 - [ ] **فاز ۷ — داشبورد و گزارش‌ها.**
 
-> نکته: **کل مدل داده** (هر ۱۱ جدول) همین حالا در `backend/app/models` تعریف
-> شده است؛ فازهای بعدی روی همین پایه فقط منطق و رابط کاربری هر بخش را اضافه می‌کنند.
+> نکته: **کل مدل داده** (۱۲ جدول، شامل `party_contacts`) همین حالا در
+> `backend/app/models` تعریف شده است؛ فازهای بعدی روی همین پایه فقط منطق و رابط
+> کاربری هر بخش را اضافه می‌کنند.
 
 ## ساختار پوشه‌ها
 
@@ -104,8 +105,8 @@ daranx/
 
 ## نقشه داده (خلاصه)
 
-`users` · `parties` · `activities` · `project_stages` · `activity_items` ·
-`product_models` · `stock_items` · `purchases` ·
+`users` · `parties` · `party_contacts` · `activities` · `project_stages` ·
+`activity_items` · `product_models` · `stock_items` · `purchases` ·
 `purchase_items` · `invoices` · `financial_documents` · `tickets`
 
 > **طرف‌حساب واحد:** `parties` جای «مشتری‌ها» را گرفته؛ هر رکورد می‌تواند مشتری،
