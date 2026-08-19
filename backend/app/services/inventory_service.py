@@ -100,6 +100,51 @@ def consume_item(
     )
 
 
+def receive_item(
+    db: Session,
+    *,
+    model_id: int,
+    serial_number: str | None,
+    quantity: float | None,
+) -> StockItem:
+    """Bring one purchase line's worth of goods INTO stock (mirror of consume_item).
+
+    Serial model: register the received unit by its serial. Non-serial model:
+    append an inbound movement. Validates against the model's tracking type.
+    Flushes but does not commit.
+    """
+    model = db.get(ProductModel, model_id)
+    if model is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "مدل کالا معتبر نیست")
+
+    if model.tracking_type == TrackingType.serial:
+        if not serial_number:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "برای کالای سریال‌دار، شماره سریال لازم است"
+            )
+        dup = db.scalar(
+            select(StockItem).where(StockItem.serial_number == serial_number)
+        )
+        if dup:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "این شماره سریال قبلاً ثبت شده است"
+            )
+        return receive_serial(db, model_id=model_id, serial_number=serial_number)
+
+    # non-serial: needs a quantity (no serial number)
+    if serial_number:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "این کالا بدون‌سریال است؛ شماره سریال نپذیرید"
+        )
+    if not quantity:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "برای کالای بدون‌سریال، مقدار لازم است"
+        )
+    return add_movement(
+        db, model_id=model_id, quantity=quantity, direction=MovementDirection.in_
+    )
+
+
 def receive_serial(db: Session, *, model_id: int, serial_number: str) -> StockItem:
     """Add one serialized unit into the warehouse."""
     item = StockItem(

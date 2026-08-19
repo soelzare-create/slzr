@@ -10,7 +10,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api import activities, auth, inventory, invoices, parties, team, users
+from app.api import (
+    activities,
+    auth,
+    inventory,
+    invoices,
+    parties,
+    purchases,
+    team,
+    users,
+)
 from app.config import settings
 from app.database import Base, engine
 
@@ -48,6 +57,7 @@ app.include_router(parties.router)
 app.include_router(activities.router)
 app.include_router(inventory.router)
 app.include_router(invoices.router)
+app.include_router(purchases.router)
 
 
 @app.get("/", tags=["meta"])
