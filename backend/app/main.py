@@ -18,6 +18,7 @@ from app.api import (
     invoices,
     parties,
     purchases,
+    reports,
     support,
     team,
     users,
@@ -62,6 +63,7 @@ app.include_router(invoices.router)
 app.include_router(purchases.router)
 app.include_router(accounting.router)
 app.include_router(support.router)
+app.include_router(reports.router)
 
 
 @app.get("/", tags=["meta"])
