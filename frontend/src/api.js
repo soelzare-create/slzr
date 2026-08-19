@@ -107,4 +107,9 @@ export const api = {
   accountingSummary: () => request("/accounting/summary"),
   accountingBalances: () => request("/accounting/balances"),
   accountingDocuments: (params) => request(`/accounting/documents${qs(params)}`),
+
+  // support (tickets tied to a customer and, optionally, a device serial)
+  listTickets: (params) => request(`/tickets${qs(params)}`),
+  createTicket: (t) => request("/tickets", { method: "POST", body: t }),
+  updateTicket: (id, t) => request(`/tickets/${id}`, { method: "PATCH", body: t }),
 };

@@ -113,3 +113,13 @@ export const FINANCIAL_TYPE_FA = {
 
 // Roles allowed to read accounting (mirrors backend RBAC).
 export const ACCOUNTING_ROLES = ["manager", "accountant"];
+
+// Support / ticketing
+export const TICKET_STATUS_FA = {
+  open: "باز",
+  investigating: "در حال بررسی",
+  closed: "بسته",
+};
+
+// Roles allowed to create/edit tickets (mirrors backend RBAC).
+export const SUPPORT_WRITE_ROLES = ["manager", "technical", "sales"];

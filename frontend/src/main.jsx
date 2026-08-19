@@ -10,6 +10,7 @@ import Activities from "./pages/Activities";
 import Inventory from "./pages/Inventory";
 import Purchases from "./pages/Purchases";
 import Accounting from "./pages/Accounting";
+import Support from "./pages/Support";
 
 function RequireAuth({ children }) {
   return getToken() ? children : <Navigate to="/login" replace />;
@@ -73,6 +74,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           element={
             <RequireAuth>
               <Accounting />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/support"
+          element={
+            <RequireAuth>
+              <Support />
             </RequireAuth>
           }
         />
