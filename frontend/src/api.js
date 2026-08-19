@@ -112,4 +112,7 @@ export const api = {
   listTickets: (params) => request(`/tickets${qs(params)}`),
   createTicket: (t) => request("/tickets", { method: "POST", body: t }),
   updateTicket: (id, t) => request(`/tickets/${id}`, { method: "PATCH", body: t }),
+
+  // reports (management overview)
+  reportsOverview: () => request("/reports/overview"),
 };

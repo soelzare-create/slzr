@@ -107,6 +107,33 @@ h1, h2 { color: var(--navy); }
 }
 .stat-num { font-size: 30px; font-weight: 700; }
 
+/* KPI grid (dashboard) */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+.kpis .stat { padding: 14px 12px; }
+.kpis .stat-num { font-size: 21px; word-break: break-word; }
+.kpi-label { font-size: 13px; opacity: 0.75; margin-top: 4px; }
+.kpi-num.pos { color: var(--ok); }
+.kpi-num.neg { color: var(--danger); }
+
+/* Simple horizontal bar chart (no chart library) */
+.bar-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.bar-name { width: 130px; font-size: 13px; }
+.bar-track {
+  flex: 1;
+  height: 16px;
+  background: var(--line-soft);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.bar-fill { height: 100%; background: var(--navy); border-radius: 6px; }
+.bar-fill.income { background: var(--ok); }
+.bar-fill.expense { background: var(--danger); }
+.bar-val { width: 110px; font-size: 13px; text-align: left; }
+
 /* Two-column form grid */
 .grid2 {
   display: grid;
