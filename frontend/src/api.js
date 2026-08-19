@@ -97,4 +97,9 @@ export const api = {
   finalizeInvoice: (id) =>
     request(`/invoices/${id}/finalize`, { method: "POST" }),
   updateInvoice: (id, inv) => request(`/invoices/${id}`, { method: "PATCH", body: inv }),
+
+  // purchases (buying: record a purchase from a supplier)
+  listPurchases: (params) => request(`/purchases${qs(params)}`),
+  createPurchase: (p) => request("/purchases", { method: "POST", body: p }),
+  updatePurchase: (id, p) => request(`/purchases/${id}`, { method: "PATCH", body: p }),
 };

@@ -43,6 +43,9 @@ export default function Layout({ me, children }) {
             <NavLink to="/inventory" style={link}>
               انبار
             </NavLink>
+            <NavLink to="/purchases" style={link}>
+              خریدها
+            </NavLink>
           </nav>
         </div>
         <div className="row">

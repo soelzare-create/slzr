@@ -94,3 +94,13 @@ export const INVOICE_STATUS_FA = {
   paid: "پرداخت‌شده",
   overdue: "معوق",
 };
+
+// Purchases (buying side)
+export const PURCHASE_STATUS_FA = {
+  unpaid: "پرداخت‌نشده",
+  paid: "پرداخت‌شده",
+  overdue: "معوق",
+};
+
+// Roles allowed to record purchases (mirrors backend RBAC).
+export const PURCHASE_WRITE_ROLES = ["manager", "warehouse"];
