@@ -102,4 +102,9 @@ export const api = {
   listPurchases: (params) => request(`/purchases${qs(params)}`),
   createPurchase: (p) => request("/purchases", { method: "POST", body: p }),
   updatePurchase: (id, p) => request(`/purchases/${id}`, { method: "PATCH", body: p }),
+
+  // accounting (ledger, per-party balances, summary)
+  accountingSummary: () => request("/accounting/summary"),
+  accountingBalances: () => request("/accounting/balances"),
+  accountingDocuments: (params) => request(`/accounting/documents${qs(params)}`),
 };

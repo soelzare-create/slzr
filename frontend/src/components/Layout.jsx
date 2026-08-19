@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { setToken } from "../api";
-import { ROLE_FA } from "../labels";
+import { ROLE_FA, ACCOUNTING_ROLES } from "../labels";
 
 export default function Layout({ me, children }) {
   const navigate = useNavigate();
@@ -46,6 +46,11 @@ export default function Layout({ me, children }) {
             <NavLink to="/purchases" style={link}>
               خریدها
             </NavLink>
+            {me && ACCOUNTING_ROLES.includes(me.role) && (
+              <NavLink to="/accounting" style={link}>
+                حسابداری
+              </NavLink>
+            )}
           </nav>
         </div>
         <div className="row">
