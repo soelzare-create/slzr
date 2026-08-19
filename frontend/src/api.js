@@ -61,6 +61,12 @@ export const api = {
   listParties: (params) => request(`/parties${qs(params)}`),
   createParty: (p) => request("/parties", { method: "POST", body: p }),
   updateParty: (id, p) => request(`/parties/${id}`, { method: "PATCH", body: p }),
+  // party contacts (افراد رابط — سمت/نام/شماره per person)
+  listPartyContacts: (id) => request(`/parties/${id}/contacts`),
+  addPartyContact: (id, c) =>
+    request(`/parties/${id}/contacts`, { method: "POST", body: c }),
+  deletePartyContact: (id, contactId) =>
+    request(`/parties/${id}/contacts/${contactId}`, { method: "DELETE" }),
 
   // inventory (warehouse)
   listProductModels: (params) => request(`/product-models${qs(params)}`),

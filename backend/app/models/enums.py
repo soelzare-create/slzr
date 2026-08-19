@@ -14,6 +14,19 @@ class UserRole(str, enum.Enum):
     accountant = "accountant"    # حسابدار
 
 
+class ContactPosition(str, enum.Enum):
+    """سمت فردِ رابط در سازمانِ طرف‌حساب — برای ارتباط با هر بخش."""
+
+    ceo = "ceo"                  # مدیرعامل
+    procurement = "procurement"  # خرید / بازرگانی
+    sales = "sales"              # فروش
+    finance = "finance"          # مالی / حسابداری
+    technical = "technical"      # فنی / مهندسی
+    warehouse = "warehouse"      # انباردار
+    staff = "staff"              # کارشناس / کارمند
+    other = "other"              # سایر
+
+
 class ActivityType(str, enum.Enum):
     """سه نوع فعالیت درآمدزا."""
 

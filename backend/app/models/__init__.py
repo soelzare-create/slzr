@@ -6,7 +6,7 @@ from app.models.accounting import FinancialDocument
 from app.models.activity import Activity, ActivityItem, ProjectStage
 from app.models.inventory import ProductModel, StockItem
 from app.models.invoice import Invoice
-from app.models.party import Party
+from app.models.party import Party, PartyContact
 from app.models.purchase import Purchase, PurchaseItem
 from app.models.support import Ticket
 from app.models.user import User
@@ -14,6 +14,7 @@ from app.models.user import User
 __all__ = [
     "User",
     "Party",
+    "PartyContact",
     "Activity",
     "ProjectStage",
     "ActivityItem",
