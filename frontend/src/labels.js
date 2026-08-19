@@ -104,3 +104,12 @@ export const PURCHASE_STATUS_FA = {
 
 // Roles allowed to record purchases (mirrors backend RBAC).
 export const PURCHASE_WRITE_ROLES = ["manager", "warehouse"];
+
+// Accounting (financial documents / balances)
+export const FINANCIAL_TYPE_FA = {
+  income: "دخل",
+  expense: "خرج",
+};
+
+// Roles allowed to read accounting (mirrors backend RBAC).
+export const ACCOUNTING_ROLES = ["manager", "accountant"];
