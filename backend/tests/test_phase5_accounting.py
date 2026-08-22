@@ -213,6 +213,46 @@ def test_only_finance_roles_record_vouchers():
     assert r.status_code == 403
 
 
+def test_edit_and_delete_receipt_recomputes_invoice_status():
+    cust = _party("مشتری ویرایش", cust=True)
+    inv = _final_invoice(cust, 1_000_000)
+    pay = client.post("/api/accounting/payments", headers=_h("0914"), json={
+        "direction": "receipt", "invoice_id": inv["id"], "amount": 400_000}).json()
+    assert client.get(f"/api/invoices/{inv['id']}", headers=_h("0910")).json()["status"] == "partial"
+
+    # edit the receipt up to the full amount → invoice becomes paid
+    r = client.patch(f"/api/accounting/payments/{pay['id']}", headers=_h("0914"),
+                     json={"amount": 1_000_000})
+    assert r.status_code == 200, r.text
+    got = client.get(f"/api/invoices/{inv['id']}", headers=_h("0910")).json()
+    assert got["status"] == "paid" and got["paid_amount"] == 1_000_000
+
+    # editing above the invoice total is rejected
+    assert client.patch(f"/api/accounting/payments/{pay['id']}", headers=_h("0914"),
+                        json={"amount": 1_200_000}).status_code == 400
+
+    # delete the receipt → invoice goes back to unpaid
+    assert client.delete(f"/api/accounting/payments/{pay['id']}", headers=_h("0914")).status_code == 204
+    got = client.get(f"/api/invoices/{inv['id']}", headers=_h("0910")).json()
+    assert got["status"] == "unpaid" and got["paid_amount"] == 0
+
+
+def test_cheque_originated_payment_cannot_be_edited_or_deleted():
+    cust = _party("مشتری چک-قفل", cust=True)
+    inv = _final_invoice(cust, 300_000)
+    acc = client.post("/api/accounting/accounts", headers=_h("0914"),
+                      json={"name": "صندوق قفل", "type": "cash"}).json()
+    ch = client.post("/api/accounting/cheques", headers=_h("0914"), json={
+        "direction": "received", "number": "900", "amount": 300_000,
+        "due_date": "2026-09-01", "invoice_id": inv["id"]}).json()
+    cleared = client.post(f"/api/accounting/cheques/{ch['id']}/clear", headers=_h("0914"),
+                          json={"account_id": acc["id"]}).json()
+    pid = cleared["payment_id"]
+    assert client.patch(f"/api/accounting/payments/{pid}", headers=_h("0914"),
+                        json={"amount": 100_000}).status_code == 400
+    assert client.delete(f"/api/accounting/payments/{pid}", headers=_h("0914")).status_code == 400
+
+
 def test_received_cheque_clears_into_account_and_settles_invoice():
     cust = _party("مشتری چکی", cust=True)
     inv = _final_invoice(cust, 1_000_000)

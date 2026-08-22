@@ -78,6 +78,16 @@ class PaymentCreate(BaseModel):
     note: str | None = Field(default=None, max_length=500)
 
 
+class PaymentUpdate(BaseModel):
+    amount: float | None = Field(default=None, gt=0)
+    paid_at: date | None = None
+    method: PaymentMethod | None = None
+    category: str | None = Field(default=None, max_length=120)
+    account_id: int | None = None
+    party_id: int | None = None
+    note: str | None = Field(default=None, max_length=500)
+
+
 class PaymentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

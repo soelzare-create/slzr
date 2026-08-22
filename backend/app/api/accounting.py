@@ -40,6 +40,7 @@ from app.schemas.accounting import (
     PartyBalanceOut,
     PaymentCreate,
     PaymentOut,
+    PaymentUpdate,
 )
 from app.services import accounting_service
 
@@ -175,6 +176,80 @@ def create_payment(
     db.commit()
     db.refresh(payment)
     return payment
+
+
+def _refresh_linked_status(db: Session, invoice_id: int | None, purchase_id: int | None) -> None:
+    if invoice_id is not None:
+        inv = db.get(Invoice, invoice_id)
+        if inv is not None:
+            accounting_service.recompute_invoice_status(db, inv)
+    if purchase_id is not None:
+        pur = db.get(Purchase, purchase_id)
+        if pur is not None:
+            accounting_service.recompute_purchase_status(db, pur)
+
+
+def _cheque_origin(db: Session, payment_id: int) -> Cheque | None:
+    return db.scalar(select(Cheque).where(Cheque.payment_id == payment_id))
+
+
+@router.patch("/payments/{payment_id}", response_model=PaymentOut)
+def update_payment(
+    payment_id: int,
+    payload: PaymentUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(can_write),
+) -> Payment:
+    payment = db.get(Payment, payment_id)
+    if payment is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "سند یافت نشد")
+    if _cheque_origin(db, payment.id) is not None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "این سند از وصول چک ساخته شده؛ آن را از بخش چک‌ها مدیریت کنید",
+        )
+    data = payload.model_dump(exclude_unset=True)
+
+    # guard over-receipt if the amount of an invoice-linked receipt changes
+    if "amount" in data and payment.invoice_id is not None:
+        invoice = db.get(Invoice, payment.invoice_id)
+        others = accounting_service.invoice_paid(db, invoice.id) - float(payment.amount)
+        if data["amount"] > float(invoice.total_amount) - others + 1e-6:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"مبلغ از باقی‌ماندهٔ فاکتور ({float(invoice.total_amount) - others:g}) بیشتر است",
+            )
+    if data.get("account_id") is not None and db.get(CashAccount, data["account_id"]) is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "حساب مالی معتبر نیست")
+
+    for field, value in data.items():
+        setattr(payment, field, value)
+    db.flush()
+    _refresh_linked_status(db, payment.invoice_id, payment.purchase_id)
+    db.commit()
+    db.refresh(payment)
+    return payment
+
+
+@router.delete("/payments/{payment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_payment(
+    payment_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(can_write),
+) -> None:
+    payment = db.get(Payment, payment_id)
+    if payment is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "سند یافت نشد")
+    if _cheque_origin(db, payment.id) is not None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "این سند از وصول چک ساخته شده؛ آن را از بخش چک‌ها مدیریت کنید",
+        )
+    invoice_id, purchase_id = payment.invoice_id, payment.purchase_id
+    db.delete(payment)
+    db.flush()
+    _refresh_linked_status(db, invoice_id, purchase_id)
+    db.commit()
 
 
 def _customer_of(db: Session, invoice: Invoice) -> int | None:

@@ -77,6 +77,12 @@ export default function Accounting() {
     return m;
   }, [payments]);
 
+  // payments created by clearing a cheque are managed from the cheque section
+  const chequePaymentIds = useMemo(
+    () => new Set(cheques.filter((c) => c.payment_id).map((c) => c.payment_id)),
+    [cheques]
+  );
+
   const receivables = invoices.filter((i) => Number(i.remaining) > 0.0001);
   const payables = purchases
     .map((p) => ({ ...p, remaining: Number(p.total_amount) - (purchasePaid[p.id] || 0) }))
@@ -275,54 +281,14 @@ export default function Accounting() {
       </div>
 
       {/* Payments ledger */}
-      <div className="card" style={{ marginTop: 20 }}>
-        <h2 style={{ marginTop: 0 }}>دفتر دریافت‌ها و پرداخت‌ها</h2>
-        <div style={{ overflowX: "auto" }}>
-          <table>
-            <thead>
-              <tr>
-                <th>شناسه</th>
-                <th>نوع</th>
-                <th>مبلغ</th>
-                <th>تاریخ</th>
-                <th>روش</th>
-                <th>حساب</th>
-                <th>طرف‌حساب</th>
-                <th>بابت / دسته</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.id}</td>
-                  <td>
-                    <span className="badge">{PAYMENT_DIRECTION_FA[p.direction]}</span>
-                  </td>
-                  <td>{fa(p.amount)}</td>
-                  <td>{p.paid_at || "—"}</td>
-                  <td>{PAYMENT_METHOD_FA[p.method] || "—"}</td>
-                  <td>{p.account_id ? accountName(p.account_id) : "—"}</td>
-                  <td>{p.party_id ? partyName[p.party_id] || `#${p.party_id}` : "—"}</td>
-                  <td style={{ opacity: 0.8 }}>
-                    {p.invoice_id
-                      ? `فاکتور #${p.invoice_id}`
-                      : p.purchase_id
-                      ? `خرید #${p.purchase_id}`
-                      : p.category || (p.note ? p.note : "—")}
-                  </td>
-                </tr>
-              ))}
-              {payments.length === 0 && (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: "center", opacity: 0.6 }}>
-                    سندی ثبت نشده
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <PaymentsLedger
+        payments={payments}
+        accounts={accounts}
+        accountName={accountName}
+        partyName={partyName}
+        chequePaymentIds={chequePaymentIds}
+        onChanged={reload}
+      />
 
       {/* Party balances */}
       <div className="card" style={{ marginTop: 20 }}>
@@ -524,6 +490,155 @@ function CashAccounts({ accounts, onChanged }) {
           <button type="submit" style={{ width: "auto", marginTop: 0 }}>ثبت حساب</button>
         </form>
       )}
+      {error && <div className="error">{error}</div>}
+    </div>
+  );
+}
+
+function PaymentsLedger({ payments, accounts, accountName, partyName, chequePaymentIds, onChanged }) {
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState({});
+  const [error, setError] = useState("");
+
+  function startEdit(p) {
+    setError("");
+    setEditId(p.id);
+    setForm({
+      amount: String(p.amount),
+      paid_at: p.paid_at || "",
+      method: p.method,
+      account_id: p.account_id ? String(p.account_id) : "",
+      category: p.category || "",
+      note: p.note || "",
+    });
+  }
+
+  async function save(id) {
+    setError("");
+    try {
+      await api.updatePayment(id, {
+        amount: Number(form.amount),
+        paid_at: form.paid_at || null,
+        method: form.method,
+        account_id: form.account_id ? Number(form.account_id) : null,
+        category: form.category || null,
+        note: form.note || null,
+      });
+      setEditId(null);
+      onChanged();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function remove(id) {
+    setError("");
+    try {
+      await api.deletePayment(id);
+      onChanged();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  return (
+    <div className="card" style={{ marginTop: 20 }}>
+      <h2 style={{ marginTop: 0 }}>دفتر دریافت‌ها و پرداخت‌ها</h2>
+      <div style={{ overflowX: "auto" }}>
+        <table>
+          <thead>
+            <tr>
+              <th>شناسه</th>
+              <th>نوع</th>
+              <th>مبلغ</th>
+              <th>تاریخ</th>
+              <th>روش</th>
+              <th>حساب</th>
+              <th>طرف‌حساب</th>
+              <th>بابت / دسته</th>
+              <th>اقدام</th>
+            </tr>
+          </thead>
+          <tbody>
+            {payments.map((p) => {
+              const fromCheque = chequePaymentIds.has(p.id);
+              if (editId === p.id) {
+                return (
+                  <tr key={p.id}>
+                    <td>{p.id}</td>
+                    <td>{PAYMENT_DIRECTION_FA[p.direction]}</td>
+                    <td>
+                      <input type="number" min="0" step="any" value={form.amount}
+                        onChange={(e) => setForm({ ...form, amount: e.target.value })} style={{ width: 110 }} />
+                    </td>
+                    <td>
+                      <input type="date" value={form.paid_at}
+                        onChange={(e) => setForm({ ...form, paid_at: e.target.value })} />
+                    </td>
+                    <td>
+                      <select value={form.method} onChange={(e) => setForm({ ...form, method: e.target.value })}>
+                        {Object.entries(PAYMENT_METHOD_FA).map(([k, v]) => (
+                          <option key={k} value={k}>{v}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <select value={form.account_id} onChange={(e) => setForm({ ...form, account_id: e.target.value })}>
+                        <option value="">—</option>
+                        {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                      </select>
+                    </td>
+                    <td>{p.party_id ? partyName[p.party_id] || `#${p.party_id}` : "—"}</td>
+                    <td>
+                      <input value={form.category} placeholder="دسته/شرح"
+                        onChange={(e) => setForm({ ...form, category: e.target.value })} style={{ width: 120 }} />
+                    </td>
+                    <td>
+                      <div className="row" style={{ gap: 6 }}>
+                        <button style={{ width: "auto", marginTop: 0, padding: "3px 10px" }} onClick={() => save(p.id)}>ذخیره</button>
+                        <button className="secondary" style={{ width: "auto", marginTop: 0, padding: "3px 10px" }} onClick={() => setEditId(null)}>لغو</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              }
+              return (
+                <tr key={p.id}>
+                  <td>{p.id}</td>
+                  <td><span className="badge">{PAYMENT_DIRECTION_FA[p.direction]}</span></td>
+                  <td>{fa(p.amount)}</td>
+                  <td>{p.paid_at || "—"}</td>
+                  <td>{PAYMENT_METHOD_FA[p.method] || "—"}</td>
+                  <td>{p.account_id ? accountName(p.account_id) : "—"}</td>
+                  <td>{p.party_id ? partyName[p.party_id] || `#${p.party_id}` : "—"}</td>
+                  <td style={{ opacity: 0.8 }}>
+                    {p.invoice_id
+                      ? `فاکتور #${p.invoice_id}`
+                      : p.purchase_id
+                      ? `خرید #${p.purchase_id}`
+                      : p.category || (p.note ? p.note : "—")}
+                  </td>
+                  <td>
+                    {fromCheque ? (
+                      <span style={{ opacity: 0.55, fontSize: 12 }}>از چک</span>
+                    ) : (
+                      <div className="row" style={{ gap: 6 }}>
+                        <button className="secondary" style={{ width: "auto", marginTop: 0, padding: "3px 10px" }} onClick={() => startEdit(p)}>ویرایش</button>
+                        <button className="secondary" style={{ width: "auto", marginTop: 0, padding: "3px 10px" }} onClick={() => remove(p.id)}>حذف</button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {payments.length === 0 && (
+              <tr>
+                <td colSpan={9} style={{ textAlign: "center", opacity: 0.6 }}>سندی ثبت نشده</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
       {error && <div className="error">{error}</div>}
     </div>
   );
