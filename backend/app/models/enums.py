@@ -117,7 +117,23 @@ class TaskStatus(str, enum.Enum):
 
 
 class PaymentDirection(str, enum.Enum):
-    """جهت پرداخت — دریافت از مشتری یا پرداخت به تأمین‌کننده."""
+    """جهت سند مالی — دریافت (پول ورودی) یا پرداخت (پول خروجی)."""
 
-    receipt = "receipt"  # دریافت (پول ورودی — بابت فاکتور فروش)
-    payment = "payment"  # پرداخت (پول خروجی — بابت سند خرید)
+    receipt = "receipt"  # دریافت
+    payment = "payment"  # پرداخت
+
+
+class PaymentMethod(str, enum.Enum):
+    """روش پرداخت/دریافت."""
+
+    cash = "cash"          # نقد
+    card = "card"          # کارت‌خوان / کارت‌به‌کارت
+    transfer = "transfer"  # حواله / انتقال بانکی
+    cheque = "cheque"      # چک
+
+
+class CashAccountType(str, enum.Enum):
+    """نوع حساب مالی — صندوق نقدی یا حساب بانکی."""
+
+    cash = "cash"  # صندوق
+    bank = "bank"  # بانک

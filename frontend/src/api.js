@@ -103,6 +103,9 @@ export const api = {
   accountingDocuments: (params) => request(`/accounting/documents${qs(params)}`),
   listPayments: (params) => request(`/accounting/payments${qs(params)}`),
   createPayment: (p) => request("/accounting/payments", { method: "POST", body: p }),
+  listCashAccounts: () => request("/accounting/accounts"),
+  createCashAccount: (a) => request("/accounting/accounts", { method: "POST", body: a }),
+  expenseByCategory: () => request("/accounting/expense-by-category"),
 
   // tasks (internal referrals — ارجاعات)
   listTasks: (params) => request(`/tasks${qs(params)}`),

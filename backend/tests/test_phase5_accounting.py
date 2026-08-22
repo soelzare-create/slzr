@@ -173,6 +173,46 @@ def test_receipt_cannot_exceed_remaining():
     assert r.status_code == 400
 
 
+def test_cash_account_balance_reflects_vouchers():
+    acc = client.post("/api/accounting/accounts", headers=_h("0914"), json={
+        "name": "صندوق تست", "type": "cash", "opening_balance": 1_000_000}).json()
+    assert acc["balance"] == 1_000_000
+    # a standalone receipt into the account raises its balance
+    client.post("/api/accounting/payments", headers=_h("0914"), json={
+        "direction": "receipt", "amount": 200_000, "account_id": acc["id"],
+        "category": "علی‌الحساب"})
+    # an operating-expense payment lowers it
+    client.post("/api/accounting/payments", headers=_h("0914"), json={
+        "direction": "payment", "amount": 300_000, "account_id": acc["id"],
+        "category": "اجاره"})
+    accounts = client.get("/api/accounting/accounts", headers=_h("0914")).json()
+    mine = next(a for a in accounts if a["id"] == acc["id"])
+    assert mine["balance"] == 900_000  # 1,000,000 + 200,000 − 300,000
+
+
+def test_expense_by_category_groups_payments():
+    acc = client.post("/api/accounting/accounts", headers=_h("0914"), json={
+        "name": "صندوق ۲", "type": "cash"}).json()
+    client.post("/api/accounting/payments", headers=_h("0914"), json={
+        "direction": "payment", "amount": 500_000, "account_id": acc["id"],
+        "category": "حقوق و دستمزد"})
+    rows = client.get("/api/accounting/expense-by-category", headers=_h("0914")).json()
+    cats = {r["category"]: r["amount"] for r in rows}
+    assert cats.get("حقوق و دستمزد", 0) >= 500_000
+
+
+def test_standalone_receipt_needs_no_invoice():
+    r = client.post("/api/accounting/payments", headers=_h("0914"), json={
+        "direction": "receipt", "amount": 50_000, "category": "درآمد متفرقه"})
+    assert r.status_code == 201, r.text
+
+
+def test_only_finance_roles_record_vouchers():
+    r = client.post("/api/accounting/payments", headers=_h("0911"), json={
+        "direction": "payment", "amount": 1000, "category": "x"})
+    assert r.status_code == 403
+
+
 def test_summary_tracks_received_and_receivable():
     before = client.get("/api/accounting/summary", headers=_h("0910")).json()
     cust = _party("مشتری خلاصه", cust=True)

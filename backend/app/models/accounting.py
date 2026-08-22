@@ -11,11 +11,16 @@ from __future__ import annotations
 
 from datetime import date
 
-from sqlalchemy import Date, Enum, ForeignKey, Numeric, String
+from sqlalchemy import Boolean, Date, Enum, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
-from app.models.enums import FinancialType, PaymentDirection
+from app.models.enums import (
+    CashAccountType,
+    FinancialType,
+    PaymentDirection,
+    PaymentMethod,
+)
 from app.models.mixins import TimestampMixin
 
 
@@ -43,11 +48,36 @@ class FinancialDocument(Base, TimestampMixin):
         return f"<FinancialDocument {self.id} {self.type.value} {self.amount}>"
 
 
-class Payment(Base, TimestampMixin):
-    """پرداخت‌ها و دریافت‌ها — تراکنش نقدیِ واقعی (جدا از سند تعهدی فاکتور/خرید).
+class CashAccount(Base, TimestampMixin):
+    """صندوق‌ها و حساب‌های بانکی — جایی که پول نگهداری می‌شود.
 
-    یک فاکتور می‌تواند چند دریافت داشته باشد (مثلاً بخشی نقد، مابقی دو هفته بعد)؛
-    مبلغ پرداخت‌شدهٔ فاکتور = مجموع دریافت‌های آن.
+    مانده = مانده‌ی اولیه + مجموع دریافت‌ها − مجموع پرداخت‌ها (محاسبه‌شونده).
+    """
+
+    __tablename__ = "cash_accounts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)  # نام حساب
+    type: Mapped[CashAccountType] = mapped_column(
+        Enum(CashAccountType, native_enum=False, length=10),
+        default=CashAccountType.cash,
+        nullable=False,
+    )  # صندوق یا بانک
+    opening_balance: Mapped[float] = mapped_column(
+        Numeric(14, 2), default=0, nullable=False
+    )  # مانده‌ی اولیه
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<CashAccount {self.id} {self.name}>"
+
+
+class Payment(Base, TimestampMixin):
+    """اسناد دریافت و پرداخت — تراکنش نقدیِ واقعی (جدا از سند تعهدی فاکتور/خرید).
+
+    یک سند می‌تواند به فاکتور/خرید وصل باشد (تسویه‌ی آن)، یا مستقل باشد
+    (دریافت متفرقه، یا هزینه‌ی عملیاتی مثل اجاره/حقوق/قبوض). هر سند روی مانده‌ی
+    یک حساب مالی (صندوق/بانک) اثر می‌گذارد.
     """
 
     __tablename__ = "payments"
@@ -58,12 +88,23 @@ class Payment(Base, TimestampMixin):
     )  # دریافت یا پرداخت
     amount: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)  # مبلغ
     paid_at: Mapped[date | None] = mapped_column(Date)  # تاریخ تراکنش
+    method: Mapped[PaymentMethod] = mapped_column(
+        Enum(PaymentMethod, native_enum=False, length=10),
+        default=PaymentMethod.cash,
+        nullable=False,
+    )  # روش
+    category: Mapped[str | None] = mapped_column(
+        String(120), index=True
+    )  # دستهٔ هزینه/درآمد (مثلاً اجاره، حقوق، فروش)
+    account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("cash_accounts.id"), index=True
+    )  # حساب مالیِ اثرپذیر
     invoice_id: Mapped[int | None] = mapped_column(
         ForeignKey("invoices.id"), index=True
-    )  # فاکتور مرتبط (برای دریافت)
+    )  # فاکتور مرتبط (برای دریافت بابت فروش)
     purchase_id: Mapped[int | None] = mapped_column(
         ForeignKey("purchases.id"), index=True
-    )  # سند خرید مرتبط (برای پرداخت)
+    )  # سند خرید مرتبط (برای پرداخت بابت خرید)
     party_id: Mapped[int | None] = mapped_column(
         ForeignKey("parties.id"), index=True
     )  # طرف‌حساب

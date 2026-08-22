@@ -5,7 +5,12 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.enums import FinancialType, PaymentDirection
+from app.models.enums import (
+    CashAccountType,
+    FinancialType,
+    PaymentDirection,
+    PaymentMethod,
+)
 
 
 class FinancialDocumentOut(BaseModel):
@@ -29,21 +34,44 @@ class PartyBalanceOut(BaseModel):
 
 
 class AccountingSummaryOut(BaseModel):
-    income: float          # مجموع فروش (تعهدی)
-    expense: float         # مجموع خرید (تعهدی)
-    net: float             # مانده تعهدی
-    received: float = 0     # مجموع دریافت‌های نقدی
-    paid_out: float = 0     # مجموع پرداخت‌های نقدی
-    receivable: float = 0   # طلبِ وصول‌نشده (فروش منهای دریافت)
-    payable: float = 0      # بدهیِ پرداخت‌نشده (خرید منهای پرداخت)
+    income: float           # مجموع فروش (تعهدی)
+    expense: float          # مجموع خرید (تعهدی)
+    net: float              # مانده تعهدی
+    received: float = 0      # مجموع دریافت‌های نقدی
+    paid_out: float = 0      # مجموع پرداخت‌های نقدی
+    receivable: float = 0    # طلبِ وصول‌نشده (فروش منهای دریافت)
+    payable: float = 0       # بدهیِ پرداخت‌نشده (خرید منهای پرداخت)
+    cash_on_hand: float = 0  # موجودی صندوق‌ها و بانک‌ها
 
+
+# --- cash & bank accounts --------------------------------------------------
+
+class CashAccountCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    type: CashAccountType = CashAccountType.cash
+    opening_balance: float = Field(default=0, ge=0)
+
+
+class CashAccountOut(BaseModel):
+    id: int
+    name: str
+    type: CashAccountType
+    opening_balance: float
+    balance: float
+    is_active: bool
+
+
+# --- payment / receipt vouchers -------------------------------------------
 
 class PaymentCreate(BaseModel):
     direction: PaymentDirection
     amount: float = Field(gt=0)
     paid_at: date | None = None
-    invoice_id: int | None = None   # برای دریافت بابت فاکتور
-    purchase_id: int | None = None  # برای پرداخت بابت خرید
+    method: PaymentMethod = PaymentMethod.cash
+    category: str | None = Field(default=None, max_length=120)
+    account_id: int | None = None
+    invoice_id: int | None = None   # دریافت بابت فاکتور
+    purchase_id: int | None = None  # پرداخت بابت خرید
     party_id: int | None = None
     note: str | None = Field(default=None, max_length=500)
 
@@ -55,9 +83,17 @@ class PaymentOut(BaseModel):
     direction: PaymentDirection
     amount: float
     paid_at: date | None
+    method: PaymentMethod
+    category: str | None
+    account_id: int | None
     invoice_id: int | None
     purchase_id: int | None
     party_id: int | None
     recorder_id: int | None
     note: str | None
     created_at: datetime
+
+
+class ExpenseCategoryOut(BaseModel):
+    category: str
+    amount: float

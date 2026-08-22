@@ -16,13 +16,16 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import require_roles
 from app.database import get_db
-from app.models.accounting import FinancialDocument, Payment
+from app.models.accounting import CashAccount, FinancialDocument, Payment
 from app.models.enums import FinancialType, PaymentDirection, UserRole
 from app.models.invoice import Invoice
 from app.models.purchase import Purchase
 from app.models.user import User
 from app.schemas.accounting import (
     AccountingSummaryOut,
+    CashAccountCreate,
+    CashAccountOut,
+    ExpenseCategoryOut,
     FinancialDocumentOut,
     PartyBalanceOut,
     PaymentCreate,
@@ -114,11 +117,12 @@ def create_payment(
     db: Session = Depends(get_db),
     recorder: User = Depends(can_write),
 ) -> Payment:
+    """Record a voucher. It may settle an invoice/purchase, or stand alone as a
+    miscellaneous receipt or an operating expense."""
     party_id = payload.party_id
-    # A receipt is against a sales invoice; a payment is against a purchase.
-    if payload.direction == PaymentDirection.receipt:
-        if payload.invoice_id is None:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "برای دریافت، فاکتور لازم است")
+
+    # Optional link to a sales invoice (a receipt) — guard against over-receipt.
+    if payload.invoice_id is not None:
         invoice = db.get(Invoice, payload.invoice_id)
         if invoice is None:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "فاکتور معتبر نیست")
@@ -132,20 +136,26 @@ def create_payment(
             )
         if party_id is None:
             party_id = _customer_of(db, invoice)
-    else:  # payment
-        if payload.purchase_id is None:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "برای پرداخت، سند خرید لازم است")
+
+    # Optional link to a purchase (a payment).
+    if payload.purchase_id is not None:
         purchase = db.get(Purchase, payload.purchase_id)
         if purchase is None:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "سند خرید معتبر نیست")
         if party_id is None:
             party_id = purchase.supplier_id
 
+    if payload.account_id is not None and db.get(CashAccount, payload.account_id) is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "حساب مالی معتبر نیست")
+
     payment = accounting_service.record_payment(
         db,
         direction=payload.direction,
         amount=payload.amount,
         paid_at=payload.paid_at,
+        method=payload.method,
+        category=payload.category,
+        account_id=payload.account_id,
         invoice_id=payload.invoice_id,
         purchase_id=payload.purchase_id,
         party_id=party_id,
@@ -162,3 +172,48 @@ def _customer_of(db: Session, invoice: Invoice) -> int | None:
 
     activity = db.get(Activity, invoice.activity_id)
     return activity.customer_id if activity else None
+
+
+# --- cash & bank accounts (صندوق / بانک) ----------------------------------
+
+@router.get(
+    "/accounts",
+    response_model=list[CashAccountOut],
+    dependencies=[Depends(can_read)],
+)
+def list_accounts(db: Session = Depends(get_db)) -> list[dict]:
+    return accounting_service.accounts_overview(db)
+
+
+@router.post(
+    "/accounts",
+    response_model=CashAccountOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(can_write)],
+)
+def create_account(payload: CashAccountCreate, db: Session = Depends(get_db)) -> dict:
+    account = CashAccount(
+        name=payload.name,
+        type=payload.type,
+        opening_balance=payload.opening_balance,
+    )
+    db.add(account)
+    db.commit()
+    db.refresh(account)
+    return {
+        "id": account.id,
+        "name": account.name,
+        "type": account.type,
+        "opening_balance": float(account.opening_balance),
+        "balance": accounting_service.account_balance(db, account),
+        "is_active": account.is_active,
+    }
+
+
+@router.get(
+    "/expense-by-category",
+    response_model=list[ExpenseCategoryOut],
+    dependencies=[Depends(can_read)],
+)
+def expense_by_category(db: Session = Depends(get_db)) -> list[dict]:
+    return accounting_service.expense_by_category(db)
