@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Parties from "./pages/Parties";
 import Activities from "./pages/Activities";
 import Inventory from "./pages/Inventory";
+import Invoices from "./pages/Invoices";
 import Purchases from "./pages/Purchases";
 import Accounting from "./pages/Accounting";
 import Support from "./pages/Support";
@@ -58,6 +59,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           element={
             <RequireAuth>
               <Inventory />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/invoices"
+          element={
+            <RequireAuth>
+              <Invoices />
             </RequireAuth>
           }
         />

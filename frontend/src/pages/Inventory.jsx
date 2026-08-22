@@ -22,6 +22,7 @@ export default function Inventory() {
   const { me, loading } = useMe();
   const [models, setModels] = useState([]);
   const [form, setForm] = useState(EMPTY);
+  const [isCustomUnit, setIsCustomUnit] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [openId, setOpenId] = useState(null);
@@ -49,6 +50,7 @@ export default function Inventory() {
         specs: form.specs || null,
       });
       setForm(EMPTY);
+      setIsCustomUnit(false);
       reload();
     } catch (e) {
       setError(e.message);
@@ -147,17 +149,37 @@ export default function Inventory() {
             </div>
             <div>
               <label>واحد شمارش *</label>
-              <input
-                list="uom-list"
-                required
-                value={form.unit_of_measure}
-                onChange={(e) => setForm({ ...form, unit_of_measure: e.target.value })}
-              />
-              <datalist id="uom-list">
+              <select
+                value={isCustomUnit ? "__other__" : form.unit_of_measure}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "__other__") {
+                    setIsCustomUnit(true);
+                    setForm({ ...form, unit_of_measure: "" });
+                  } else {
+                    setIsCustomUnit(false);
+                    setForm({ ...form, unit_of_measure: v });
+                  }
+                }}
+              >
                 {UNITS_OF_MEASURE.map((u) => (
-                  <option key={u} value={u} />
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
                 ))}
-              </datalist>
+                <option value="__other__">سایر (واحد دلخواه)…</option>
+              </select>
+              {isCustomUnit && (
+                <input
+                  required
+                  placeholder="واحد دلخواه را بنویسید (مثلاً جفت، طاقه)"
+                  value={form.unit_of_measure}
+                  onChange={(e) =>
+                    setForm({ ...form, unit_of_measure: e.target.value })
+                  }
+                  style={{ marginTop: 8 }}
+                />
+              )}
             </div>
             <div>
               <label>قیمت پایه</label>

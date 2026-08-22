@@ -67,7 +67,16 @@ export const TRACKING_TYPE_FA = {
 };
 
 // Common units of measure (واحد شمارش) offered in the product form.
-export const UNITS_OF_MEASURE = ["عدد", "متر", "کیلوگرم", "بسته", "رول", "لیتر"];
+// The most-used ones come first; "سایر" (custom) is handled by the form itself.
+export const UNITS_OF_MEASURE = [
+  "عدد",
+  "بسته",
+  "متر",
+  "حلقه",
+  "رول",
+  "کیلوگرم",
+  "لیتر",
+];
 
 export const UNIT_STATUS_FA = {
   warehouse: "انبار",
