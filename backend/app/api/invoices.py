@@ -26,8 +26,14 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, require_roles
 from app.database import get_db
 from app.models.activity import Activity
-from app.models.enums import InvoiceKind, InvoiceStatus, TrackingType, UserRole
-from app.models.inventory import ProductModel
+from app.models.enums import (
+    InvoiceKind,
+    InvoiceStatus,
+    TrackingType,
+    UnitItemStatus,
+    UserRole,
+)
+from app.models.inventory import ProductModel, StockItem
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.user import User
 from app.schemas.invoice import InvoiceCreate, InvoiceOut, InvoiceStatusUpdate
@@ -48,7 +54,14 @@ def _items_total(items: list[InvoiceItem]) -> Decimal:
 def _apply_effects(db: Session, invoice: Invoice, activity: Activity) -> None:
     """When a sale becomes final: consume stock (linked lines) and book income."""
     for it in invoice.items:
-        if it.product_model_id is not None:
+        if it.stock_item_id is not None:
+            inventory_service.consume_item(
+                db,
+                stock_item_id=it.stock_item_id,
+                product_model_id=None,
+                quantity=None,
+            )
+        elif it.product_model_id is not None:
             inventory_service.consume_item(
                 db,
                 stock_item_id=None,
@@ -105,8 +118,14 @@ def create_invoice(
             status.HTTP_400_BAD_REQUEST, "فاکتور نهایی باید حداقل یک قلم داشته باشد"
         )
 
-    # Validate any product links up front (non-serial warehouse goods only).
+    # Validate any warehouse links up front. A line may link to a non-serial
+    # product (quantity) OR to a specific serial unit — not both.
     for line in payload.items:
+        if line.product_model_id is not None and line.stock_item_id is not None:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "هر ردیف یا کالای بدون‌سریال است یا تک‌کالای سریال‌دار، نه هر دو",
+            )
         if line.product_model_id is not None:
             model = db.get(ProductModel, line.product_model_id)
             if model is None:
@@ -116,7 +135,19 @@ def create_invoice(
             if model.tracking_type != TrackingType.quantity:
                 raise HTTPException(
                     status.HTTP_400_BAD_REQUEST,
-                    "فقط کالای بدون‌سریال (مقداری) قابل اتصال به قلم فاکتور است",
+                    "برای کالای سریال‌دار باید یک تک‌کالای مشخص انتخاب شود",
+                )
+        if line.stock_item_id is not None:
+            unit = db.get(StockItem, line.stock_item_id)
+            if unit is None or unit.serial_number is None:
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_ENTITY, "تک‌کالای انتخاب‌شده معتبر نیست"
+                )
+            # For a FINAL invoice the unit must still be in the warehouse.
+            if payload.kind == InvoiceKind.final and unit.status != UnitItemStatus.warehouse:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    f"تک‌کالای «{unit.serial_number}» در انبار موجود نیست",
                 )
 
     if payload.source_proforma_id is not None:
@@ -138,7 +169,9 @@ def create_invoice(
         InvoiceItem(
             description=line.description,
             product_model_id=line.product_model_id,
-            quantity=line.quantity,
+            stock_item_id=line.stock_item_id,
+            # a serial unit is always exactly one physical item
+            quantity=1 if line.stock_item_id is not None else line.quantity,
             unit_price=line.unit_price,
         )
         for line in payload.items

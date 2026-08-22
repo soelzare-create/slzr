@@ -1,12 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { INVOICE_KIND_FA } from "../labels";
 
 // Reusable line-item editor for creating a proforma or a final invoice.
-// Used from the activity panel (blank) and from "convert" (prefilled from a
-// proforma). Each row: description + optional warehouse product + qty + unit price.
+// Each row can be:
+//   - a free-text service/description line (no warehouse link), or
+//   - a non-serial (quantity) product  -> stock reduced by quantity on finalize, or
+//   - a serial product's specific unit -> that exact device is sold on finalize.
 function emptyLine() {
-  return { description: "", product_model_id: "", quantity: "1", unit_price: "" };
+  return {
+    description: "",
+    product_model_id: "", // selected catalog model (serial or non-serial)
+    stock_item_id: "", // selected serial unit (only for serial models)
+    quantity: "1",
+    unit_price: "",
+  };
 }
 
 export default function InvoiceEditor({
@@ -17,47 +25,84 @@ export default function InvoiceEditor({
   onSaved,
   onCancel,
 }) {
-  const [lines, setLines] = useState(
-    initialItems && initialItems.length
-      ? initialItems.map((it) => ({
-          description: it.description || "",
-          product_model_id: it.product_model_id ? String(it.product_model_id) : "",
-          quantity: String(it.quantity ?? "1"),
-          unit_price: String(it.unit_price ?? ""),
-        }))
-      : [emptyLine()]
-  );
-  const [dueDate, setDueDate] = useState("");
   const [products, setProducts] = useState([]);
+  const [units, setUnits] = useState([]); // all serial stock units
+  const [ready, setReady] = useState(false);
+  const [lines, setLines] = useState([emptyLine()]);
+  const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Load catalog + serial units, then build the initial line rows.
   useEffect(() => {
-    // Only non-serial (quantity) goods can be linked to a line for stock-out.
-    api
-      .listProductModels()
-      .then((all) => setProducts(all.filter((m) => m.tracking_type === "quantity")))
-      .catch(() => {});
+    Promise.all([
+      api.listProductModels().catch(() => []),
+      api.listStockItems({}).catch(() => []),
+    ]).then(([prods, stock]) => {
+      setProducts(prods);
+      const serialUnits = stock.filter((s) => s.serial_number);
+      setUnits(serialUnits);
+
+      if (initialItems && initialItems.length) {
+        setLines(
+          initialItems.map((it) => {
+            let modelId = it.product_model_id ? String(it.product_model_id) : "";
+            // serial line: recover its model from the referenced unit
+            if (it.stock_item_id) {
+              const u = serialUnits.find((s) => s.id === it.stock_item_id);
+              if (u) modelId = String(u.model_id);
+            }
+            return {
+              description: it.description || "",
+              product_model_id: modelId,
+              stock_item_id: it.stock_item_id ? String(it.stock_item_id) : "",
+              quantity: String(it.quantity ?? "1"),
+              unit_price: String(it.unit_price ?? ""),
+            };
+          })
+        );
+      }
+      setReady(true);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const productById = useMemo(() => {
+    const m = {};
+    for (const p of products) m[String(p.id)] = p;
+    return m;
+  }, [products]);
+
+  const isSerial = (modelId) => productById[String(modelId)]?.tracking_type === "serial";
+
+  // In-warehouse serial units for a model, plus the already-selected unit
+  // (so a prefilled/convert line keeps showing its device).
+  function unitsForLine(l) {
+    const list = units.filter(
+      (u) => String(u.model_id) === String(l.product_model_id) && u.status === "warehouse"
+    );
+    if (l.stock_item_id && !list.some((u) => String(u.id) === String(l.stock_item_id))) {
+      const sel = units.find((u) => String(u.id) === String(l.stock_item_id));
+      if (sel) list.unshift(sel);
+    }
+    return list;
+  }
 
   function setLine(idx, patch) {
     setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
   }
-  function addRow() {
-    setLines((prev) => [...prev, emptyLine()]);
-  }
-  function removeRow(idx) {
+  const addRow = () => setLines((prev) => [...prev, emptyLine()]);
+  const removeRow = (idx) =>
     setLines((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
-  }
 
   function onPickProduct(idx, value) {
-    const patch = { product_model_id: value };
-    const p = products.find((m) => String(m.id) === String(value));
+    const p = productById[String(value)];
+    const cur = lines[idx];
+    const patch = { product_model_id: value, stock_item_id: "" };
     if (p) {
-      // prefill description + price from the catalog, but keep them editable
-      const cur = lines[idx];
       if (!cur.description) patch.description = p.name;
       if (!cur.unit_price) patch.unit_price = String(p.base_price ?? "");
+      if (p.tracking_type === "serial") patch.quantity = "1";
     }
     setLine(idx, patch);
   }
@@ -67,20 +112,31 @@ export default function InvoiceEditor({
 
   async function save() {
     setError("");
-    const items = lines
-      .filter((l) => l.description.trim() !== "")
-      .map((l) => ({
+    const items = [];
+    for (const l of lines) {
+      if (l.description.trim() === "") continue;
+      const serial = isSerial(l.product_model_id);
+      if (serial && !l.stock_item_id) {
+        setError(`برای کالای سریال‌دار «${l.description}» یک دستگاه از انبار انتخاب کنید`);
+        return;
+      }
+      const item = {
         description: l.description.trim(),
-        product_model_id: l.product_model_id ? Number(l.product_model_id) : null,
-        quantity: Number(l.quantity) || 0,
+        quantity: serial ? 1 : Number(l.quantity) || 0,
         unit_price: Number(l.unit_price) || 0,
-      }));
+        product_model_id: null,
+        stock_item_id: null,
+      };
+      if (serial) item.stock_item_id = Number(l.stock_item_id);
+      else if (l.product_model_id) item.product_model_id = Number(l.product_model_id);
+      if (!serial && item.quantity <= 0) {
+        setError(`تعداد ردیف «${l.description}» باید بزرگ‌تر از صفر باشد`);
+        return;
+      }
+      items.push(item);
+    }
     if (items.length === 0) {
       setError("حداقل یک ردیف با شرح لازم است");
-      return;
-    }
-    if (items.some((it) => it.quantity <= 0)) {
-      setError("تعداد هر ردیف باید بزرگ‌تر از صفر باشد");
       return;
     }
     setBusy(true);
@@ -99,6 +155,8 @@ export default function InvoiceEditor({
       setBusy(false);
     }
   }
+
+  if (!ready) return <div className="card" style={{ marginTop: 16 }}>در حال بارگذاری…</div>;
 
   return (
     <div className="card" style={{ marginTop: 16, border: "1px solid var(--navy)" }}>
@@ -120,65 +178,85 @@ export default function InvoiceEditor({
           </tr>
         </thead>
         <tbody>
-          {lines.map((l, idx) => (
-            <tr key={idx}>
-              <td>
-                <input
-                  placeholder="مثلاً سرور HP یا خدمات نصب"
-                  value={l.description}
-                  onChange={(e) => setLine(idx, { description: e.target.value })}
-                  style={{ minWidth: 180 }}
-                />
-              </td>
-              <td>
-                <select
-                  value={l.product_model_id}
-                  onChange={(e) => onPickProduct(idx, e.target.value)}
-                  style={{ minWidth: 150 }}
-                >
-                  <option value="">— بدون کسر انبار —</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({Number(p.current_stock).toLocaleString("fa-IR")}{" "}
-                      {p.unit_of_measure})
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={l.quantity}
-                  onChange={(e) => setLine(idx, { quantity: e.target.value })}
-                  style={{ width: 80 }}
-                />
-              </td>
-              <td>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={l.unit_price}
-                  onChange={(e) => setLine(idx, { unit_price: e.target.value })}
-                  style={{ width: 130 }}
-                />
-              </td>
-              <td>{lineTotal(l).toLocaleString("fa-IR")}</td>
-              <td>
-                <button
-                  type="button"
-                  className="secondary"
-                  style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
-                  onClick={() => removeRow(idx)}
-                  disabled={lines.length === 1}
-                >
-                  حذف
-                </button>
-              </td>
-            </tr>
-          ))}
+          {lines.map((l, idx) => {
+            const serial = isSerial(l.product_model_id);
+            return (
+              <tr key={idx}>
+                <td>
+                  <input
+                    placeholder="مثلاً سرور HP یا خدمات نصب"
+                    value={l.description}
+                    onChange={(e) => setLine(idx, { description: e.target.value })}
+                    style={{ minWidth: 160 }}
+                  />
+                </td>
+                <td>
+                  <select
+                    value={l.product_model_id}
+                    onChange={(e) => onPickProduct(idx, e.target.value)}
+                    style={{ minWidth: 150 }}
+                  >
+                    <option value="">— بدون کسر انبار —</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                        {p.tracking_type === "serial"
+                          ? " (سریال‌دار)"
+                          : ` (${Number(p.current_stock).toLocaleString("fa-IR")} ${p.unit_of_measure})`}
+                      </option>
+                    ))}
+                  </select>
+                  {serial && (
+                    <select
+                      value={l.stock_item_id}
+                      onChange={(e) => setLine(idx, { stock_item_id: e.target.value })}
+                      style={{ minWidth: 150, marginTop: 6 }}
+                    >
+                      <option value="">— انتخاب دستگاه (سریال) —</option>
+                      {unitsForLine(l).map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.serial_number}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={serial ? 1 : l.quantity}
+                    disabled={serial}
+                    onChange={(e) => setLine(idx, { quantity: e.target.value })}
+                    style={{ width: 80 }}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={l.unit_price}
+                    onChange={(e) => setLine(idx, { unit_price: e.target.value })}
+                    style={{ width: 130 }}
+                  />
+                </td>
+                <td>{lineTotal(l).toLocaleString("fa-IR")}</td>
+                <td>
+                  <button
+                    type="button"
+                    className="secondary"
+                    style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
+                    onClick={() => removeRow(idx)}
+                    disabled={lines.length === 1}
+                  >
+                    حذف
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
