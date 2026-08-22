@@ -136,3 +136,40 @@ export const PAYMENT_DIRECTION_FA = {
   receipt: "دریافت",
   payment: "پرداخت",
 };
+
+export const PAYMENT_METHOD_FA = {
+  cash: "نقد",
+  card: "کارت",
+  transfer: "حواله",
+  cheque: "چک",
+};
+
+export const CASH_ACCOUNT_TYPE_FA = {
+  cash: "صندوق",
+  bank: "بانک",
+};
+
+export const CHEQUE_DIRECTION_FA = {
+  received: "دریافتی",
+  issued: "پرداختی",
+};
+
+export const CHEQUE_STATUS_FA = {
+  registered: "در جریان",
+  cleared: "وصول‌شده",
+  bounced: "برگشتی",
+};
+
+// Common operating-expense categories (دستهٔ هزینه) offered in the voucher form.
+export const EXPENSE_CATEGORIES = [
+  "اجاره",
+  "حقوق و دستمزد",
+  "قبوض (آب/برق/گاز/تلفن)",
+  "اینترنت",
+  "ملزومات اداری",
+  "حمل و نقل",
+  "بازاریابی و تبلیغات",
+  "مالیات و عوارض",
+  "تعمیر و نگهداری",
+  "سایر",
+];

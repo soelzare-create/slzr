@@ -10,8 +10,14 @@ from datetime import date
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.accounting import FinancialDocument, Payment
-from app.models.enums import FinancialType, InvoiceStatus, PaymentDirection, PurchaseStatus
+from app.models.accounting import CashAccount, FinancialDocument, Payment
+from app.models.enums import (
+    FinancialType,
+    InvoiceStatus,
+    PaymentDirection,
+    PaymentMethod,
+    PurchaseStatus,
+)
 from app.models.invoice import Invoice
 from app.models.party import Party
 from app.models.purchase import Purchase
@@ -139,7 +145,68 @@ def summary(db: Session) -> dict:
         "paid_out": paid_out,
         "receivable": t["income"] - received,  # طلبِ وصول‌نشدهٔ ما
         "payable": t["expense"] - paid_out,     # بدهیِ پرداخت‌نشدهٔ ما
+        "cash_on_hand": cash_on_hand(db),       # مجموع موجودی صندوق‌ها و بانک‌ها
     }
+
+
+# --- cash & bank accounts (صندوق / بانک) ----------------------------------
+
+def account_balance(db: Session, account: CashAccount) -> float:
+    got = float(
+        db.scalar(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.direction == PaymentDirection.receipt,
+                Payment.account_id == account.id,
+            )
+        )
+        or 0
+    )
+    out = float(
+        db.scalar(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.direction == PaymentDirection.payment,
+                Payment.account_id == account.id,
+            )
+        )
+        or 0
+    )
+    return float(account.opening_balance) + got - out
+
+
+def accounts_overview(db: Session) -> list[dict]:
+    rows = db.scalars(select(CashAccount).order_by(CashAccount.id)).all()
+    return [
+        {
+            "id": a.id,
+            "name": a.name,
+            "type": a.type.value,
+            "opening_balance": float(a.opening_balance),
+            "balance": account_balance(db, a),
+            "is_active": a.is_active,
+        }
+        for a in rows
+    ]
+
+
+def cash_on_hand(db: Session) -> float:
+    return sum(a["balance"] for a in accounts_overview(db))
+
+
+def expense_by_category(db: Session) -> list[dict]:
+    """Group outgoing payments by category — the operating-expense report."""
+    rows = db.execute(
+        select(
+            Payment.category,
+            func.coalesce(func.sum(Payment.amount), 0),
+        )
+        .where(Payment.direction == PaymentDirection.payment)
+        .group_by(Payment.category)
+    ).all()
+    result = [
+        {"category": cat or "سایر", "amount": float(amount)} for cat, amount in rows
+    ]
+    result.sort(key=lambda r: r["amount"], reverse=True)
+    return result
 
 
 # --- payments & receipts (پرداخت / دریافت) --------------------------------
@@ -201,6 +268,9 @@ def record_payment(
     direction: PaymentDirection,
     amount: float,
     paid_at: date | None,
+    method: PaymentMethod = PaymentMethod.cash,
+    category: str | None = None,
+    account_id: int | None = None,
     invoice_id: int | None,
     purchase_id: int | None,
     party_id: int | None,
@@ -212,6 +282,9 @@ def record_payment(
         direction=direction,
         amount=amount,
         paid_at=paid_at,
+        method=method,
+        category=category,
+        account_id=account_id,
         invoice_id=invoice_id,
         purchase_id=purchase_id,
         party_id=party_id,

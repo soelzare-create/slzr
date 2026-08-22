@@ -19,7 +19,10 @@ import app.models  # noqa: F401
 
 
 def seed() -> None:
+    from app.db_migrate import auto_add_missing_columns
+
     Base.metadata.create_all(bind=engine)
+    auto_add_missing_columns(engine, Base)
     db = SessionLocal()
     try:
         existing = db.scalar(

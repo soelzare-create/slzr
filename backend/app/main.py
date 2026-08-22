@@ -25,6 +25,7 @@ from app.api import (
 )
 from app.config import settings
 from app.database import Base, engine
+from app.db_migrate import auto_add_missing_columns
 
 # Import models so their tables are registered on Base before create_all.
 import app.models  # noqa: F401
@@ -32,8 +33,10 @@ import app.models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # For development we auto-create tables. In production use migrations.
+    # For development we auto-create tables and add any newly-introduced columns
+    # to an existing database, so updates never require deleting the DB file.
     Base.metadata.create_all(bind=engine)
+    auto_add_missing_columns(engine, Base)
     yield
 
 

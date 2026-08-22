@@ -41,10 +41,10 @@ if not exist ".venv" (
   call .venv\Scripts\activate.bat
 )
 if not exist ".env" copy .env.example .env >nul
-if not exist "daranx.db" (
-  echo [backend] seeding initial admin account...
-  python -m app.seed
-)
+REM Always run seed: it creates missing tables, adds any new columns, and makes
+REM sure the initial admin exists. It is safe to run every time (idempotent).
+echo [backend] preparing database...
+python -m app.seed
 cd ..
 
 REM ================= FRONTEND =================

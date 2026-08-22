@@ -2,7 +2,7 @@
 
 Importing this package registers every table on the declarative ``Base``.
 """
-from app.models.accounting import FinancialDocument, Payment
+from app.models.accounting import CashAccount, Cheque, FinancialDocument, Payment
 from app.models.activity import Activity, ProjectStage
 from app.models.inventory import ProductModel, StockItem
 from app.models.invoice import Invoice, InvoiceItem
@@ -25,5 +25,7 @@ __all__ = [
     "InvoiceItem",
     "FinancialDocument",
     "Payment",
+    "CashAccount",
+    "Cheque",
     "Task",
 ]
