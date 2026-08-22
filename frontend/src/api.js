@@ -97,15 +97,17 @@ export const api = {
   createPurchase: (p) => request("/purchases", { method: "POST", body: p }),
   updatePurchase: (id, p) => request(`/purchases/${id}`, { method: "PATCH", body: p }),
 
-  // accounting (ledger, per-party balances, summary)
+  // accounting (ledger, per-party balances, summary, payments/receipts)
   accountingSummary: () => request("/accounting/summary"),
   accountingBalances: () => request("/accounting/balances"),
   accountingDocuments: (params) => request(`/accounting/documents${qs(params)}`),
+  listPayments: (params) => request(`/accounting/payments${qs(params)}`),
+  createPayment: (p) => request("/accounting/payments", { method: "POST", body: p }),
 
-  // support (tickets tied to a customer and, optionally, a device serial)
-  listTickets: (params) => request(`/tickets${qs(params)}`),
-  createTicket: (t) => request("/tickets", { method: "POST", body: t }),
-  updateTicket: (id, t) => request(`/tickets/${id}`, { method: "PATCH", body: t }),
+  // tasks (internal referrals — ارجاعات)
+  listTasks: (params) => request(`/tasks${qs(params)}`),
+  createTask: (t) => request("/tasks", { method: "POST", body: t }),
+  updateTask: (id, t) => request(`/tasks/${id}`, { method: "PATCH", body: t }),
 
   // reports (management overview)
   reportsOverview: () => request("/reports/overview"),

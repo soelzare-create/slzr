@@ -26,9 +26,18 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, require_roles
 from app.database import get_db
 from app.models.activity import Activity
-from app.models.enums import InvoiceKind, InvoiceStatus, TrackingType, UserRole
-from app.models.inventory import ProductModel
+from app.models.enums import (
+    ActivityType,
+    InvoiceKind,
+    InvoiceStatus,
+    TrackingType,
+    UnitItemStatus,
+    UserRole,
+)
+from app.models.inventory import ProductModel, StockItem
 from app.models.invoice import Invoice, InvoiceItem
+from app.models.party import Party
+from app.models.support import Task
 from app.models.user import User
 from app.schemas.invoice import InvoiceCreate, InvoiceOut, InvoiceStatusUpdate
 from app.services import accounting_service, inventory_service
@@ -45,22 +54,69 @@ def _items_total(items: list[InvoiceItem]) -> Decimal:
     )
 
 
+def _touch_last_price(db: Session, model_id: int | None, unit_price: float) -> None:
+    """Remember the last sold price as the product's base price."""
+    if model_id is None:
+        return
+    model = db.get(ProductModel, model_id)
+    if model is not None:
+        model.base_price = unit_price
+
+
 def _apply_effects(db: Session, invoice: Invoice, activity: Activity) -> None:
-    """When a sale becomes final: consume stock (linked lines) and book income."""
+    """When a sale becomes final: consume stock (linked lines), remember the last
+    sold price on each product, and book income."""
     for it in invoice.items:
-        if it.product_model_id is not None:
+        if it.stock_item_id is not None:
+            unit = db.get(StockItem, it.stock_item_id)
+            inventory_service.consume_item(
+                db,
+                stock_item_id=it.stock_item_id,
+                product_model_id=None,
+                quantity=None,
+            )
+            if unit is not None:
+                _touch_last_price(db, unit.model_id, float(it.unit_price))
+        elif it.product_model_id is not None:
             inventory_service.consume_item(
                 db,
                 stock_item_id=None,
                 product_model_id=it.product_model_id,
                 quantity=float(it.quantity),
             )
+            _touch_last_price(db, it.product_model_id, float(it.unit_price))
     accounting_service.record_income(
         db,
         amount=float(invoice.total_amount),
         party_id=activity.customer_id,
         invoice_id=invoice.id,
     )
+
+
+def _enrich(db: Session, invoice: Invoice) -> Invoice:
+    """Attach computed paid/remaining amounts for the response model."""
+    invoice.paid_amount = accounting_service.invoice_paid(db, invoice.id)
+    invoice.remaining = float(invoice.total_amount) - invoice.paid_amount
+    return invoice
+
+
+def _create_delivery_task(db: Session, invoice: Invoice, issuer: User) -> None:
+    """A final sale auto-refers a delivery task to a warehouse employee."""
+    warehouse_user = db.scalar(
+        select(User).where(User.role == UserRole.warehouse, User.is_active.is_(True))
+    )
+    if warehouse_user is None:
+        return  # no warehouse staff to assign to — skip silently
+    db.add(
+        Task(
+            title="تحویل کالای فروخته‌شده",
+            description=f"تحویل اقلام فاکتور #{invoice.id} به مشتری/مسئول مربوطه.",
+            created_by_id=issuer.id,
+            assigned_to_id=warehouse_user.id,
+            invoice_id=invoice.id,
+        )
+    )
+    db.flush()
 
 
 @router.get("", response_model=list[InvoiceOut], dependencies=[Depends(get_current_user)])
@@ -77,7 +133,7 @@ def list_invoices(
         stmt = stmt.where(Invoice.kind == kind)
     if status_ is not None:
         stmt = stmt.where(Invoice.status == status_)
-    return list(db.scalars(stmt))
+    return [_enrich(db, inv) for inv in db.scalars(stmt)]
 
 
 @router.get(
@@ -87,7 +143,7 @@ def get_invoice(invoice_id: int, db: Session = Depends(get_db)) -> Invoice:
     invoice = db.get(Invoice, invoice_id)
     if invoice is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "فاکتور یافت نشد")
-    return invoice
+    return _enrich(db, invoice)
 
 
 @router.post("", response_model=InvoiceOut, status_code=status.HTTP_201_CREATED)
@@ -96,17 +152,42 @@ def create_invoice(
     db: Session = Depends(get_db),
     issuer: User = Depends(can_write),
 ) -> Invoice:
-    activity = db.get(Activity, payload.activity_id)
-    if activity is None:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "فعالیت معتبر نیست")
+    # Resolve the activity: an explicit one, or auto-create a «فروش کالا»
+    # activity from a customer so an invoice can be issued without one.
+    if payload.activity_id is not None:
+        activity = db.get(Activity, payload.activity_id)
+        if activity is None:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "فعالیت معتبر نیست")
+    elif payload.customer_id is not None:
+        customer = db.get(Party, payload.customer_id)
+        if customer is None or not customer.is_customer:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "مشتری معتبر نیست")
+        activity = Activity(
+            customer_id=customer.id,
+            owner_id=issuer.id,
+            type=ActivityType.sale,
+            title="فروش کالا",
+        )
+        db.add(activity)
+        db.flush()
+    else:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, "فعالیت یا مشتری لازم است"
+        )
 
     if payload.kind == InvoiceKind.final and not payload.items:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST, "فاکتور نهایی باید حداقل یک قلم داشته باشد"
         )
 
-    # Validate any product links up front (non-serial warehouse goods only).
+    # Validate any warehouse links up front. A line may link to a non-serial
+    # product (quantity) OR to a specific serial unit — not both.
     for line in payload.items:
+        if line.product_model_id is not None and line.stock_item_id is not None:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "هر ردیف یا کالای بدون‌سریال است یا تک‌کالای سریال‌دار، نه هر دو",
+            )
         if line.product_model_id is not None:
             model = db.get(ProductModel, line.product_model_id)
             if model is None:
@@ -116,7 +197,19 @@ def create_invoice(
             if model.tracking_type != TrackingType.quantity:
                 raise HTTPException(
                     status.HTTP_400_BAD_REQUEST,
-                    "فقط کالای بدون‌سریال (مقداری) قابل اتصال به قلم فاکتور است",
+                    "برای کالای سریال‌دار باید یک تک‌کالای مشخص انتخاب شود",
+                )
+        if line.stock_item_id is not None:
+            unit = db.get(StockItem, line.stock_item_id)
+            if unit is None or unit.serial_number is None:
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_ENTITY, "تک‌کالای انتخاب‌شده معتبر نیست"
+                )
+            # For a FINAL invoice the unit must still be in the warehouse.
+            if payload.kind == InvoiceKind.final and unit.status != UnitItemStatus.warehouse:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    f"تک‌کالای «{unit.serial_number}» در انبار موجود نیست",
                 )
 
     if payload.source_proforma_id is not None:
@@ -138,7 +231,9 @@ def create_invoice(
         InvoiceItem(
             description=line.description,
             product_model_id=line.product_model_id,
-            quantity=line.quantity,
+            stock_item_id=line.stock_item_id,
+            # a serial unit is always exactly one physical item
+            quantity=1 if line.stock_item_id is not None else line.quantity,
             unit_price=line.unit_price,
         )
         for line in payload.items
@@ -150,10 +245,11 @@ def create_invoice(
 
     if payload.kind == InvoiceKind.final:
         _apply_effects(db, invoice, activity)
+        _create_delivery_task(db, invoice, issuer)
 
     db.commit()
     db.refresh(invoice)
-    return invoice
+    return _enrich(db, invoice)
 
 
 @router.patch("/{invoice_id}", response_model=InvoiceOut)
@@ -170,7 +266,7 @@ def update_invoice(
         setattr(invoice, field, value)
     db.commit()
     db.refresh(invoice)
-    return invoice
+    return _enrich(db, invoice)
 
 
 @router.delete("/{invoice_id}", status_code=status.HTTP_204_NO_CONTENT)

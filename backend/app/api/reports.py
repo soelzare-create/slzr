@@ -12,12 +12,12 @@ from sqlalchemy.orm import Session
 from app.core.deps import require_roles
 from app.database import get_db
 from app.models.activity import Activity
-from app.models.enums import TicketStatus, UserRole
+from app.models.enums import TaskStatus, UserRole
 from app.models.inventory import ProductModel
 from app.models.invoice import Invoice
 from app.models.party import Party
 from app.models.purchase import Purchase
-from app.models.support import Ticket
+from app.models.support import Task
 from app.schemas.reports import (
     Counts,
     Finance,
@@ -41,7 +41,7 @@ def _count(db: Session, model, *where) -> int:
 
 def _status_breakdown(db: Session, model) -> StatusBreakdown:
     rows = db.execute(select(model.status, func.count()).group_by(model.status)).all()
-    data = {"unpaid": 0, "paid": 0, "overdue": 0}
+    data = {"unpaid": 0, "partial": 0, "paid": 0, "overdue": 0}
     total = 0
     for st, cnt in rows:
         data[st.value] = int(cnt)
@@ -56,7 +56,9 @@ def overview(db: Session = Depends(get_db)) -> ReportsOverview:
         suppliers=_count(db, Party, Party.is_supplier.is_(True)),
         activities=_count(db, Activity),
         products=_count(db, ProductModel),
-        open_tickets=_count(db, Ticket, Ticket.status == TicketStatus.open),
+        open_tasks=_count(
+            db, Task, Task.status != TaskStatus.done
+        ),
     )
     finance = Finance(**accounting_service.summary(db))
 

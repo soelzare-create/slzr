@@ -133,5 +133,55 @@ def test_documents_ledger_lists_income_and_expense():
 def test_only_manager_or_accountant_may_read_accounting():
     # sales & warehouse are operational roles, not financial
     assert client.get("/api/accounting/summary", headers=_h("0911")).status_code == 403
+
+
+def _final_invoice(customer_id, amount) -> dict:
+    act = client.post("/api/activities", headers=_h("0910"), json={
+        "customer_id": customer_id, "owner_id": 1, "type": "sale"}).json()
+    return client.post("/api/invoices", headers=_h("0910"), json={
+        "activity_id": act["id"], "kind": "final",
+        "items": [{"description": "خدمات", "quantity": 1, "unit_price": amount}]}).json()
+
+
+def test_partial_then_full_receipt_moves_invoice_status():
+    cust = _party("مشتری اقساطی", cust=True)
+    inv = _final_invoice(cust, 1_000_000)
+    assert inv["status"] == "unpaid" and inv["remaining"] == 1_000_000
+
+    # take 40% now
+    r1 = client.post("/api/accounting/payments", headers=_h("0914"), json={
+        "direction": "receipt", "invoice_id": inv["id"], "amount": 400_000,
+        "paid_at": "2026-08-22"})
+    assert r1.status_code == 201, r1.text
+    got = client.get(f"/api/invoices/{inv['id']}", headers=_h("0910")).json()
+    assert got["status"] == "partial"
+    assert got["paid_amount"] == 400_000 and got["remaining"] == 600_000
+
+    # settle the rest two weeks later
+    client.post("/api/accounting/payments", headers=_h("0914"), json={
+        "direction": "receipt", "invoice_id": inv["id"], "amount": 600_000,
+        "paid_at": "2026-09-05"})
+    got = client.get(f"/api/invoices/{inv['id']}", headers=_h("0910")).json()
+    assert got["status"] == "paid" and got["remaining"] == 0
+
+
+def test_receipt_cannot_exceed_remaining():
+    cust = _party("مشتری سقف", cust=True)
+    inv = _final_invoice(cust, 500_000)
+    r = client.post("/api/accounting/payments", headers=_h("0914"), json={
+        "direction": "receipt", "invoice_id": inv["id"], "amount": 600_000})
+    assert r.status_code == 400
+
+
+def test_summary_tracks_received_and_receivable():
+    before = client.get("/api/accounting/summary", headers=_h("0910")).json()
+    cust = _party("مشتری خلاصه", cust=True)
+    inv = _final_invoice(cust, 200_000)
+    client.post("/api/accounting/payments", headers=_h("0914"), json={
+        "direction": "receipt", "invoice_id": inv["id"], "amount": 50_000})
+    after = client.get("/api/accounting/summary", headers=_h("0910")).json()
+    assert after["received"] == before["received"] + 50_000
+    # receivable = accrued income − received
+    assert after["receivable"] == after["income"] - after["received"]
     assert client.get("/api/accounting/balances", headers=_h("0913")).status_code == 403
     assert client.get("/api/accounting/summary", headers=_h("0914")).status_code == 200

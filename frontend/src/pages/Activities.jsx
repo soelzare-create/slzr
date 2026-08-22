@@ -3,6 +3,7 @@ import { api } from "../api";
 import { useMe } from "../hooks/useMe";
 import Layout from "../components/Layout";
 import SalesPanel from "../components/SalesPanel";
+import InvoiceEditor from "../components/InvoiceEditor";
 import {
   ACTIVITY_TYPE_FA,
   ACTIVITY_STATUS_FA,
@@ -21,8 +22,8 @@ export default function Activities() {
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [openId, setOpenId] = useState(null);
-  const [salesId, setSalesId] = useState(null);
+  const [statusId, setStatusId] = useState(null); // activity whose "وضعیت" panel is open
+  const [editor, setEditor] = useState(null); // {activityId, kind}
 
   const canWrite = me && WRITE_ROLES.includes(me.role);
   const custName = (id) => customers.find((c) => c.id === id)?.name || `#${id}`;
@@ -111,23 +112,34 @@ export default function Activities() {
                   <span className="badge">{ACTIVITY_STATUS_FA[a.status]}</span>
                 </td>
                 <td>
-                  <div className="row" style={{ gap: 6 }}>
-                    {a.type === "project" && (
-                      <button
-                        className="secondary"
-                        style={{ width: "auto", marginTop: 0, padding: "4px 10px" }}
-                        onClick={() => setOpenId(openId === a.id ? null : a.id)}
-                      >
-                        مراحل
-                      </button>
-                    )}
+                  <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
                     <button
                       className="secondary"
                       style={{ width: "auto", marginTop: 0, padding: "4px 10px" }}
-                      onClick={() => setSalesId(salesId === a.id ? null : a.id)}
+                      onClick={() => {
+                        setEditor(null);
+                        setStatusId(statusId === a.id ? null : a.id);
+                      }}
                     >
-                      پیش‌فاکتور/فاکتور
+                      وضعیت
                     </button>
+                    {canWrite && (
+                      <button
+                        className="secondary"
+                        style={{ width: "auto", marginTop: 0, padding: "4px 10px" }}
+                        onClick={() => setEditor({ activityId: a.id, kind: "proforma" })}
+                      >
+                        ایجاد پیش‌فاکتور
+                      </button>
+                    )}
+                    {canWrite && (
+                      <button
+                        style={{ width: "auto", marginTop: 0, padding: "4px 10px" }}
+                        onClick={() => setEditor({ activityId: a.id, kind: "final" })}
+                      >
+                        ایجاد فاکتور
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -143,15 +155,35 @@ export default function Activities() {
         </table>
       </div>
 
-      {openId && (
-        <StagePanel
-          activityId={openId}
-          canWrite={me && ["manager", "sales", "technical"].includes(me.role)}
+      {editor && (
+        <InvoiceEditor
+          activityId={editor.activityId}
+          kind={editor.kind}
+          onSaved={() => {
+            const aid = editor.activityId;
+            setEditor(null);
+            setStatusId(aid); // show the activity's invoices after creating
+            reload();
+          }}
+          onCancel={() => setEditor(null)}
         />
       )}
 
-      {salesId && (
-        <SalesPanel activityId={salesId} canWrite={canWrite} onChanged={reload} />
+      {statusId && (
+        <>
+          <StatusPanel
+            activity={activities.find((a) => a.id === statusId)}
+            canWrite={canWrite}
+            onChanged={reload}
+          />
+          {activities.find((a) => a.id === statusId)?.type === "project" && (
+            <StagePanel
+              activityId={statusId}
+              canWrite={me && ["manager", "sales", "technical"].includes(me.role)}
+            />
+          )}
+          <SalesPanel activityId={statusId} canWrite={canWrite} onChanged={reload} />
+        </>
       )}
 
       {canWrite && (
@@ -216,6 +248,53 @@ export default function Activities() {
         </form>
       )}
     </Layout>
+  );
+}
+
+function StatusPanel({ activity, canWrite, onChanged }) {
+  const [error, setError] = useState("");
+  if (!activity) return null;
+
+  async function setStatus(status) {
+    setError("");
+    try {
+      await api.updateActivity(activity.id, { status });
+      onChanged && onChanged();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  return (
+    <div className="card" style={{ marginTop: 20 }}>
+      <h2 style={{ marginTop: 0 }}>
+        وضعیت فعالیت #{activity.id}
+        {activity.title ? ` — ${activity.title}` : ""}
+      </h2>
+      <div className="row" style={{ gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        <span>
+          وضعیت فعلی:{" "}
+          <span className="badge">{ACTIVITY_STATUS_FA[activity.status]}</span>
+        </span>
+        {canWrite && (
+          <label style={{ margin: 0 }}>
+            تغییر وضعیت:{" "}
+            <select
+              value={activity.status}
+              onChange={(e) => setStatus(e.target.value)}
+              style={{ width: 170 }}
+            >
+              {Object.entries(ACTIVITY_STATUS_FA).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+      {error && <div className="error">{error}</div>}
+    </div>
   );
 }
 

@@ -165,27 +165,11 @@ export default function SalesPanel({ activityId, canWrite, onChanged }) {
 
       <h3 style={{ margin: "6px 0", color: "var(--navy)" }}>پیش‌فاکتورها</h3>
       <InvoiceTable rows={proformas} isProforma />
-      {canWrite && !editor && (
-        <button
-          style={{ width: "auto", marginTop: 10 }}
-          onClick={() => setEditor({ kind: "proforma" })}
-        >
-          ثبت پیش‌فاکتور جدید
-        </button>
-      )}
 
       <hr style={{ border: "none", borderTop: "1px solid var(--line-soft)", margin: "18px 0" }} />
 
       <h3 style={{ margin: "6px 0", color: "var(--navy)" }}>فاکتورها</h3>
       <InvoiceTable rows={finals} isProforma={false} />
-      {canWrite && !editor && (
-        <button
-          style={{ width: "auto", marginTop: 10 }}
-          onClick={() => setEditor({ kind: "final" })}
-        >
-          ثبت فاکتور جدید
-        </button>
-      )}
 
       {editor && (
         <InvoiceEditor

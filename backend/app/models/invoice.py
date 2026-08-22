@@ -66,8 +66,10 @@ class Invoice(Base, TimestampMixin):
 class InvoiceItem(Base, TimestampMixin):
     """اقلام فاکتور — هر ردیف: شرح (کالا یا خدمت) + تعداد + قیمت واحد.
 
-    `product_model_id` اختیاری است: اگر پر شود، هنگام صدور فاکتور نهایی از موجودی
-    انبار همان کالا کم می‌شود. ردیف‌های خدمت/شرح آزاد اثری روی انبار ندارند.
+    اتصال به انبار اختیاری است و هنگام صدور فاکتور نهایی موجودی را کم می‌کند:
+    - `product_model_id` : کالای بدون‌سریال (مقداری) — به اندازهٔ `quantity` خارج می‌شود.
+    - `stock_item_id`    : یک تک‌کالای سریال‌دارِ مشخص — همان دستگاه «فروخته» می‌شود.
+    ردیف‌های خدمت/شرح آزاد (بدون اتصال) اثری روی انبار ندارند.
     """
 
     __tablename__ = "invoice_items"
@@ -81,7 +83,10 @@ class InvoiceItem(Base, TimestampMixin):
     )  # شرح ردیف (نام کالا یا خدمت)
     product_model_id: Mapped[int | None] = mapped_column(
         ForeignKey("product_models.id")
-    )  # کالای انبار (اختیاری — برای کسر موجودی)
+    )  # کالای بدون‌سریال (اختیاری — برای کسر مقداری موجودی)
+    stock_item_id: Mapped[int | None] = mapped_column(
+        ForeignKey("stock_items.id")
+    )  # تک‌کالای سریال‌دار (اختیاری — همان دستگاه فروخته می‌شود)
     quantity: Mapped[float] = mapped_column(
         Numeric(14, 2), default=1, nullable=False
     )  # تعداد / مقدار

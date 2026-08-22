@@ -12,6 +12,7 @@ from app.models.enums import MovementDirection, TrackingType, UnitItemStatus
 
 class ProductModelBase(BaseModel):
     name: str = Field(min_length=1, max_length=300)
+    part_number: str | None = Field(default=None, max_length=120)
     tracking_type: TrackingType
     unit_of_measure: str = Field(default="عدد", min_length=1, max_length=30)
     base_price: float = Field(default=0, ge=0)
@@ -24,6 +25,7 @@ class ProductModelCreate(ProductModelBase):
 
 class ProductModelUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=300)
+    part_number: str | None = Field(default=None, max_length=120)
     unit_of_measure: str | None = Field(default=None, min_length=1, max_length=30)
     base_price: float | None = Field(default=None, ge=0)
     specs: str | None = Field(default=None, max_length=2000)

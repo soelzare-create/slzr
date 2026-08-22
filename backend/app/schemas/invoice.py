@@ -16,7 +16,8 @@ from app.models.enums import InvoiceKind, InvoiceStatus
 
 class InvoiceItemCreate(BaseModel):
     description: str = Field(min_length=1, max_length=400)  # شرح کالا یا خدمت
-    product_model_id: int | None = None  # کالای انبار (اختیاری — برای کسر موجودی)
+    product_model_id: int | None = None  # کالای بدون‌سریال (اختیاری — کسر مقداری)
+    stock_item_id: int | None = None  # تک‌کالای سریال‌دار (اختیاری — همان دستگاه)
     quantity: float = Field(default=1, gt=0)  # تعداد / مقدار
     unit_price: float = Field(default=0, ge=0)  # قیمت واحد
 
@@ -28,6 +29,7 @@ class InvoiceItemOut(BaseModel):
     invoice_id: int
     description: str
     product_model_id: int | None
+    stock_item_id: int | None
     quantity: float
     unit_price: float
     line_total: float
@@ -37,7 +39,10 @@ class InvoiceItemOut(BaseModel):
 # --- Invoices --------------------------------------------------------------
 
 class InvoiceCreate(BaseModel):
-    activity_id: int
+    # Either target an existing activity, or give a customer and let the server
+    # auto-create a «فروش کالا» activity to hold the invoice.
+    activity_id: int | None = None
+    customer_id: int | None = None
     kind: InvoiceKind = InvoiceKind.proforma
     settlement_due_date: date | None = None  # تاریخ تصفیه حساب
     source_proforma_id: int | None = None  # اگر از روی یک پیش‌فاکتور ساخته می‌شود
@@ -62,3 +67,5 @@ class InvoiceOut(BaseModel):
     source_proforma_id: int | None
     created_at: datetime
     items: list[InvoiceItemOut] = []
+    paid_amount: float = 0  # مجموع دریافت‌های ثبت‌شده برای این فاکتور
+    remaining: float = 0  # باقی‌ماندهٔ قابل دریافت

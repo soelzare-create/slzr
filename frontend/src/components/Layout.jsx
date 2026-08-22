@@ -52,8 +52,8 @@ export default function Layout({ me, children }) {
             <NavLink to="/purchases" style={link}>
               خریدها
             </NavLink>
-            <NavLink to="/support" style={link}>
-              پشتیبانی
+            <NavLink to="/referrals" style={link}>
+              ارجاعات
             </NavLink>
             {me && ACCOUNTING_ROLES.includes(me.role) && (
               <NavLink to="/accounting" style={link}>
