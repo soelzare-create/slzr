@@ -58,10 +58,10 @@ def _sell(customer_id, model_id, qty, price) -> None:
                 json={"model_id": model_id, "quantity": qty, "direction": "in"})
     act = client.post("/api/activities", headers=_h("0910"),
                       json={"customer_id": customer_id, "owner_id": 1, "type": "sale"}).json()
-    client.post(f"/api/activities/{act['id']}/items", headers=_h("0910"),
-                json={"product_model_id": model_id, "quantity": qty, "price": price})
-    client.post("/api/invoices", headers=_h("0910"),
-                json={"activity_id": act["id"], "kind": "final"})
+    client.post("/api/invoices", headers=_h("0910"), json={
+        "activity_id": act["id"], "kind": "final",
+        "items": [{"description": "کالا", "product_model_id": model_id,
+                   "quantity": qty, "unit_price": price}]})
 
 
 def _buy(supplier_id, model_id, qty, unit_cost) -> None:

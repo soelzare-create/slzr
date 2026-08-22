@@ -17,16 +17,13 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user, require_roles
 from app.database import get_db
-from app.models.activity import Activity, ActivityItem, ProjectStage
-from app.models.enums import ActivityType, TrackingType, UnitItemStatus, UserRole
-from app.models.inventory import ProductModel, StockItem
+from app.models.activity import Activity, ProjectStage
+from app.models.enums import ActivityType, UserRole
 from app.models.party import Party
 from app.models.user import User
 from app.schemas.activity import (
     ActivityCreate,
     ActivityDetail,
-    ActivityItemCreate,
-    ActivityItemOut,
     ActivityOut,
     ActivityUpdate,
     ProjectStageCreate,
@@ -151,79 +148,3 @@ def add_stage(
     db.commit()
     db.refresh(stage)
     return stage
-
-
-# --- Activity items (sales lines) -----------------------------------------
-
-@router.get(
-    "/{activity_id}/items",
-    response_model=list[ActivityItemOut],
-    dependencies=[Depends(get_current_user)],
-)
-def list_items(activity_id: int, db: Session = Depends(get_db)) -> list[ActivityItem]:
-    _load_activity(activity_id, db)
-    stmt = (
-        select(ActivityItem)
-        .where(ActivityItem.activity_id == activity_id)
-        .order_by(ActivityItem.id)
-    )
-    return list(db.scalars(stmt))
-
-
-@router.post(
-    "/{activity_id}/items",
-    response_model=ActivityItemOut,
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(can_write)],
-)
-def add_item(
-    activity_id: int, payload: ActivityItemCreate, db: Session = Depends(get_db)
-) -> ActivityItem:
-    _load_activity(activity_id, db)
-
-    if payload.stock_item_id is not None:
-        unit = db.get(StockItem, payload.stock_item_id)
-        if unit is None or unit.serial_number is None:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "تک‌کالا یافت نشد")
-        if unit.status != UnitItemStatus.warehouse:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, "این تک‌کالا در انبار موجود نیست"
-            )
-        # A given physical unit can appear on only one activity line.
-        taken = db.scalar(
-            select(ActivityItem).where(ActivityItem.stock_item_id == unit.id)
-        )
-        if taken:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT, "این تک‌کالا قبلاً به فعالیتی افزوده شده است"
-            )
-    else:
-        model = db.get(ProductModel, payload.product_model_id)
-        if model is None:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "مدل کالا معتبر نیست")
-        if model.tracking_type != TrackingType.quantity:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                "برای این مدل کالا باید تک‌کالای سریال‌دار انتخاب شود",
-            )
-
-    item = ActivityItem(activity_id=activity_id, **payload.model_dump())
-    db.add(item)
-    db.commit()
-    db.refresh(item)
-    return item
-
-
-@router.delete(
-    "/{activity_id}/items/{item_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(can_write)],
-)
-def delete_item(
-    activity_id: int, item_id: int, db: Session = Depends(get_db)
-) -> None:
-    item = db.get(ActivityItem, item_id)
-    if item is None or item.activity_id != activity_id:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "قلم یافت نشد")
-    db.delete(item)
-    db.commit()

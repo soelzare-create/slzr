@@ -126,7 +126,7 @@ export default function Activities() {
                       style={{ width: "auto", marginTop: 0, padding: "4px 10px" }}
                       onClick={() => setSalesId(salesId === a.id ? null : a.id)}
                     >
-                      اقلام/فاکتور
+                      پیش‌فاکتور/فاکتور
                     </button>
                   </div>
                 </td>
