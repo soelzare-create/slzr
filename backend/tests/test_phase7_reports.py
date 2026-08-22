@@ -79,21 +79,24 @@ def test_overview_aggregates_everything():
     model = _bulk_model("کالای گزارش")
     _sell(cust, model, qty=2, price=1_000_000)   # income 1,000,000 -> customer is a debtor
     _buy(supp, model, qty=5, unit_cost=100_000)  # expense 500,000 -> supplier is a creditor
-    client.post("/api/tickets", headers=_h("0910"),
-                json={"customer_id": cust, "title": "تیکت باز"})
+    client.post("/api/tasks", headers=_h("0910"),
+                json={"assigned_to_id": 1, "title": "کار باز"})
 
     ov = client.get("/api/reports/overview", headers=_h("0910")).json()
 
     assert ov["counts"]["customers"] >= 1
     assert ov["counts"]["suppliers"] >= 1
-    assert ov["counts"]["open_tickets"] >= 1
+    assert ov["counts"]["open_tasks"] >= 1
     assert ov["finance"]["income"] >= 1_000_000
     assert ov["finance"]["expense"] >= 500_000
     assert ov["finance"]["net"] == ov["finance"]["income"] - ov["finance"]["expense"]
 
     # invoice/purchase status counts are present and add up
     assert ov["invoices"]["total"] == (
-        ov["invoices"]["unpaid"] + ov["invoices"]["paid"] + ov["invoices"]["overdue"]
+        ov["invoices"]["unpaid"]
+        + ov["invoices"]["partial"]
+        + ov["invoices"]["paid"]
+        + ov["invoices"]["overdue"]
     )
     assert ov["purchases"]["total"] >= 1
 

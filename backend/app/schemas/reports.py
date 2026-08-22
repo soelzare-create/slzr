@@ -9,7 +9,7 @@ class Counts(BaseModel):
     suppliers: int
     activities: int
     products: int
-    open_tickets: int
+    open_tasks: int
 
 
 class Finance(BaseModel):
@@ -20,6 +20,7 @@ class Finance(BaseModel):
 
 class StatusBreakdown(BaseModel):
     unpaid: int = 0
+    partial: int = 0
     paid: int = 0
     overdue: int = 0
     total: int = 0

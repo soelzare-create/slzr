@@ -37,6 +37,7 @@ from app.models.enums import (
 from app.models.inventory import ProductModel, StockItem
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.party import Party
+from app.models.support import Task
 from app.models.user import User
 from app.schemas.invoice import InvoiceCreate, InvoiceOut, InvoiceStatusUpdate
 from app.services import accounting_service, inventory_service
@@ -53,16 +54,29 @@ def _items_total(items: list[InvoiceItem]) -> Decimal:
     )
 
 
+def _touch_last_price(db: Session, model_id: int | None, unit_price: float) -> None:
+    """Remember the last sold price as the product's base price."""
+    if model_id is None:
+        return
+    model = db.get(ProductModel, model_id)
+    if model is not None:
+        model.base_price = unit_price
+
+
 def _apply_effects(db: Session, invoice: Invoice, activity: Activity) -> None:
-    """When a sale becomes final: consume stock (linked lines) and book income."""
+    """When a sale becomes final: consume stock (linked lines), remember the last
+    sold price on each product, and book income."""
     for it in invoice.items:
         if it.stock_item_id is not None:
+            unit = db.get(StockItem, it.stock_item_id)
             inventory_service.consume_item(
                 db,
                 stock_item_id=it.stock_item_id,
                 product_model_id=None,
                 quantity=None,
             )
+            if unit is not None:
+                _touch_last_price(db, unit.model_id, float(it.unit_price))
         elif it.product_model_id is not None:
             inventory_service.consume_item(
                 db,
@@ -70,12 +84,39 @@ def _apply_effects(db: Session, invoice: Invoice, activity: Activity) -> None:
                 product_model_id=it.product_model_id,
                 quantity=float(it.quantity),
             )
+            _touch_last_price(db, it.product_model_id, float(it.unit_price))
     accounting_service.record_income(
         db,
         amount=float(invoice.total_amount),
         party_id=activity.customer_id,
         invoice_id=invoice.id,
     )
+
+
+def _enrich(db: Session, invoice: Invoice) -> Invoice:
+    """Attach computed paid/remaining amounts for the response model."""
+    invoice.paid_amount = accounting_service.invoice_paid(db, invoice.id)
+    invoice.remaining = float(invoice.total_amount) - invoice.paid_amount
+    return invoice
+
+
+def _create_delivery_task(db: Session, invoice: Invoice, issuer: User) -> None:
+    """A final sale auto-refers a delivery task to a warehouse employee."""
+    warehouse_user = db.scalar(
+        select(User).where(User.role == UserRole.warehouse, User.is_active.is_(True))
+    )
+    if warehouse_user is None:
+        return  # no warehouse staff to assign to — skip silently
+    db.add(
+        Task(
+            title="تحویل کالای فروخته‌شده",
+            description=f"تحویل اقلام فاکتور #{invoice.id} به مشتری/مسئول مربوطه.",
+            created_by_id=issuer.id,
+            assigned_to_id=warehouse_user.id,
+            invoice_id=invoice.id,
+        )
+    )
+    db.flush()
 
 
 @router.get("", response_model=list[InvoiceOut], dependencies=[Depends(get_current_user)])
@@ -92,7 +133,7 @@ def list_invoices(
         stmt = stmt.where(Invoice.kind == kind)
     if status_ is not None:
         stmt = stmt.where(Invoice.status == status_)
-    return list(db.scalars(stmt))
+    return [_enrich(db, inv) for inv in db.scalars(stmt)]
 
 
 @router.get(
@@ -102,7 +143,7 @@ def get_invoice(invoice_id: int, db: Session = Depends(get_db)) -> Invoice:
     invoice = db.get(Invoice, invoice_id)
     if invoice is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "فاکتور یافت نشد")
-    return invoice
+    return _enrich(db, invoice)
 
 
 @router.post("", response_model=InvoiceOut, status_code=status.HTTP_201_CREATED)
@@ -204,10 +245,11 @@ def create_invoice(
 
     if payload.kind == InvoiceKind.final:
         _apply_effects(db, invoice, activity)
+        _create_delivery_task(db, invoice, issuer)
 
     db.commit()
     db.refresh(invoice)
-    return invoice
+    return _enrich(db, invoice)
 
 
 @router.patch("/{invoice_id}", response_model=InvoiceOut)
@@ -224,7 +266,7 @@ def update_invoice(
         setattr(invoice, field, value)
     db.commit()
     db.refresh(invoice)
-    return invoice
+    return _enrich(db, invoice)
 
 
 @router.delete("/{invoice_id}", status_code=status.HTTP_204_NO_CONTENT)

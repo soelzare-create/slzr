@@ -12,6 +12,7 @@ import {
 
 const EMPTY = {
   name: "",
+  part_number: "",
   tracking_type: "serial",
   unit_of_measure: "عدد",
   base_price: "",
@@ -44,6 +45,7 @@ export default function Inventory() {
     try {
       await api.createProductModel({
         name: form.name,
+        part_number: form.part_number || null,
         tracking_type: form.tracking_type,
         unit_of_measure: form.unit_of_measure,
         base_price: form.base_price ? Number(form.base_price) : 0,
@@ -70,6 +72,7 @@ export default function Inventory() {
             <tr>
               <th>شناسه</th>
               <th>نام مدل</th>
+              <th>پارت‌نامبر</th>
               <th>نوع</th>
               <th>واحد شمارش</th>
               <th>قیمت پایه</th>
@@ -82,6 +85,7 @@ export default function Inventory() {
               <tr key={m.id}>
                 <td>{m.id}</td>
                 <td>{m.name}</td>
+                <td>{m.part_number || "—"}</td>
                 <td>{TRACKING_TYPE_FA[m.tracking_type]}</td>
                 <td>{m.unit_of_measure}</td>
                 <td>{Number(m.base_price).toLocaleString("fa-IR")}</td>
@@ -103,7 +107,7 @@ export default function Inventory() {
             ))}
             {models.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ textAlign: "center", opacity: 0.6 }}>
+                <td colSpan={8} style={{ textAlign: "center", opacity: 0.6 }}>
                   موردی نیست
                 </td>
               </tr>
@@ -132,6 +136,14 @@ export default function Inventory() {
                 placeholder="مثلاً سوییچ سیسکو X"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <label>پارت‌نامبر</label>
+              <input
+                placeholder="مثلاً WS-C2960X-24"
+                value={form.part_number}
+                onChange={(e) => setForm({ ...form, part_number: e.target.value })}
               />
             </div>
             <div>

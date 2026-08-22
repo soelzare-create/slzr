@@ -5,12 +5,16 @@ writing to `financial_documents` themselves.
 """
 from __future__ import annotations
 
+from datetime import date
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.accounting import FinancialDocument
-from app.models.enums import FinancialType
+from app.models.accounting import FinancialDocument, Payment
+from app.models.enums import FinancialType, InvoiceStatus, PaymentDirection, PurchaseStatus
+from app.models.invoice import Invoice
 from app.models.party import Party
+from app.models.purchase import Purchase
 
 
 def record_income(
@@ -109,10 +113,120 @@ def all_party_balances(db: Session) -> list[dict]:
 
 
 def summary(db: Session) -> dict:
-    """Company-wide totals: total income, total expense, net."""
+    """Company-wide totals: accrued income/expense, and cash received/paid."""
     t = _income_expense(db)
+    received = float(
+        db.scalar(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.direction == PaymentDirection.receipt
+            )
+        )
+        or 0
+    )
+    paid_out = float(
+        db.scalar(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.direction == PaymentDirection.payment
+            )
+        )
+        or 0
+    )
     return {
         "income": t["income"],
         "expense": t["expense"],
         "net": t["income"] - t["expense"],
+        "received": received,
+        "paid_out": paid_out,
+        "receivable": t["income"] - received,  # طلبِ وصول‌نشدهٔ ما
+        "payable": t["expense"] - paid_out,     # بدهیِ پرداخت‌نشدهٔ ما
     }
+
+
+# --- payments & receipts (پرداخت / دریافت) --------------------------------
+
+def invoice_paid(db: Session, invoice_id: int) -> float:
+    """Sum of receipts recorded against one sales invoice."""
+    return float(
+        db.scalar(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.direction == PaymentDirection.receipt,
+                Payment.invoice_id == invoice_id,
+            )
+        )
+        or 0
+    )
+
+
+def purchase_paid(db: Session, purchase_id: int) -> float:
+    """Sum of payments recorded against one purchase."""
+    return float(
+        db.scalar(
+            select(func.coalesce(func.sum(Payment.amount), 0)).where(
+                Payment.direction == PaymentDirection.payment,
+                Payment.purchase_id == purchase_id,
+            )
+        )
+        or 0
+    )
+
+
+def recompute_invoice_status(db: Session, invoice: Invoice) -> None:
+    """Derive a sales invoice's status from how much has been received."""
+    total = float(invoice.total_amount)
+    paid = invoice_paid(db, invoice.id)
+    if paid <= 0:
+        invoice.status = InvoiceStatus.unpaid
+    elif paid < total:
+        invoice.status = InvoiceStatus.partial
+    else:
+        invoice.status = InvoiceStatus.paid
+
+
+def recompute_purchase_status(db: Session, purchase: Purchase) -> None:
+    """Derive a purchase's status from how much has been paid."""
+    total = float(purchase.total_amount)
+    paid = purchase_paid(db, purchase.id)
+    if paid <= 0:
+        purchase.status = PurchaseStatus.unpaid
+    elif paid < total:
+        # purchases have no explicit partial state; keep them unpaid until settled
+        purchase.status = PurchaseStatus.unpaid
+    else:
+        purchase.status = PurchaseStatus.paid
+
+
+def record_payment(
+    db: Session,
+    *,
+    direction: PaymentDirection,
+    amount: float,
+    paid_at: date | None,
+    invoice_id: int | None,
+    purchase_id: int | None,
+    party_id: int | None,
+    recorder_id: int | None,
+    note: str | None,
+) -> Payment:
+    """Record a real cash movement, then refresh the linked doc's status."""
+    payment = Payment(
+        direction=direction,
+        amount=amount,
+        paid_at=paid_at,
+        invoice_id=invoice_id,
+        purchase_id=purchase_id,
+        party_id=party_id,
+        recorder_id=recorder_id,
+        note=note,
+    )
+    db.add(payment)
+    db.flush()
+
+    if invoice_id is not None:
+        inv = db.get(Invoice, invoice_id)
+        if inv is not None:
+            recompute_invoice_status(db, inv)
+    if purchase_id is not None:
+        pur = db.get(Purchase, purchase_id)
+        if pur is not None:
+            recompute_purchase_status(db, pur)
+    return payment

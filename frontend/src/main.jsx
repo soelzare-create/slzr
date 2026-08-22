@@ -12,7 +12,7 @@ import Invoices from "./pages/Invoices";
 import Proformas from "./pages/Proformas";
 import Purchases from "./pages/Purchases";
 import Accounting from "./pages/Accounting";
-import Support from "./pages/Support";
+import Referrals from "./pages/Referrals";
 
 function RequireAuth({ children }) {
   return getToken() ? children : <Navigate to="/login" replace />;
@@ -96,10 +96,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           }
         />
         <Route
-          path="/support"
+          path="/referrals"
           element={
             <RequireAuth>
-              <Support />
+              <Referrals />
             </RequireAuth>
           }
         />

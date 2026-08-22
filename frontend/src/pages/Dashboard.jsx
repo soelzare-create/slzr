@@ -64,8 +64,8 @@ function Overview({ ov }) {
             <div className="kpi-label">مجموع خرج</div>
           </div>
           <div className="stat">
-            <div className="stat-num">{fa(ov.counts.open_tickets)}</div>
-            <div className="kpi-label">تیکت‌های باز</div>
+            <div className="stat-num">{fa(ov.counts.open_tasks)}</div>
+            <div className="kpi-label">ارجاعات باز</div>
           </div>
           <div className="stat">
             <div className="stat-num">{fa(ov.counts.customers)}</div>

@@ -1,5 +1,5 @@
-"""Phase 6 — support/ticketing: a ticket ties a customer issue to (optionally)
-a specific device serial; covers validation, status lifecycle, and RBAC."""
+"""Phase 6 (reworked) — internal task referrals (ارجاعات): create, list scoping,
+status lifecycle with a stamped completion time, and permission checks."""
 from __future__ import annotations
 
 import os
@@ -7,9 +7,9 @@ import tempfile
 
 import pytest
 
-_tmp_db = os.path.join(tempfile.mkdtemp(), "test_support.db")
+_tmp_db = os.path.join(tempfile.mkdtemp(), "test_tasks.db")
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp_db}"
-os.environ["SECRET_KEY"] = "test-secret-support"
+os.environ["SECRET_KEY"] = "test-secret-tasks"
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -21,7 +21,7 @@ from app.models.user import User  # noqa: E402
 
 client = TestClient(app)
 
-
+# ids: 1 manager, 2 sales, 3 technical
 @pytest.fixture(scope="module", autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
@@ -30,9 +30,9 @@ def setup_db():
         [
             User(name="مدیر", role=UserRole.manager, phone="0910",
                  password_hash=hash_password("pass1234")),
-            User(name="کارشناس فنی", role=UserRole.technical, phone="0912",
+            User(name="فروش", role=UserRole.sales, phone="0911",
                  password_hash=hash_password("pass1234")),
-            User(name="انباردار", role=UserRole.warehouse, phone="0913",
+            User(name="فنی", role=UserRole.technical, phone="0912",
                  password_hash=hash_password("pass1234")),
         ]
     )
@@ -47,78 +47,59 @@ def _h(phone: str) -> dict:
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
-def _customer() -> int:
-    return client.post("/api/parties", headers=_h("0910"),
-                       json={"name": "مشتری", "is_customer": True}).json()["id"]
-
-
-def _serial_unit(serial: str) -> int:
-    model = client.post("/api/product-models", headers=_h("0910"),
-                        json={"name": "دستگاه", "tracking_type": "serial"}).json()
-    return client.post("/api/stock-items", headers=_h("0913"),
-                       json={"model_id": model["id"], "serial_number": serial}).json()["id"]
-
-
-def test_create_ticket_with_device():
-    cust = _customer()
-    unit = _serial_unit("DEV-001")
-    r = client.post("/api/tickets", headers=_h("0912"), json={
-        "customer_id": cust, "device_unit_id": unit, "owner_id": 2,
-        "title": "دستگاه روشن نمی‌شود", "description": "پس از قطع برق",
-    })
-    assert r.status_code == 201
+def test_sales_refers_a_task_to_technical():
+    r = client.post("/api/tasks", headers=_h("0911"), json={
+        "assigned_to_id": 3, "title": "نصب و راه‌اندازی",
+        "scheduled_at": "2026-09-01T10:00:00", "description": "نصب در محل مشتری"})
+    assert r.status_code == 201, r.text
     body = r.json()
-    assert body["status"] == "open" and body["device_unit_id"] == unit
+    assert body["status"] == "assigned"
+    assert body["assigned_to_id"] == 3 and body["created_by_id"] == 2
+    assert body["done_at"] is None
 
 
-def test_create_ticket_without_device_is_allowed():
-    cust = _customer()
-    r = client.post("/api/tickets", headers=_h("0910"),
-                    json={"customer_id": cust, "title": "سوال عمومی"})
-    assert r.status_code == 201 and r.json()["device_unit_id"] is None
+def test_scoping_assigned_vs_created():
+    # sales(2) refers to technical(3)
+    client.post("/api/tasks", headers=_h("0911"),
+                json={"assigned_to_id": 3, "title": "کار الف"})
+    # technical sees it under "assigned"; sales sees it under "created"
+    assigned = client.get("/api/tasks", headers=_h("0912"),
+                          params={"scope": "assigned"}).json()
+    created = client.get("/api/tasks", headers=_h("0911"),
+                         params={"scope": "created"}).json()
+    assert any(t["title"] == "کار الف" for t in assigned)
+    assert any(t["title"] == "کار الف" for t in created)
+    # sales should NOT see it in their "assigned" list
+    sales_assigned = client.get("/api/tasks", headers=_h("0911"),
+                                params={"scope": "assigned"}).json()
+    assert all(t["title"] != "کار الف" for t in sales_assigned)
 
 
-def test_device_must_be_a_serial_unit():
-    cust = _customer()
-    r = client.post("/api/tickets", headers=_h("0912"), json={
-        "customer_id": cust, "device_unit_id": 999999, "title": "دستگاه نامعتبر"})
-    assert r.status_code == 422
+def test_done_stamps_completion_time():
+    tid = client.post("/api/tasks", headers=_h("0911"),
+                      json={"assigned_to_id": 3, "title": "کار ب"}).json()["id"]
+    r = client.patch(f"/api/tasks/{tid}", headers=_h("0912"), json={"status": "done"})
+    assert r.status_code == 200
+    assert r.json()["status"] == "done" and r.json()["done_at"] is not None
+    # reverting clears the completion time
+    r2 = client.patch(f"/api/tasks/{tid}", headers=_h("0912"),
+                      json={"status": "in_progress"})
+    assert r2.json()["done_at"] is None
 
 
-def test_customer_must_have_customer_role():
-    supp = client.post("/api/parties", headers=_h("0910"),
-                       json={"name": "فقط تأمین‌کننده", "is_customer": False,
-                             "is_supplier": True}).json()["id"]
-    r = client.post("/api/tickets", headers=_h("0912"),
-                    json={"customer_id": supp, "title": "نامعتبر"})
-    assert r.status_code == 422
+def test_employee_can_refer_to_manager_and_track_it():
+    tid = client.post("/api/tasks", headers=_h("0912"),
+                      json={"assigned_to_id": 1, "title": "بررسی قرارداد"}).json()["id"]
+    # creator (technical) can see its stage even though it's assigned to the manager
+    created = client.get("/api/tasks", headers=_h("0912"),
+                         params={"scope": "created"}).json()
+    assert any(t["id"] == tid for t in created)
 
 
-def test_ticket_status_lifecycle():
-    cust = _customer()
-    tid = client.post("/api/tickets", headers=_h("0912"),
-                      json={"customer_id": cust, "title": "پیگیری"}).json()["id"]
-    for st in ("investigating", "closed"):
-        r = client.patch(f"/api/tickets/{tid}", headers=_h("0912"), json={"status": st})
-        assert r.status_code == 200 and r.json()["status"] == st
-
-
-def test_filter_by_customer_and_status():
-    cust = _customer()
-    client.post("/api/tickets", headers=_h("0912"),
-                json={"customer_id": cust, "title": "باز ۱"})
-    tid = client.post("/api/tickets", headers=_h("0912"),
-                      json={"customer_id": cust, "title": "بسته ۱"}).json()["id"]
-    client.patch(f"/api/tickets/{tid}", headers=_h("0912"), json={"status": "closed"})
-
-    open_ones = client.get("/api/tickets", headers=_h("0910"),
-                           params={"customer_id": cust, "status": "open"}).json()
-    assert all(t["status"] == "open" for t in open_ones)
-    assert any(t["title"] == "باز ۱" for t in open_ones)
-
-
-def test_warehouse_cannot_write_tickets():
-    cust = _customer()
-    r = client.post("/api/tickets", headers=_h("0913"),
-                    json={"customer_id": cust, "title": "غیرمجاز"})
-    assert r.status_code == 403
+def test_unrelated_user_cannot_update():
+    # sales(2) refers to technical(3); the manager is neither creator nor assignee
+    tid = client.post("/api/tasks", headers=_h("0911"),
+                      json={"assigned_to_id": 3, "title": "کار ج"}).json()["id"]
+    # a manager CAN touch anything
+    assert client.patch(f"/api/tasks/{tid}", headers=_h("0910"),
+                        json={"status": "in_progress"}).status_code == 200

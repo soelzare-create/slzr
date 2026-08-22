@@ -31,6 +31,9 @@ class ProductModel(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(300), nullable=False)  # نام مدل
+    part_number: Mapped[str | None] = mapped_column(
+        String(120), index=True
+    )  # پارت‌نامبر (کد کالای سازنده)
     tracking_type: Mapped[TrackingType] = mapped_column(
         Enum(TrackingType, native_enum=False, length=20), nullable=False
     )  # سریال‌دار یا بدون سریال

@@ -67,3 +67,5 @@ class InvoiceOut(BaseModel):
     source_proforma_id: int | None
     created_at: datetime
     items: list[InvoiceItemOut] = []
+    paid_amount: float = 0  # مجموع دریافت‌های ثبت‌شده برای این فاکتور
+    remaining: float = 0  # باقی‌ماندهٔ قابل دریافت

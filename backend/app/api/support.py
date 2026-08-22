@@ -1,108 +1,126 @@
-"""Support routes — ticketing (فاز ۶).
+"""Task routes — internal referrals (ارجاعات).
 
-A ticket ties a customer issue to, optionally, the specific device it concerns
-(a serialized stock unit). Support drives the issue to resolution; it does not
-touch inventory or accounting.
-
-Access model:
-- Read  : any authenticated user.
-- Write : manager, technical, or sales (customer-facing roles).
+Replaces the old ticketing. Any authenticated employee can refer a task to
+another (including to their manager). A user sees tasks assigned to them and
+tasks they created; managers see everything. The assignee (or the creator, or a
+manager) can advance the status; moving to «done» stamps the completion time.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app.core.deps import get_current_user, require_roles
+from app.core.deps import get_current_user
 from app.database import get_db
-from app.models.enums import TicketStatus, UserRole
-from app.models.inventory import StockItem
-from app.models.party import Party
-from app.models.support import Ticket
+from app.models.enums import TaskStatus, UserRole
+from app.models.support import Task
 from app.models.user import User
-from app.schemas.support import TicketCreate, TicketOut, TicketUpdate
+from app.schemas.support import TaskCreate, TaskOut, TaskUpdate
 
-router = APIRouter(prefix="/api/tickets", tags=["support"])
-
-can_write = require_roles(UserRole.manager, UserRole.technical, UserRole.sales)
+router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
 
-def _validate_device(db: Session, device_unit_id: int | None) -> None:
-    """A ticket's device, if given, must be a serialized stock unit."""
-    if device_unit_id is None:
-        return
-    unit = db.get(StockItem, device_unit_id)
-    if unit is None or unit.serial_number is None:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY, "دستگاه (تک‌کالای سریال‌دار) معتبر نیست"
-        )
+def _may_touch(task: Task, user: User) -> bool:
+    return (
+        user.role == UserRole.manager
+        or task.assigned_to_id == user.id
+        or task.created_by_id == user.id
+    )
 
 
-def _validate_owner(db: Session, owner_id: int | None) -> None:
-    if owner_id is not None and db.get(User, owner_id) is None:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "کاربر مسئول معتبر نیست")
-
-
-@router.get("", response_model=list[TicketOut], dependencies=[Depends(get_current_user)])
-def list_tickets(
+@router.get("", response_model=list[TaskOut])
+def list_tasks(
     db: Session = Depends(get_db),
-    customer_id: int | None = None,
-    owner_id: int | None = None,
-    status_: TicketStatus | None = Query(default=None, alias="status"),
-) -> list[Ticket]:
-    stmt = select(Ticket).order_by(Ticket.id.desc())
-    if customer_id is not None:
-        stmt = stmt.where(Ticket.customer_id == customer_id)
-    if owner_id is not None:
-        stmt = stmt.where(Ticket.owner_id == owner_id)
+    user: User = Depends(get_current_user),
+    assigned_to_id: int | None = None,
+    created_by_id: int | None = None,
+    status_: TaskStatus | None = Query(default=None, alias="status"),
+    scope: str | None = Query(default=None),  # "assigned" | "created" | None
+) -> list[Task]:
+    stmt = select(Task).order_by(Task.id.desc())
+    # Managers see all; everyone else sees tasks they created or were assigned.
+    if user.role != UserRole.manager:
+        stmt = stmt.where(
+            or_(Task.assigned_to_id == user.id, Task.created_by_id == user.id)
+        )
+    if scope == "assigned":
+        stmt = stmt.where(Task.assigned_to_id == user.id)
+    elif scope == "created":
+        stmt = stmt.where(Task.created_by_id == user.id)
+    if assigned_to_id is not None:
+        stmt = stmt.where(Task.assigned_to_id == assigned_to_id)
+    if created_by_id is not None:
+        stmt = stmt.where(Task.created_by_id == created_by_id)
     if status_ is not None:
-        stmt = stmt.where(Ticket.status == status_)
+        stmt = stmt.where(Task.status == status_)
     return list(db.scalars(stmt))
 
 
-@router.post(
-    "", response_model=TicketOut, status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(can_write)],
-)
-def create_ticket(payload: TicketCreate, db: Session = Depends(get_db)) -> Ticket:
-    customer = db.get(Party, payload.customer_id)
-    if customer is None or not customer.is_customer:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "مشتری معتبر نیست")
-    _validate_device(db, payload.device_unit_id)
-    _validate_owner(db, payload.owner_id)
-
-    ticket = Ticket(**payload.model_dump())
-    db.add(ticket)
+@router.post("", response_model=TaskOut, status_code=status.HTTP_201_CREATED)
+def create_task(
+    payload: TaskCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Task:
+    assignee = db.get(User, payload.assigned_to_id)
+    if assignee is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "کاربر ارجاع‌شونده معتبر نیست")
+    task = Task(
+        title=payload.title,
+        description=payload.description,
+        created_by_id=user.id,
+        assigned_to_id=payload.assigned_to_id,
+        scheduled_at=payload.scheduled_at,
+        invoice_id=payload.invoice_id,
+    )
+    db.add(task)
     db.commit()
-    db.refresh(ticket)
-    return ticket
+    db.refresh(task)
+    return task
 
 
-@router.get(
-    "/{ticket_id}", response_model=TicketOut, dependencies=[Depends(get_current_user)]
-)
-def get_ticket(ticket_id: int, db: Session = Depends(get_db)) -> Ticket:
-    ticket = db.get(Ticket, ticket_id)
-    if ticket is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "تیکت یافت نشد")
-    return ticket
+@router.get("/{task_id}", response_model=TaskOut)
+def get_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Task:
+    task = db.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "کار یافت نشد")
+    return task
 
 
-@router.patch(
-    "/{ticket_id}", response_model=TicketOut, dependencies=[Depends(can_write)]
-)
-def update_ticket(
-    ticket_id: int, payload: TicketUpdate, db: Session = Depends(get_db)
-) -> Ticket:
-    ticket = db.get(Ticket, ticket_id)
-    if ticket is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "تیکت یافت نشد")
+@router.patch("/{task_id}", response_model=TaskOut)
+def update_task(
+    task_id: int,
+    payload: TaskUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Task:
+    task = db.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "کار یافت نشد")
+    if not _may_touch(task, user):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "اجازهٔ تغییر این کار را ندارید")
+
     data = payload.model_dump(exclude_unset=True)
-    if "owner_id" in data:
-        _validate_owner(db, data["owner_id"])
+    if "assigned_to_id" in data and db.get(User, data["assigned_to_id"]) is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "کاربر ارجاع‌شونده معتبر نیست")
+
     for field, value in data.items():
-        setattr(ticket, field, value)
+        setattr(task, field, value)
+
+    # stamp/clear the completion time as the status crosses «done»
+    if "status" in data:
+        if data["status"] == TaskStatus.done and task.done_at is None:
+            task.done_at = datetime.now(timezone.utc)
+        elif data["status"] != TaskStatus.done:
+            task.done_at = None
+
     db.commit()
-    db.refresh(ticket)
-    return ticket
+    db.refresh(task)
+    return task

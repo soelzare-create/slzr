@@ -17,6 +17,87 @@ function emptyLine() {
   };
 }
 
+// A small searchable product dropdown (filter by name or part number).
+function ProductCombo({ value, products, onPick }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const selected = products.find((p) => String(p.id) === String(value));
+  const query = q.trim().toLowerCase();
+  const matches = query
+    ? products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          (p.part_number || "").toLowerCase().includes(query)
+      )
+    : products;
+
+  return (
+    <div style={{ position: "relative", minWidth: 190 }}>
+      <input
+        placeholder="جستجوی کالا…"
+        value={open ? q : selected ? selected.name : ""}
+        onFocus={() => {
+          setOpen(true);
+          setQ("");
+        }}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        style={{ width: "100%" }}
+      />
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            zIndex: 20,
+            insetInlineStart: 0,
+            insetInlineEnd: 0,
+            maxHeight: 220,
+            overflowY: "auto",
+            background: "var(--card, #fff)",
+            border: "1px solid var(--line-soft, #ddd)",
+            borderRadius: 8,
+            boxShadow: "0 6px 18px rgba(0,0,0,0.12)",
+          }}
+        >
+          <div
+            onMouseDown={() => {
+              onPick("");
+              setOpen(false);
+            }}
+            style={{ padding: "6px 10px", cursor: "pointer", opacity: 0.7 }}
+          >
+            — بدون کسر انبار —
+          </div>
+          {matches.map((p) => (
+            <div
+              key={p.id}
+              onMouseDown={() => {
+                onPick(String(p.id));
+                setOpen(false);
+              }}
+              style={{ padding: "6px 10px", cursor: "pointer" }}
+            >
+              {p.name}
+              {p.part_number ? ` · ${p.part_number}` : ""}
+              <span style={{ opacity: 0.6, fontSize: 12 }}>
+                {p.tracking_type === "serial"
+                  ? " (سریال‌دار)"
+                  : ` (${Number(p.current_stock).toLocaleString("fa-IR")} ${p.unit_of_measure})`}
+              </span>
+            </div>
+          ))}
+          {matches.length === 0 && (
+            <div style={{ padding: "6px 10px", opacity: 0.6 }}>یافت نشد</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function InvoiceEditor({
   activityId, // when set, the invoice attaches to this activity
   customerMode, // when true, pick a customer and the server auto-creates an activity
@@ -118,21 +199,27 @@ export default function InvoiceEditor({
     const items = [];
     for (const l of lines) {
       if (l.description.trim() === "") continue;
-      const serial = isSerial(l.product_model_id);
-      if (serial && !l.stock_item_id) {
+      // A serial device is only tied to stock on a FINAL invoice; on a proforma
+      // (a quote) it is just a free line — we never reserve/deduct a device.
+      const serialFinal = isSerial(l.product_model_id) && kind === "final";
+      if (serialFinal && !l.stock_item_id) {
         setError(`برای کالای سریال‌دار «${l.description}» یک دستگاه از انبار انتخاب کنید`);
         return;
       }
       const item = {
         description: l.description.trim(),
-        quantity: serial ? 1 : Number(l.quantity) || 0,
+        quantity: serialFinal ? 1 : Number(l.quantity) || 0,
         unit_price: Number(l.unit_price) || 0,
         product_model_id: null,
         stock_item_id: null,
       };
-      if (serial) item.stock_item_id = Number(l.stock_item_id);
-      else if (l.product_model_id) item.product_model_id = Number(l.product_model_id);
-      if (!serial && item.quantity <= 0) {
+      if (serialFinal) {
+        item.stock_item_id = Number(l.stock_item_id);
+      } else if (l.product_model_id && !isSerial(l.product_model_id)) {
+        // only non-serial products link for stock; serial-on-proforma stays free
+        item.product_model_id = Number(l.product_model_id);
+      }
+      if (!serialFinal && item.quantity <= 0) {
         setError(`تعداد ردیف «${l.description}» باید بزرگ‌تر از صفر باشد`);
         return;
       }
@@ -208,7 +295,7 @@ export default function InvoiceEditor({
         </thead>
         <tbody>
           {lines.map((l, idx) => {
-            const serial = isSerial(l.product_model_id);
+            const serialFinal = isSerial(l.product_model_id) && kind === "final";
             return (
               <tr key={idx}>
                 <td>
@@ -220,22 +307,12 @@ export default function InvoiceEditor({
                   />
                 </td>
                 <td>
-                  <select
+                  <ProductCombo
                     value={l.product_model_id}
-                    onChange={(e) => onPickProduct(idx, e.target.value)}
-                    style={{ minWidth: 150 }}
-                  >
-                    <option value="">— بدون کسر انبار —</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                        {p.tracking_type === "serial"
-                          ? " (سریال‌دار)"
-                          : ` (${Number(p.current_stock).toLocaleString("fa-IR")} ${p.unit_of_measure})`}
-                      </option>
-                    ))}
-                  </select>
-                  {serial && (
+                    products={products}
+                    onPick={(v) => onPickProduct(idx, v)}
+                  />
+                  {serialFinal && (
                     <select
                       value={l.stock_item_id}
                       onChange={(e) => setLine(idx, { stock_item_id: e.target.value })}
@@ -255,8 +332,8 @@ export default function InvoiceEditor({
                     type="number"
                     min="0"
                     step="any"
-                    value={serial ? 1 : l.quantity}
-                    disabled={serial}
+                    value={serialFinal ? 1 : l.quantity}
+                    disabled={serialFinal}
                     onChange={(e) => setLine(idx, { quantity: e.target.value })}
                     style={{ width: 80 }}
                   />

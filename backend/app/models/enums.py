@@ -85,9 +85,10 @@ class InvoiceKind(str, enum.Enum):
 
 
 class InvoiceStatus(str, enum.Enum):
-    """وضعیت فاکتور — پرداخت‌شده یا معوق."""
+    """وضعیت فاکتور — بر اساس مبلغ دریافت‌شده محاسبه می‌شود."""
 
     unpaid = "unpaid"    # صادرشده / پرداخت‌نشده
+    partial = "partial"  # قسمتی پرداخت‌شده
     paid = "paid"        # پرداخت‌شده
     overdue = "overdue"  # معوق
 
@@ -107,9 +108,16 @@ class FinancialType(str, enum.Enum):
     expense = "expense"  # خرج
 
 
-class TicketStatus(str, enum.Enum):
-    """وضعیت تیکت — باز، در حال بررسی، بسته."""
+class TaskStatus(str, enum.Enum):
+    """وضعیت کارِ ارجاع‌شده — ارجاع‌شده، در حال انجام، انجام‌شده."""
 
-    open = "open"                # باز
-    investigating = "investigating"  # در حال بررسی
-    closed = "closed"            # بسته
+    assigned = "assigned"        # ارجاع‌شده (جدید)
+    in_progress = "in_progress"  # در حال انجام
+    done = "done"                # انجام‌شده
+
+
+class PaymentDirection(str, enum.Enum):
+    """جهت پرداخت — دریافت از مشتری یا پرداخت به تأمین‌کننده."""
+
+    receipt = "receipt"  # دریافت (پول ورودی — بابت فاکتور فروش)
+    payment = "payment"  # پرداخت (پول خروجی — بابت سند خرید)
