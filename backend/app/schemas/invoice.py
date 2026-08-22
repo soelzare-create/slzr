@@ -39,7 +39,10 @@ class InvoiceItemOut(BaseModel):
 # --- Invoices --------------------------------------------------------------
 
 class InvoiceCreate(BaseModel):
-    activity_id: int
+    # Either target an existing activity, or give a customer and let the server
+    # auto-create a «فروش کالا» activity to hold the invoice.
+    activity_id: int | None = None
+    customer_id: int | None = None
     kind: InvoiceKind = InvoiceKind.proforma
     settlement_due_date: date | None = None  # تاریخ تصفیه حساب
     source_proforma_id: int | None = None  # اگر از روی یک پیش‌فاکتور ساخته می‌شود

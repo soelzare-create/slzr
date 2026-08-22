@@ -27,6 +27,7 @@ from app.core.deps import get_current_user, require_roles
 from app.database import get_db
 from app.models.activity import Activity
 from app.models.enums import (
+    ActivityType,
     InvoiceKind,
     InvoiceStatus,
     TrackingType,
@@ -35,6 +36,7 @@ from app.models.enums import (
 )
 from app.models.inventory import ProductModel, StockItem
 from app.models.invoice import Invoice, InvoiceItem
+from app.models.party import Party
 from app.models.user import User
 from app.schemas.invoice import InvoiceCreate, InvoiceOut, InvoiceStatusUpdate
 from app.services import accounting_service, inventory_service
@@ -109,9 +111,28 @@ def create_invoice(
     db: Session = Depends(get_db),
     issuer: User = Depends(can_write),
 ) -> Invoice:
-    activity = db.get(Activity, payload.activity_id)
-    if activity is None:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "فعالیت معتبر نیست")
+    # Resolve the activity: an explicit one, or auto-create a «فروش کالا»
+    # activity from a customer so an invoice can be issued without one.
+    if payload.activity_id is not None:
+        activity = db.get(Activity, payload.activity_id)
+        if activity is None:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "فعالیت معتبر نیست")
+    elif payload.customer_id is not None:
+        customer = db.get(Party, payload.customer_id)
+        if customer is None or not customer.is_customer:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "مشتری معتبر نیست")
+        activity = Activity(
+            customer_id=customer.id,
+            owner_id=issuer.id,
+            type=ActivityType.sale,
+            title="فروش کالا",
+        )
+        db.add(activity)
+        db.flush()
+    else:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, "فعالیت یا مشتری لازم است"
+        )
 
     if payload.kind == InvoiceKind.final and not payload.items:
         raise HTTPException(

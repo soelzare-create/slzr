@@ -15,9 +15,11 @@ export default function Proformas() {
   const [parties, setParties] = useState([]);
   const [openId, setOpenId] = useState(null);
   const [convert, setConvert] = useState(null); // {activityId, sourceProformaId, items}
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
   const canWrite = me && WRITE_ROLES.includes(me.role);
+  const customers = parties.filter((p) => p.is_customer);
 
   function reload() {
     api.listInvoices({ kind: "proforma" }).then(setRows).catch((e) => setError(e.message));
@@ -64,12 +66,36 @@ export default function Proformas() {
   return (
     <Layout me={me}>
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>پیش‌فاکتورها</h2>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+          <h2 style={{ marginTop: 0 }}>پیش‌فاکتورها</h2>
+          {canWrite && !creating && !convert && (
+            <button
+              style={{ width: "auto", marginTop: 0 }}
+              onClick={() => setCreating(true)}
+            >
+              ثبت پیش‌فاکتور جدید
+            </button>
+          )}
+        </div>
         <p style={{ marginTop: 0, opacity: 0.75, fontSize: 14 }}>
-          برای ساختن پیش‌فاکتور جدید، از صفحه‌ی «فعالیت‌ها» یک فعالیت را باز کنید و
-          «ثبت پیش‌فاکتور جدید» را بزنید. اینجا همه‌ی پیش‌فاکتورها را می‌بینید و
-          می‌توانید هرکدام را که مشتری تأیید کرد به فاکتور تبدیل کنید.
+          می‌توانید همین‌جا مستقیم پیش‌فاکتور بزنید (فقط مشتری را انتخاب کنید — یک
+          فعالیت «فروش کالا» خودکار ساخته می‌شود)، یا از صفحه‌ی «فعالیت‌ها» برای یک
+          فعالیت مشخص پیش‌فاکتور صادر کنید. هر پیش‌فاکتوری را که مشتری تأیید کرد
+          می‌توانید به فاکتور تبدیل کنید.
         </p>
+
+        {creating && (
+          <InvoiceEditor
+            customerMode
+            customers={customers}
+            kind="proforma"
+            onSaved={() => {
+              setCreating(false);
+              reload();
+            }}
+            onCancel={() => setCreating(false)}
+          />
+        )}
         <table>
           <thead>
             <tr>

@@ -196,6 +196,32 @@ def test_serial_line_sells_the_specific_unit_on_final():
     assert again.status_code == 400
 
 
+def test_proforma_without_activity_auto_creates_a_sale_activity():
+    sales = _h("0911")
+    cid = client.post("/api/parties", headers=sales,
+                      json={"name": "مشتری مستقیم"}).json()["id"]
+    # no activity_id — just a customer
+    pf = client.post("/api/invoices", headers=sales, json={
+        "customer_id": cid, "kind": "proforma",
+        "items": [{"description": "سرور", "quantity": 1, "unit_price": 9_000_000}]})
+    assert pf.status_code == 201, pf.text
+    aid = pf.json()["activity_id"]
+    assert aid is not None
+    # the auto-created activity is a «فروش کالا» sale for that customer
+    act = client.get(f"/api/activities/{aid}", headers=sales).json()
+    assert act["type"] == "sale"
+    assert act["title"] == "فروش کالا"
+    assert act["customer_id"] == cid
+
+
+def test_invoice_needs_activity_or_customer():
+    sales = _h("0911")
+    r = client.post("/api/invoices", headers=sales, json={
+        "kind": "proforma",
+        "items": [{"description": "چیزی", "quantity": 1, "unit_price": 1000}]})
+    assert r.status_code == 422
+
+
 def test_final_invoice_needs_items():
     ctx = _activity()
     sales = _h("0911")

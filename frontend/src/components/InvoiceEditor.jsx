@@ -18,7 +18,9 @@ function emptyLine() {
 }
 
 export default function InvoiceEditor({
-  activityId,
+  activityId, // when set, the invoice attaches to this activity
+  customerMode, // when true, pick a customer and the server auto-creates an activity
+  customers, // customer list for customerMode
   kind, // "proforma" | "final"
   initialItems, // optional array to prefill (convert flow)
   sourceProformaId, // optional
@@ -30,6 +32,7 @@ export default function InvoiceEditor({
   const [ready, setReady] = useState(false);
   const [lines, setLines] = useState([emptyLine()]);
   const [dueDate, setDueDate] = useState("");
+  const [customerId, setCustomerId] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -139,10 +142,15 @@ export default function InvoiceEditor({
       setError("حداقل یک ردیف با شرح لازم است");
       return;
     }
+    if (customerMode && !customerId) {
+      setError("مشتری را انتخاب کنید");
+      return;
+    }
     setBusy(true);
     try {
       await api.createInvoice({
-        activity_id: Number(activityId),
+        activity_id: activityId ? Number(activityId) : null,
+        customer_id: customerMode ? Number(customerId) : null,
         kind,
         settlement_due_date: dueDate || null,
         source_proforma_id: sourceProformaId || null,
@@ -165,6 +173,27 @@ export default function InvoiceEditor({
           ? `تبدیل پیش‌فاکتور #${sourceProformaId} به فاکتور`
           : `ثبت ${INVOICE_KIND_FA[kind]} جدید`}
       </h3>
+
+      {customerMode && (
+        <div style={{ marginBottom: 12 }}>
+          <label>مشتری *</label>
+          <select
+            value={customerId}
+            onChange={(e) => setCustomerId(e.target.value)}
+            style={{ maxWidth: 320 }}
+          >
+            <option value="">— انتخاب مشتری —</option>
+            {(customers || []).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <div style={{ opacity: 0.7, fontSize: 13, marginTop: 4 }}>
+            برای این پیش‌فاکتور یک فعالیت «فروش کالا» به‌طور خودکار ساخته می‌شود.
+          </div>
+        </div>
+      )}
 
       <table>
         <thead>
