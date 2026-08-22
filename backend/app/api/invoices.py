@@ -4,12 +4,16 @@ Access model:
 - Read  : any authenticated user.
 - Write : manager or sales.
 
-Rules:
-- Total is computed from the activity's items (اقلام فعالیت).
-- A **proforma** is a quote: no effect on stock or the ledger.
-- Finalizing (creating a `final` invoice, or converting a proforma) makes the
-  invoice module message inventory ("take these out of stock") and accounting
-  ("record this income"). Only one final invoice per activity.
+Model:
+- An activity is only a grouping folder; every priced line lives on the invoice.
+- One activity may carry several proformas AND several final invoices.
+- A **proforma** is a quote: it has line items but no effect on stock or ledger,
+  and it can be edited/deleted freely.
+- A **final** invoice, on creation, messages inventory ("take these out of
+  stock", only for lines linked to a warehouse product) and accounting ("record
+  this income"). It is immutable afterwards except for its payment status.
+- Converting a proforma is done by creating a final invoice from its (possibly
+  edited) lines, carrying `source_proforma_id` for traceability.
 """
 from __future__ import annotations
 
@@ -21,9 +25,10 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user, require_roles
 from app.database import get_db
-from app.models.activity import Activity, ActivityItem
-from app.models.enums import InvoiceKind, InvoiceStatus, UserRole
-from app.models.invoice import Invoice
+from app.models.activity import Activity
+from app.models.enums import InvoiceKind, InvoiceStatus, TrackingType, UserRole
+from app.models.inventory import ProductModel
+from app.models.invoice import Invoice, InvoiceItem
 from app.models.user import User
 from app.schemas.invoice import InvoiceCreate, InvoiceOut, InvoiceStatusUpdate
 from app.services import accounting_service, inventory_service
@@ -33,39 +38,23 @@ router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 can_write = require_roles(UserRole.manager, UserRole.sales)
 
 
-def _activity_total(db: Session, activity_id: int) -> tuple[Decimal, list[ActivityItem]]:
-    items = list(
-        db.scalars(select(ActivityItem).where(ActivityItem.activity_id == activity_id))
+def _items_total(items: list[InvoiceItem]) -> Decimal:
+    return sum(
+        (Decimal(str(i.quantity)) * Decimal(str(i.unit_price)) for i in items),
+        Decimal("0"),
     )
-    total = sum((i.price for i in items), Decimal("0"))
-    return total, items
-
-
-def _has_final(db: Session, activity_id: int, exclude_id: int | None = None) -> bool:
-    stmt = select(Invoice).where(
-        Invoice.activity_id == activity_id, Invoice.kind == InvoiceKind.final
-    )
-    if exclude_id is not None:
-        stmt = stmt.where(Invoice.id != exclude_id)
-    return db.scalar(stmt) is not None
 
 
 def _apply_effects(db: Session, invoice: Invoice, activity: Activity) -> None:
-    """Message inventory and accounting when a sale becomes final."""
-    items = db.scalars(
-        select(ActivityItem).where(ActivityItem.activity_id == activity.id)
-    ).all()
-    if not items:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, "فعالیت هیچ قلمی ندارد؛ فاکتور نهایی ممکن نیست"
-        )
-    for it in items:
-        inventory_service.consume_item(
-            db,
-            stock_item_id=it.stock_item_id,
-            product_model_id=it.product_model_id,
-            quantity=float(it.quantity) if it.quantity is not None else None,
-        )
+    """When a sale becomes final: consume stock (linked lines) and book income."""
+    for it in invoice.items:
+        if it.product_model_id is not None:
+            inventory_service.consume_item(
+                db,
+                stock_item_id=None,
+                product_model_id=it.product_model_id,
+                quantity=float(it.quantity),
+            )
     accounting_service.record_income(
         db,
         amount=float(invoice.total_amount),
@@ -91,9 +80,17 @@ def list_invoices(
     return list(db.scalars(stmt))
 
 
-@router.post(
-    "", response_model=InvoiceOut, status_code=status.HTTP_201_CREATED
+@router.get(
+    "/{invoice_id}", response_model=InvoiceOut, dependencies=[Depends(get_current_user)]
 )
+def get_invoice(invoice_id: int, db: Session = Depends(get_db)) -> Invoice:
+    invoice = db.get(Invoice, invoice_id)
+    if invoice is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "فاکتور یافت نشد")
+    return invoice
+
+
+@router.post("", response_model=InvoiceOut, status_code=status.HTTP_201_CREATED)
 def create_invoice(
     payload: InvoiceCreate,
     db: Session = Depends(get_db),
@@ -103,57 +100,56 @@ def create_invoice(
     if activity is None:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "فعالیت معتبر نیست")
 
-    total, _ = _activity_total(db, activity.id)
+    if payload.kind == InvoiceKind.final and not payload.items:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "فاکتور نهایی باید حداقل یک قلم داشته باشد"
+        )
+
+    # Validate any product links up front (non-serial warehouse goods only).
+    for line in payload.items:
+        if line.product_model_id is not None:
+            model = db.get(ProductModel, line.product_model_id)
+            if model is None:
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_ENTITY, "کالای انتخاب‌شده معتبر نیست"
+                )
+            if model.tracking_type != TrackingType.quantity:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    "فقط کالای بدون‌سریال (مقداری) قابل اتصال به قلم فاکتور است",
+                )
+
+    if payload.source_proforma_id is not None:
+        src = db.get(Invoice, payload.source_proforma_id)
+        if src is None or src.kind != InvoiceKind.proforma:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY, "پیش‌فاکتور مبدأ معتبر نیست"
+            )
+
     invoice = Invoice(
         activity_id=activity.id,
         issuer_id=issuer.id,
         kind=payload.kind,
-        total_amount=total,
         status=InvoiceStatus.unpaid,
         settlement_due_date=payload.settlement_due_date,
+        source_proforma_id=payload.source_proforma_id,
     )
+    invoice.items = [
+        InvoiceItem(
+            description=line.description,
+            product_model_id=line.product_model_id,
+            quantity=line.quantity,
+            unit_price=line.unit_price,
+        )
+        for line in payload.items
+    ]
+    invoice.total_amount = _items_total(invoice.items)
+
+    db.add(invoice)
+    db.flush()
 
     if payload.kind == InvoiceKind.final:
-        if _has_final(db, activity.id):
-            raise HTTPException(
-                status.HTTP_409_CONFLICT, "برای این فعالیت فاکتور نهایی صادر شده است"
-            )
-        db.add(invoice)
-        db.flush()
         _apply_effects(db, invoice, activity)
-
-    else:  # proforma — no stock/ledger effect
-        db.add(invoice)
-
-    db.commit()
-    db.refresh(invoice)
-    return invoice
-
-
-@router.post("/{invoice_id}/finalize", response_model=InvoiceOut)
-def finalize_invoice(
-    invoice_id: int,
-    db: Session = Depends(get_db),
-    issuer: User = Depends(can_write),
-) -> Invoice:
-    """Convert a proforma into a final invoice and apply its effects."""
-    invoice = db.get(Invoice, invoice_id)
-    if invoice is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "فاکتور یافت نشد")
-    if invoice.kind == InvoiceKind.final:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "این فاکتور نهایی است")
-    if _has_final(db, invoice.activity_id):
-        raise HTTPException(
-            status.HTTP_409_CONFLICT, "برای این فعالیت فاکتور نهایی صادر شده است"
-        )
-
-    activity = db.get(Activity, invoice.activity_id)
-    # Recompute the total in case items changed since the proforma was issued.
-    total, _ = _activity_total(db, activity.id)
-    invoice.total_amount = total
-    invoice.kind = InvoiceKind.final
-    db.flush()
-    _apply_effects(db, invoice, activity)
 
     db.commit()
     db.refresh(invoice)
@@ -175,3 +171,21 @@ def update_invoice(
     db.commit()
     db.refresh(invoice)
     return invoice
+
+
+@router.delete("/{invoice_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_invoice(
+    invoice_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(can_write),
+) -> None:
+    invoice = db.get(Invoice, invoice_id)
+    if invoice is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "فاکتور یافت نشد")
+    if invoice.kind == InvoiceKind.final:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "فاکتور نهایی قابل حذف نیست (روی انبار و حسابداری اثر گذاشته است)",
+        )
+    db.delete(invoice)
+    db.commit()

@@ -3,51 +3,56 @@ import { api } from "../api";
 import { useMe } from "../hooks/useMe";
 import Layout from "../components/Layout";
 import InvoiceLines from "../components/InvoiceLines";
-import { INVOICE_STATUS_FA, WRITE_ROLES } from "../labels";
+import InvoiceEditor from "../components/InvoiceEditor";
+import { WRITE_ROLES } from "../labels";
 
-// Standalone list of every FINAL invoice (فاکتور) across activities.
-export default function Invoices() {
+// Standalone list of every proforma (پیش‌فاکتور) across activities.
+export default function Proformas() {
   const { me, loading } = useMe();
   const [rows, setRows] = useState([]);
+  const [finals, setFinals] = useState([]);
   const [activities, setActivities] = useState([]);
   const [parties, setParties] = useState([]);
-  const [team, setTeam] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("");
   const [openId, setOpenId] = useState(null);
+  const [convert, setConvert] = useState(null); // {activityId, sourceProformaId, items}
   const [error, setError] = useState("");
 
   const canWrite = me && WRITE_ROLES.includes(me.role);
 
   function reload() {
-    api
-      .listInvoices({ kind: "final", status: statusFilter })
-      .then(setRows)
-      .catch((e) => setError(e.message));
+    api.listInvoices({ kind: "proforma" }).then(setRows).catch((e) => setError(e.message));
+    api.listInvoices({ kind: "final" }).then(setFinals).catch(() => {});
   }
 
   useEffect(() => {
     if (!me) return;
     api.listActivities().then(setActivities).catch(() => {});
     api.listParties().then(setParties).catch(() => {});
-    api.listTeam().then(setTeam).catch(() => {});
-  }, [me]);
-
-  useEffect(() => {
-    if (me) reload();
+    reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me, statusFilter]);
+  }, [me]);
 
   const partyName = (id) => parties.find((p) => p.id === id)?.name || "—";
   const customerOf = (activityId) => {
     const a = activities.find((x) => x.id === activityId);
     return a ? partyName(a.customer_id) : "—";
   };
-  const issuerName = (id) => team.find((u) => u.id === id)?.name || `#${id}`;
+  const isConverted = (pfId) => finals.some((f) => f.source_proforma_id === pfId);
 
-  async function setStatus(id, status) {
+  async function startConvert(pf) {
+    setError("");
+    const full = await api.getInvoice(pf.id);
+    setConvert({
+      activityId: pf.activity_id,
+      sourceProformaId: pf.id,
+      items: full.items,
+    });
+  }
+
+  async function remove(id) {
     setError("");
     try {
-      await api.updateInvoice(id, { status });
+      await api.deleteInvoice(id);
       reload();
     } catch (e) {
       setError(e.message);
@@ -59,36 +64,19 @@ export default function Invoices() {
   return (
     <Layout me={me}>
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>فاکتورها</h2>
+        <h2 style={{ marginTop: 0 }}>پیش‌فاکتورها</h2>
         <p style={{ marginTop: 0, opacity: 0.75, fontSize: 14 }}>
-          فاکتور نهایی از صفحه‌ی «فعالیت‌ها» (یا با تبدیل یک پیش‌فاکتور) صادر می‌شود.
-          فاکتور نهایی درآمد را در حسابداری ثبت و موجودی کالاهای متصل را کم می‌کند.
+          برای ساختن پیش‌فاکتور جدید، از صفحه‌ی «فعالیت‌ها» یک فعالیت را باز کنید و
+          «ثبت پیش‌فاکتور جدید» را بزنید. اینجا همه‌ی پیش‌فاکتورها را می‌بینید و
+          می‌توانید هرکدام را که مشتری تأیید کرد به فاکتور تبدیل کنید.
         </p>
-
-        <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ width: 180 }}
-          >
-            <option value="">همه‌ی وضعیت‌ها</option>
-            {Object.entries(INVOICE_STATUS_FA).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <table>
           <thead>
             <tr>
               <th>شناسه</th>
               <th>مشتری</th>
               <th>مبلغ</th>
-              <th>وضعیت</th>
               <th>تصفیه</th>
-              <th>صادرکننده</th>
               <th></th>
             </tr>
           </thead>
@@ -98,18 +86,15 @@ export default function Invoices() {
                 <tr>
                   <td>
                     #{inv.id}
-                    {inv.source_proforma_id && (
-                      <span style={{ opacity: 0.6, fontSize: 12 }}>
-                        {" "}
-                        (از پیش‌فاکتور #{inv.source_proforma_id})
+                    {isConverted(inv.id) && (
+                      <span className="badge" style={{ marginInlineStart: 6 }}>
+                        تبدیل‌شده
                       </span>
                     )}
                   </td>
                   <td>{customerOf(inv.activity_id)}</td>
                   <td>{Number(inv.total_amount).toLocaleString("fa-IR")}</td>
-                  <td>{INVOICE_STATUS_FA[inv.status]}</td>
                   <td>{inv.settlement_due_date || "—"}</td>
-                  <td>{issuerName(inv.issuer_id)}</td>
                   <td>
                     <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
                       <button
@@ -119,30 +104,29 @@ export default function Invoices() {
                       >
                         ردیف‌ها
                       </button>
-                      {canWrite &&
-                        (inv.status !== "paid" ? (
-                          <button
-                            className="secondary"
-                            style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
-                            onClick={() => setStatus(inv.id, "paid")}
-                          >
-                            ثبت پرداخت
-                          </button>
-                        ) : (
-                          <button
-                            className="secondary"
-                            style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
-                            onClick={() => setStatus(inv.id, "unpaid")}
-                          >
-                            لغو پرداخت
-                          </button>
-                        ))}
+                      {canWrite && (
+                        <button
+                          style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
+                          onClick={() => startConvert(inv)}
+                        >
+                          تبدیل به فاکتور
+                        </button>
+                      )}
+                      {canWrite && (
+                        <button
+                          className="secondary"
+                          style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
+                          onClick={() => remove(inv.id)}
+                        >
+                          حذف
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
                 {openId === inv.id && (
                   <tr>
-                    <td colSpan={7}>
+                    <td colSpan={5}>
                       <InvoiceLines items={inv.items} />
                     </td>
                   </tr>
@@ -151,8 +135,8 @@ export default function Invoices() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ textAlign: "center", opacity: 0.6 }}>
-                  فاکتوری یافت نشد
+                <td colSpan={5} style={{ textAlign: "center", opacity: 0.6 }}>
+                  پیش‌فاکتوری ثبت نشده
                 </td>
               </tr>
             )}
@@ -160,6 +144,20 @@ export default function Invoices() {
         </table>
         {error && <div className="error">{error}</div>}
       </div>
+
+      {convert && (
+        <InvoiceEditor
+          activityId={convert.activityId}
+          kind="final"
+          initialItems={convert.items}
+          sourceProformaId={convert.sourceProformaId}
+          onSaved={() => {
+            setConvert(null);
+            reload();
+          }}
+          onCancel={() => setConvert(null)}
+        />
+      )}
     </Layout>
   );
 }

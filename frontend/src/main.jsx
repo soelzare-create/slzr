@@ -9,6 +9,7 @@ import Parties from "./pages/Parties";
 import Activities from "./pages/Activities";
 import Inventory from "./pages/Inventory";
 import Invoices from "./pages/Invoices";
+import Proformas from "./pages/Proformas";
 import Purchases from "./pages/Purchases";
 import Accounting from "./pages/Accounting";
 import Support from "./pages/Support";
@@ -59,6 +60,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           element={
             <RequireAuth>
               <Inventory />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/proformas"
+          element={
+            <RequireAuth>
+              <Proformas />
             </RequireAuth>
           }
         />

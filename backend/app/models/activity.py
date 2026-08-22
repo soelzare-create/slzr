@@ -3,16 +3,16 @@
 Contains:
 - Activity        : فعالیت‌ها (central) — a project, a sale, or a support contract
 - ProjectStage    : مراحل پروژه — stage history, only for project activities
-- ActivityItem    : اقلام فعالیت — the goods/lines attached to an activity
 
-Rule (blueprint): the project/activity module drives work forward but does NOT
+An activity is a folder that groups work; priced lines live on invoices, not
+here (see app/models/invoice.py). This module drives work forward but does NOT
 create financial documents itself.
 """
 from __future__ import annotations
 
 from datetime import date
 
-from sqlalchemy import Date, Enum, ForeignKey, Numeric, String
+from sqlalchemy import Date, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -45,9 +45,6 @@ class Activity(Base, TimestampMixin):
     stages: Mapped[list["ProjectStage"]] = relationship(
         back_populates="activity", cascade="all, delete-orphan"
     )
-    items: Mapped[list["ActivityItem"]] = relationship(
-        back_populates="activity", cascade="all, delete-orphan"
-    )
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Activity {self.id} {self.type.value} status={self.status.value}>"
@@ -68,25 +65,3 @@ class ProjectStage(Base, TimestampMixin):
     entered_at: Mapped[date | None] = mapped_column(Date)  # تاریخ ورود به مرحله
 
     activity: Mapped["Activity"] = relationship(back_populates="stages")
-
-
-class ActivityItem(Base, TimestampMixin):
-    """اقلام فعالیت — کالاهای متصل به یک فعالیت با قیمت آن قلم."""
-
-    __tablename__ = "activity_items"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    activity_id: Mapped[int] = mapped_column(
-        ForeignKey("activities.id"), nullable=False, index=True
-    )  # فعالیت
-    # A line refers either to one serialized stock item OR to a quantity of a model.
-    stock_item_id: Mapped[int | None] = mapped_column(
-        ForeignKey("stock_items.id")
-    )  # تک‌کالای سریال‌دار
-    product_model_id: Mapped[int | None] = mapped_column(
-        ForeignKey("product_models.id")
-    )  # مدل کالای بدون‌سریال
-    quantity: Mapped[float | None] = mapped_column(Numeric(14, 2))  # مقدار (بدون‌سریال)
-    price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)  # قیمت این قلم
-
-    activity: Mapped["Activity"] = relationship(back_populates="items")

@@ -1,5 +1,6 @@
-"""Phase 4A tests — sales: activity items, proforma/final invoices, and the
-wiring to inventory (stock-out) and accounting (income)."""
+"""Phase 4A tests — sales: invoices carry their own line items; proformas are
+quotes with no side effects; a final invoice books income and takes linked
+warehouse goods out of stock. One activity may hold several of each."""
 from __future__ import annotations
 
 import os
@@ -46,116 +47,151 @@ def _h(phone):
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
-_serial_seq = 0
-
-
-def _next_serial() -> str:
-    global _serial_seq
-    _serial_seq += 1
-    return f"S-{_serial_seq}"
-
-
-def _setup_sale():
-    """A customer, a sale activity, a serial unit in stock, added as a line."""
-    mgr, sales, wh = _h("0910"), _h("0911"), _h("0913")
+def _activity():
+    """A customer + a bare activity (no items — an activity is just a folder)."""
+    sales = _h("0911")
     cid = client.post("/api/parties", headers=sales,
                       json={"name": "مشتری فروش"}).json()["id"]
     aid = client.post("/api/activities", headers=sales,
-                     json={"customer_id": cid, "owner_id": 2, "type": "sale"}).json()["id"]
+                     json={"customer_id": cid, "owner_id": 2, "type": "project"}).json()["id"]
+    return dict(cid=cid, aid=aid)
+
+
+def _bulk_product(name, qty_in):
+    wh = _h("0913")
     mid = client.post("/api/product-models", headers=wh,
-                      json={"name": "سوییچ", "tracking_type": "serial",
-                            "base_price": 5_000_000}).json()["id"]
-    uid = client.post("/api/stock-items", headers=wh,
-                      json={"model_id": mid, "serial_number": _next_serial()}).json()["id"]
-    line = client.post(f"/api/activities/{aid}/items", headers=sales,
-                       json={"stock_item_id": uid, "price": 6_000_000})
-    assert line.status_code == 201, line.text
-    return dict(cid=cid, aid=aid, mid=mid, uid=uid)
+                      json={"name": name, "tracking_type": "quantity"}).json()["id"]
+    client.post("/api/stock-items", headers=wh,
+                json={"model_id": mid, "quantity": qty_in, "direction": "in"})
+    return mid
 
 
-def test_proforma_has_no_side_effects_then_finalize_does():
-    ctx = _setup_sale()
-    sales, mgr = _h("0911"), _h("0910")
+def test_activity_needs_no_items():
+    """An activity is created with no items and no price."""
+    ctx = _activity()
+    detail = client.get(f"/api/activities/{ctx['aid']}", headers=_h("0910"))
+    assert detail.status_code == 200, detail.text
 
-    # proforma: total computed, but the unit stays in warehouse, no ledger entry
-    pf = client.post("/api/invoices", headers=sales,
-                     json={"activity_id": ctx["aid"], "kind": "proforma",
-                           "settlement_due_date": "2026-09-01"})
+
+def test_proforma_has_no_side_effects():
+    ctx = _activity()
+    mgr, sales = _h("0910"), _h("0911")
+    mid = _bulk_product("سوییچ", 10)
+
+    pf = client.post("/api/invoices", headers=sales, json={
+        "activity_id": ctx["aid"], "kind": "proforma",
+        "settlement_due_date": "2026-09-01",
+        "items": [
+            {"description": "سوییچ", "product_model_id": mid, "quantity": 2, "unit_price": 6_000_000},
+            {"description": "نصب و راه‌اندازی", "quantity": 1, "unit_price": 1_000_000},
+        ],
+    })
     assert pf.status_code == 201, pf.text
-    assert float(pf.json()["total_amount"]) == 6_000_000
+    assert float(pf.json()["total_amount"]) == 13_000_000  # 2*6M + 1M
     assert pf.json()["kind"] == "proforma"
+    assert len(pf.json()["items"]) == 2
 
-    stock = client.get(f"/api/product-models/{ctx['mid']}", headers=mgr).json()
-    assert stock["current_stock"] == 1  # still in stock
+    # stock untouched, no ledger entry
+    stock = client.get(f"/api/product-models/{mid}", headers=mgr).json()
+    assert stock["current_stock"] == 10
 
-    # finalize -> unit becomes sold, income recorded
-    fin = client.post(f"/api/invoices/{pf.json()['id']}/finalize", headers=sales)
-    assert fin.status_code == 200, fin.text
-    assert fin.json()["kind"] == "final"
 
-    stock = client.get(f"/api/product-models/{ctx['mid']}", headers=mgr).json()
-    assert stock["current_stock"] == 0  # sold out of the warehouse
+def test_final_books_income_and_reduces_linked_stock():
+    ctx = _activity()
+    mgr, sales = _h("0910"), _h("0911")
+    mid = _bulk_product("کابل", 50)
+
+    fin = client.post("/api/invoices", headers=sales, json={
+        "activity_id": ctx["aid"], "kind": "final",
+        "items": [
+            {"description": "کابل", "product_model_id": mid, "quantity": 20, "unit_price": 100_000},
+            {"description": "خدمات پشتیبانی", "quantity": 1, "unit_price": 3_000_000},
+        ],
+    })
+    assert fin.status_code == 201, fin.text
+    assert float(fin.json()["total_amount"]) == 5_000_000  # 20*100k + 3M
+
+    # linked line reduced stock; service line did not
+    stock = client.get(f"/api/product-models/{mid}", headers=mgr).json()
+    assert stock["current_stock"] == 30  # 50 - 20
 
     db = SessionLocal()
     try:
         docs = db.query(FinancialDocument).filter_by(party_id=ctx["cid"]).all()
         assert len(docs) == 1
         assert docs[0].type == FinancialType.income
-        assert float(docs[0].amount) == 6_000_000
+        assert float(docs[0].amount) == 5_000_000
     finally:
         db.close()
 
 
-def test_only_one_final_invoice_per_activity():
-    ctx = _setup_sale()
+def test_several_proformas_and_finals_per_activity():
+    ctx = _activity()
     sales = _h("0911")
-    first = client.post("/api/invoices", headers=sales,
-                        json={"activity_id": ctx["aid"], "kind": "final"})
-    assert first.status_code == 201, first.text
-    second = client.post("/api/invoices", headers=sales,
-                         json={"activity_id": ctx["aid"], "kind": "final"})
-    assert second.status_code == 409
+    for _ in range(3):
+        r = client.post("/api/invoices", headers=sales, json={
+            "activity_id": ctx["aid"], "kind": "proforma",
+            "items": [{"description": "قلم", "quantity": 1, "unit_price": 1000}]})
+        assert r.status_code == 201, r.text
+    for _ in range(2):
+        r = client.post("/api/invoices", headers=sales, json={
+            "activity_id": ctx["aid"], "kind": "final",
+            "items": [{"description": "قلم", "quantity": 1, "unit_price": 1000}]})
+        assert r.status_code == 201, r.text
+
+    pfs = client.get(f"/api/invoices?activity_id={ctx['aid']}&kind=proforma", headers=sales)
+    fins = client.get(f"/api/invoices?activity_id={ctx['aid']}&kind=final", headers=sales)
+    assert len(pfs.json()) == 3
+    assert len(fins.json()) == 2
+
+
+def test_convert_proforma_carries_source_and_allows_edited_prices():
+    ctx = _activity()
+    sales = _h("0911")
+    pf = client.post("/api/invoices", headers=sales, json={
+        "activity_id": ctx["aid"], "kind": "proforma",
+        "items": [{"description": "روتر", "quantity": 1, "unit_price": 5_000_000}]}).json()
+
+    # convert -> a NEW final built from the (edited) proforma lines
+    fin = client.post("/api/invoices", headers=sales, json={
+        "activity_id": ctx["aid"], "kind": "final",
+        "source_proforma_id": pf["id"],
+        "items": [{"description": "روتر", "quantity": 1, "unit_price": 5_500_000}]})
+    assert fin.status_code == 201, fin.text
+    assert fin.json()["source_proforma_id"] == pf["id"]
+    assert float(fin.json()["total_amount"]) == 5_500_000
+
+    # the proforma still exists as its own record
+    assert client.get(f"/api/invoices/{pf['id']}", headers=sales).status_code == 200
 
 
 def test_final_invoice_needs_items():
+    ctx = _activity()
     sales = _h("0911")
-    cid = client.post("/api/parties", headers=sales, json={"name": "بی‌قلم"}).json()["id"]
-    aid = client.post("/api/activities", headers=sales,
-                     json={"customer_id": cid, "owner_id": 2, "type": "sale"}).json()["id"]
     r = client.post("/api/invoices", headers=sales,
-                    json={"activity_id": aid, "kind": "final"})
+                    json={"activity_id": ctx["aid"], "kind": "final"})
     assert r.status_code == 400
 
 
-def test_bulk_line_reduces_stock_on_finalize():
-    sales, wh, mgr = _h("0911"), _h("0913"), _h("0910")
-    cid = client.post("/api/parties", headers=sales, json={"name": "مشتری فله"}).json()["id"]
-    aid = client.post("/api/activities", headers=sales,
-                     json={"customer_id": cid, "owner_id": 2, "type": "sale"}).json()["id"]
-    mid = client.post("/api/product-models", headers=wh,
-                      json={"name": "کابل", "tracking_type": "quantity"}).json()["id"]
-    client.post("/api/stock-items", headers=wh,
-                json={"model_id": mid, "quantity": 50, "direction": "in"})
-    client.post(f"/api/activities/{aid}/items", headers=sales,
-                json={"product_model_id": mid, "quantity": 20, "price": 2_000_000})
-
-    client.post("/api/invoices", headers=sales,
-                json={"activity_id": aid, "kind": "final"})
-    stock = client.get(f"/api/product-models/{mid}", headers=mgr).json()
-    assert stock["current_stock"] == 30  # 50 in - 20 sold
-
-
-def test_cannot_sell_more_bulk_than_in_stock():
-    sales, wh = _h("0911"), _h("0913")
-    cid = client.post("/api/parties", headers=sales, json={"name": "کم‌موجودی"}).json()["id"]
-    aid = client.post("/api/activities", headers=sales,
-                     json={"customer_id": cid, "owner_id": 2, "type": "sale"}).json()["id"]
-    mid = client.post("/api/product-models", headers=wh,
-                      json={"name": "فیبر", "tracking_type": "quantity"}).json()["id"]
-    client.post("/api/stock-items", headers=wh,
-                json={"model_id": mid, "quantity": 5, "direction": "in"})
-    client.post(f"/api/activities/{aid}/items", headers=sales,
-                json={"product_model_id": mid, "quantity": 10, "price": 1})
-    r = client.post("/api/invoices", headers=sales,
-                    json={"activity_id": aid, "kind": "final"})
+def test_cannot_sell_more_linked_stock_than_available():
+    ctx = _activity()
+    sales = _h("0911")
+    mid = _bulk_product("فیبر", 5)
+    r = client.post("/api/invoices", headers=sales, json={
+        "activity_id": ctx["aid"], "kind": "final",
+        "items": [{"description": "فیبر", "product_model_id": mid, "quantity": 10, "unit_price": 1}]})
     assert r.status_code == 400  # not enough stock
+
+
+def test_proforma_can_be_deleted_but_final_cannot():
+    ctx = _activity()
+    sales = _h("0911")
+    pf = client.post("/api/invoices", headers=sales, json={
+        "activity_id": ctx["aid"], "kind": "proforma",
+        "items": [{"description": "قلم", "quantity": 1, "unit_price": 1000}]}).json()
+    assert client.delete(f"/api/invoices/{pf['id']}", headers=sales).status_code == 204
+
+    fin = client.post("/api/invoices", headers=sales, json={
+        "activity_id": ctx["aid"], "kind": "final",
+        "items": [{"description": "قلم", "quantity": 1, "unit_price": 1000}]}).json()
+    assert client.delete(f"/api/invoices/{fin['id']}", headers=sales).status_code == 400

@@ -65,18 +65,18 @@ def _bulk_model(name) -> int:
 
 
 def _sell(customer_id, model_id, qty, price) -> None:
-    """Create an activity + items, then issue a FINAL invoice (books income)."""
+    """Create an activity, then issue a FINAL invoice with a line (books income)."""
     # Put goods in the warehouse first (inbound movement — no accounting effect),
-    # otherwise finalizing the sale is blocked by the negative-stock guard.
+    # otherwise the final invoice is blocked by the negative-stock guard.
     client.post("/api/stock-items", headers=_h("0913"),
                 json={"model_id": model_id, "quantity": qty, "direction": "in"})
     act = client.post("/api/activities", headers=_h("0910"), json={
         "customer_id": customer_id, "owner_id": 1, "type": "sale"}).json()
-    client.post(f"/api/activities/{act['id']}/items", headers=_h("0910"),
-                json={"product_model_id": model_id, "quantity": qty, "price": price})
-    r = client.post("/api/invoices", headers=_h("0910"),
-                    json={"activity_id": act["id"], "kind": "final"})
-    assert r.status_code == 201
+    r = client.post("/api/invoices", headers=_h("0910"), json={
+        "activity_id": act["id"], "kind": "final",
+        "items": [{"description": "کالا", "product_model_id": model_id,
+                   "quantity": qty, "unit_price": price}]})
+    assert r.status_code == 201, r.text
 
 
 def _buy(supplier_id, model_id, qty, unit_cost) -> None:

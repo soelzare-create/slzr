@@ -2,7 +2,7 @@
 
 Contains:
 - Purchase      : خرید — a purchase document from a supplier (mirrors Invoice)
-- PurchaseItem  : اقلام خرید — the goods bought, at cost (mirrors ActivityItem)
+- PurchaseItem  : اقلام خرید — the goods bought, at cost (mirrors InvoiceItem)
 
 Flow (mirrors the sale flow):
     choose supplier → record purchase

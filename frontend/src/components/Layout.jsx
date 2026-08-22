@@ -40,6 +40,9 @@ export default function Layout({ me, children }) {
             <NavLink to="/activities" style={link}>
               فعالیت‌ها
             </NavLink>
+            <NavLink to="/proformas" style={link}>
+              پیش‌فاکتورها
+            </NavLink>
             <NavLink to="/invoices" style={link}>
               فاکتورها
             </NavLink>
