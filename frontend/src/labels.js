@@ -149,6 +149,17 @@ export const CASH_ACCOUNT_TYPE_FA = {
   bank: "بانک",
 };
 
+export const CHEQUE_DIRECTION_FA = {
+  received: "دریافتی",
+  issued: "پرداختی",
+};
+
+export const CHEQUE_STATUS_FA = {
+  registered: "در جریان",
+  cleared: "وصول‌شده",
+  bounced: "برگشتی",
+};
+
 // Common operating-expense categories (دستهٔ هزینه) offered in the voucher form.
 export const EXPENSE_CATEGORIES = [
   "اجاره",

@@ -137,3 +137,18 @@ class CashAccountType(str, enum.Enum):
 
     cash = "cash"  # صندوق
     bank = "bank"  # بانک
+
+
+class ChequeDirection(str, enum.Enum):
+    """جهت چک — دریافتی از مشتری یا پرداختی/صادرشده به تأمین‌کننده."""
+
+    received = "received"  # دریافتی
+    issued = "issued"      # پرداختی (صادرشده)
+
+
+class ChequeStatus(str, enum.Enum):
+    """وضعیت چک — در جریان، وصول/پاس‌شده، برگشتی."""
+
+    registered = "registered"  # ثبت‌شده / در جریان
+    cleared = "cleared"        # وصول‌شده (دریافتی) / پاس‌شده (پرداختی)
+    bounced = "bounced"        # برگشتی

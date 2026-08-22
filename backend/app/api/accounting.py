@@ -16,8 +16,15 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import require_roles
 from app.database import get_db
-from app.models.accounting import CashAccount, FinancialDocument, Payment
-from app.models.enums import FinancialType, PaymentDirection, UserRole
+from app.models.accounting import CashAccount, Cheque, FinancialDocument, Payment
+from app.models.enums import (
+    ChequeDirection,
+    ChequeStatus,
+    FinancialType,
+    PaymentDirection,
+    PaymentMethod,
+    UserRole,
+)
 from app.models.invoice import Invoice
 from app.models.purchase import Purchase
 from app.models.user import User
@@ -25,6 +32,9 @@ from app.schemas.accounting import (
     AccountingSummaryOut,
     CashAccountCreate,
     CashAccountOut,
+    ChequeClear,
+    ChequeCreate,
+    ChequeOut,
     ExpenseCategoryOut,
     FinancialDocumentOut,
     PartyBalanceOut,
@@ -217,3 +227,124 @@ def create_account(payload: CashAccountCreate, db: Session = Depends(get_db)) ->
 )
 def expense_by_category(db: Session = Depends(get_db)) -> list[dict]:
     return accounting_service.expense_by_category(db)
+
+
+# --- cheques (چک — دریافتی/پرداختی با سررسید) ------------------------------
+
+@router.get(
+    "/cheques",
+    response_model=list[ChequeOut],
+    dependencies=[Depends(can_read)],
+)
+def list_cheques(
+    db: Session = Depends(get_db),
+    direction: ChequeDirection | None = None,
+    status_: ChequeStatus | None = Query(default=None, alias="status"),
+) -> list[Cheque]:
+    # order by due date so the nearest cheques surface first
+    stmt = select(Cheque).order_by(Cheque.due_date.asc(), Cheque.id.desc())
+    if direction is not None:
+        stmt = stmt.where(Cheque.direction == direction)
+    if status_ is not None:
+        stmt = stmt.where(Cheque.status == status_)
+    return list(db.scalars(stmt))
+
+
+@router.post(
+    "/cheques",
+    response_model=ChequeOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(can_write)],
+)
+def create_cheque(payload: ChequeCreate, db: Session = Depends(get_db)) -> Cheque:
+    if payload.invoice_id is not None and db.get(Invoice, payload.invoice_id) is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "فاکتور معتبر نیست")
+    if payload.purchase_id is not None and db.get(Purchase, payload.purchase_id) is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "سند خرید معتبر نیست")
+    if payload.account_id is not None and db.get(CashAccount, payload.account_id) is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "حساب مالی معتبر نیست")
+    cheque = Cheque(**payload.model_dump())
+    db.add(cheque)
+    db.commit()
+    db.refresh(cheque)
+    return cheque
+
+
+@router.post(
+    "/cheques/{cheque_id}/clear",
+    response_model=ChequeOut,
+)
+def clear_cheque(
+    cheque_id: int,
+    payload: ChequeClear,
+    db: Session = Depends(get_db),
+    recorder: User = Depends(can_write),
+) -> Cheque:
+    """Cash a cheque: create the real receipt/payment and settle any linked doc."""
+    cheque = db.get(Cheque, cheque_id)
+    if cheque is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "چک یافت نشد")
+    if cheque.status != ChequeStatus.registered:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "فقط چکِ در جریان قابل وصول است")
+
+    account_id = payload.account_id or cheque.account_id
+    if account_id is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "حساب مقصد چک را مشخص کنید")
+    if db.get(CashAccount, account_id) is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "حساب مالی معتبر نیست")
+
+    if cheque.direction == ChequeDirection.received:
+        direction = PaymentDirection.receipt
+        category = "وصول چک"
+        # guard against over-receipt on the linked invoice
+        if cheque.invoice_id is not None:
+            invoice = db.get(Invoice, cheque.invoice_id)
+            remaining = float(invoice.total_amount) - accounting_service.invoice_paid(
+                db, invoice.id
+            )
+            if float(cheque.amount) > remaining + 1e-6:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    f"مبلغ چک از باقی‌ماندهٔ فاکتور ({remaining:g}) بیشتر است",
+                )
+    else:
+        direction = PaymentDirection.payment
+        category = "پرداخت چک"
+
+    payment = accounting_service.record_payment(
+        db,
+        direction=direction,
+        amount=float(cheque.amount),
+        paid_at=payload.cleared_at,
+        method=PaymentMethod.cheque,
+        category=category,
+        account_id=account_id,
+        invoice_id=cheque.invoice_id,
+        purchase_id=cheque.purchase_id,
+        party_id=cheque.party_id,
+        recorder_id=recorder.id,
+        note=f"چک شماره {cheque.number}",
+    )
+    cheque.status = ChequeStatus.cleared
+    cheque.account_id = account_id
+    cheque.payment_id = payment.id
+    db.commit()
+    db.refresh(cheque)
+    return cheque
+
+
+@router.post(
+    "/cheques/{cheque_id}/bounce",
+    response_model=ChequeOut,
+    dependencies=[Depends(can_write)],
+)
+def bounce_cheque(cheque_id: int, db: Session = Depends(get_db)) -> Cheque:
+    cheque = db.get(Cheque, cheque_id)
+    if cheque is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "چک یافت نشد")
+    if cheque.status != ChequeStatus.registered:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "فقط چکِ در جریان قابل برگشت است")
+    cheque.status = ChequeStatus.bounced
+    db.commit()
+    db.refresh(cheque)
+    return cheque

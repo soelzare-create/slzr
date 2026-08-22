@@ -213,6 +213,62 @@ def test_only_finance_roles_record_vouchers():
     assert r.status_code == 403
 
 
+def test_received_cheque_clears_into_account_and_settles_invoice():
+    cust = _party("مشتری چکی", cust=True)
+    inv = _final_invoice(cust, 1_000_000)
+    acc = client.post("/api/accounting/accounts", headers=_h("0914"),
+                      json={"name": "بانک ملت", "type": "bank"}).json()
+    # register two cheques as two installments on the invoice
+    ch1 = client.post("/api/accounting/cheques", headers=_h("0914"), json={
+        "direction": "received", "number": "111", "amount": 600_000,
+        "due_date": "2026-09-01", "party_id": cust, "invoice_id": inv["id"]}).json()
+    client.post("/api/accounting/cheques", headers=_h("0914"), json={
+        "direction": "received", "number": "112", "amount": 400_000,
+        "due_date": "2026-09-15", "party_id": cust, "invoice_id": inv["id"]})
+
+    # cashing the first cheque → invoice becomes partial, account balance rises
+    r = client.post(f"/api/accounting/cheques/{ch1['id']}/clear", headers=_h("0914"),
+                    json={"account_id": acc["id"], "cleared_at": "2026-09-02"})
+    assert r.status_code == 200, r.text
+    assert r.json()["status"] == "cleared" and r.json()["payment_id"] is not None
+
+    got = client.get(f"/api/invoices/{inv['id']}", headers=_h("0910")).json()
+    assert got["status"] == "partial" and got["paid_amount"] == 600_000
+
+    accounts = client.get("/api/accounting/accounts", headers=_h("0914")).json()
+    mine = next(a for a in accounts if a["id"] == acc["id"])
+    assert mine["balance"] == 600_000
+
+
+def test_cheque_clear_needs_account_and_only_once():
+    cust = _party("مشتری چک ۲", cust=True)
+    inv = _final_invoice(cust, 200_000)
+    ch = client.post("/api/accounting/cheques", headers=_h("0914"), json={
+        "direction": "received", "number": "222", "amount": 200_000,
+        "due_date": "2026-09-01", "invoice_id": inv["id"]}).json()
+    # no account → rejected
+    assert client.post(f"/api/accounting/cheques/{ch['id']}/clear", headers=_h("0914"),
+                       json={}).status_code == 400
+    acc = client.post("/api/accounting/accounts", headers=_h("0914"),
+                      json={"name": "صندوق چک", "type": "cash"}).json()
+    assert client.post(f"/api/accounting/cheques/{ch['id']}/clear", headers=_h("0914"),
+                       json={"account_id": acc["id"]}).status_code == 200
+    # already cleared → cannot clear again
+    assert client.post(f"/api/accounting/cheques/{ch['id']}/clear", headers=_h("0914"),
+                       json={"account_id": acc["id"]}).status_code == 400
+
+
+def test_bounced_cheque_has_no_cash_effect():
+    ch = client.post("/api/accounting/cheques", headers=_h("0914"), json={
+        "direction": "issued", "number": "333", "amount": 90_000,
+        "due_date": "2026-09-01"}).json()
+    r = client.post(f"/api/accounting/cheques/{ch['id']}/bounce", headers=_h("0914"))
+    assert r.status_code == 200 and r.json()["status"] == "bounced"
+    # a bounced cheque cannot then be cleared
+    assert client.post(f"/api/accounting/cheques/{ch['id']}/clear", headers=_h("0914"),
+                       json={}).status_code == 400
+
+
 def test_summary_tracks_received_and_receivable():
     before = client.get("/api/accounting/summary", headers=_h("0910")).json()
     cust = _party("مشتری خلاصه", cust=True)

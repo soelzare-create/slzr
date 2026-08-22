@@ -106,6 +106,12 @@ export const api = {
   listCashAccounts: () => request("/accounting/accounts"),
   createCashAccount: (a) => request("/accounting/accounts", { method: "POST", body: a }),
   expenseByCategory: () => request("/accounting/expense-by-category"),
+  listCheques: (params) => request(`/accounting/cheques${qs(params)}`),
+  createCheque: (c) => request("/accounting/cheques", { method: "POST", body: c }),
+  clearCheque: (id, body) =>
+    request(`/accounting/cheques/${id}/clear`, { method: "POST", body: body || {} }),
+  bounceCheque: (id) =>
+    request(`/accounting/cheques/${id}/bounce`, { method: "POST" }),
 
   // tasks (internal referrals — ارجاعات)
   listTasks: (params) => request(`/tasks${qs(params)}`),

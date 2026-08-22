@@ -7,6 +7,8 @@ import {
   PAYMENT_DIRECTION_FA,
   PAYMENT_METHOD_FA,
   CASH_ACCOUNT_TYPE_FA,
+  CHEQUE_DIRECTION_FA,
+  CHEQUE_STATUS_FA,
   INVOICE_STATUS_FA,
   EXPENSE_CATEGORIES,
   ACCOUNTING_ROLES,
@@ -25,6 +27,7 @@ export default function Accounting() {
   const [purchases, setPurchases] = useState([]);
   const [payments, setPayments] = useState([]);
   const [expenseCats, setExpenseCats] = useState([]);
+  const [cheques, setCheques] = useState([]);
   const [activities, setActivities] = useState([]);
   const [parties, setParties] = useState([]);
   const [voucher, setVoucher] = useState(null); // 'receipt' | 'payment' | null
@@ -54,6 +57,7 @@ export default function Accounting() {
     api.listPurchases().then(setPurchases).catch(() => {});
     api.listPayments().then(setPayments).catch(() => {});
     api.expenseByCategory().then(setExpenseCats).catch(() => {});
+    api.listCheques().then(setCheques).catch(() => {});
   }
 
   useEffect(() => {
@@ -229,6 +233,18 @@ export default function Accounting() {
           </tbody>
         </table>
       </div>
+
+      {/* Cheques / installments */}
+      <Cheques
+        cheques={cheques}
+        accounts={accounts}
+        parties={parties}
+        partyName={partyName}
+        receivables={receivables}
+        payables={payables}
+        customerOf={customerOf}
+        onChanged={reload}
+      />
 
       {/* Expense by category */}
       <div className="card" style={{ marginTop: 20 }}>
@@ -744,5 +760,225 @@ function PaymentVoucher({ accounts, payables, parties, partyName, onSaved, onCan
         <button type="button" className="secondary" style={{ width: "auto", marginTop: 0 }} onClick={onCancel}>انصراف</button>
       </div>
     </form>
+  );
+}
+
+function Cheques({ cheques, accounts, parties, partyName, receivables, payables, customerOf, onChanged }) {
+  const [show, setShow] = useState(false);
+  const [dir, setDir] = useState("received");
+  const [number, setNumber] = useState("");
+  const [bank, setBank] = useState("");
+  const [amount, setAmount] = useState("");
+  const [dueDate, setDueDate] = useState(today());
+  const [partyId, setPartyId] = useState("");
+  const [linkId, setLinkId] = useState(""); // invoice (received) or purchase (issued)
+  const [accountId, setAccountId] = useState("");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState("");
+  const [clearing, setClearing] = useState(null); // cheque being cleared
+  const [clearAccount, setClearAccount] = useState("");
+  const [clearDate, setClearDate] = useState(today());
+
+  const linkParties = parties.filter((p) =>
+    dir === "received" ? p.is_customer : p.is_supplier
+  );
+  const todayStr = today();
+
+  async function add(e) {
+    e.preventDefault();
+    setError("");
+    try {
+      await api.createCheque({
+        direction: dir,
+        number,
+        bank_name: bank || null,
+        amount: Number(amount),
+        due_date: dueDate,
+        party_id: partyId ? Number(partyId) : null,
+        invoice_id: dir === "received" && linkId ? Number(linkId) : null,
+        purchase_id: dir === "issued" && linkId ? Number(linkId) : null,
+        account_id: accountId ? Number(accountId) : null,
+        note: note || null,
+      });
+      setNumber(""); setBank(""); setAmount(""); setPartyId(""); setLinkId(""); setNote("");
+      setShow(false);
+      onChanged();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function doClear(e) {
+    e.preventDefault();
+    setError("");
+    try {
+      await api.clearCheque(clearing.id, {
+        account_id: clearAccount ? Number(clearAccount) : null,
+        cleared_at: clearDate || null,
+      });
+      setClearing(null);
+      setClearAccount("");
+      onChanged();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function bounce(id) {
+    setError("");
+    try {
+      await api.bounceCheque(id);
+      onChanged();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  const dueStyle = (c) => {
+    if (c.status !== "registered") return {};
+    if (c.due_date < todayStr) return { color: "#b91c1c", fontWeight: 700 }; // گذشته
+    return {};
+  };
+
+  return (
+    <div className="card" style={{ marginTop: 20 }}>
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <h2 style={{ margin: 0 }}>چک‌ها و اقساط</h2>
+        <button className="secondary" style={{ width: "auto", marginTop: 0 }} onClick={() => setShow(!show)}>
+          + ثبت چک
+        </button>
+      </div>
+      <p style={{ opacity: 0.7, marginTop: 6, fontSize: 13 }}>
+        برای پرداخت اقساطی، چند چک با سررسیدهای مختلف روی یک فاکتور/خرید ثبت کنید.
+        با «وصول»، سند دریافت/پرداخت واقعی ساخته و فاکتور/خرید تسویه می‌شود.
+      </p>
+
+      {show && (
+        <form className="card" style={{ background: "var(--bg-soft,#fafafa)" }} onSubmit={add}>
+          <div className="row" style={{ gap: 8, marginBottom: 8 }}>
+            <label style={{ margin: 0 }}>
+              <input type="radio" checked={dir === "received"} onChange={() => { setDir("received"); setLinkId(""); setPartyId(""); }} /> دریافتی (از مشتری)
+            </label>
+            <label style={{ margin: 0 }}>
+              <input type="radio" checked={dir === "issued"} onChange={() => { setDir("issued"); setLinkId(""); setPartyId(""); }} /> پرداختی (به تأمین‌کننده)
+            </label>
+          </div>
+          <div className="grid2">
+            <div><label>شماره چک *</label><input value={number} onChange={(e) => setNumber(e.target.value)} required /></div>
+            <div><label>بانک</label><input value={bank} onChange={(e) => setBank(e.target.value)} /></div>
+            <div><label>مبلغ *</label><input type="number" min="0" step="any" value={amount} onChange={(e) => setAmount(e.target.value)} required /></div>
+            <div><label>سررسید *</label><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required /></div>
+            <div>
+              <label>طرف‌حساب</label>
+              <select value={partyId} onChange={(e) => setPartyId(e.target.value)}>
+                <option value="">— بدون طرف‌حساب —</option>
+                {linkParties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label>{dir === "received" ? "بابت فاکتور (قسط)" : "بابت خرید (قسط)"}</label>
+              <select value={linkId} onChange={(e) => setLinkId(e.target.value)}>
+                <option value="">— بدون ارتباط —</option>
+                {dir === "received"
+                  ? receivables.map((inv) => (
+                      <option key={inv.id} value={inv.id}>
+                        فاکتور #{inv.id} — {customerOf(inv.activity_id)} — باقی‌مانده {Number(inv.remaining).toLocaleString("fa-IR")}
+                      </option>
+                    ))
+                  : payables.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        خرید #{p.id} — {partyName[p.supplier_id] || `#${p.supplier_id}`} — باقی‌مانده {Number(p.remaining).toLocaleString("fa-IR")}
+                      </option>
+                    ))}
+              </select>
+            </div>
+            <div>
+              <label>حساب وصول (اختیاری)</label>
+              <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                <option value="">— هنگام وصول انتخاب می‌شود —</option>
+                {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            </div>
+            <div><label>شرح</label><input value={note} onChange={(e) => setNote(e.target.value)} /></div>
+          </div>
+          <button type="submit" style={{ width: "auto", marginTop: 10 }}>ثبت چک</button>
+        </form>
+      )}
+
+      <div style={{ overflowX: "auto" }}>
+        <table>
+          <thead>
+            <tr>
+              <th>نوع</th>
+              <th>شماره</th>
+              <th>بانک</th>
+              <th>مبلغ</th>
+              <th>سررسید</th>
+              <th>طرف‌حساب</th>
+              <th>بابت</th>
+              <th>وضعیت</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {cheques.map((c) => (
+              <React.Fragment key={c.id}>
+                <tr>
+                  <td>{CHEQUE_DIRECTION_FA[c.direction]}</td>
+                  <td>{c.number}</td>
+                  <td>{c.bank_name || "—"}</td>
+                  <td>{fa(c.amount)}</td>
+                  <td style={dueStyle(c)}>{c.due_date}</td>
+                  <td>{c.party_id ? partyName[c.party_id] || `#${c.party_id}` : "—"}</td>
+                  <td style={{ opacity: 0.8 }}>
+                    {c.invoice_id ? `فاکتور #${c.invoice_id}` : c.purchase_id ? `خرید #${c.purchase_id}` : "—"}
+                  </td>
+                  <td><span className="badge">{CHEQUE_STATUS_FA[c.status]}</span></td>
+                  <td>
+                    {c.status === "registered" && (
+                      <div className="row" style={{ gap: 6 }}>
+                        <button style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
+                          onClick={() => { setClearing(c); setClearAccount(c.account_id ? String(c.account_id) : ""); setClearDate(today()); }}>
+                          وصول
+                        </button>
+                        <button className="secondary" style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
+                          onClick={() => bounce(c.id)}>
+                          برگشت
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+                {clearing && clearing.id === c.id && (
+                  <tr>
+                    <td colSpan={9}>
+                      <form className="row" style={{ gap: 8, flexWrap: "wrap", alignItems: "flex-end" }} onSubmit={doClear}>
+                        <div>
+                          <label style={{ margin: 0 }}>حساب مقصد *</label>
+                          <select value={clearAccount} onChange={(e) => setClearAccount(e.target.value)} required>
+                            <option value="">— انتخاب حساب —</option>
+                            {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ margin: 0 }}>تاریخ وصول</label>
+                          <input type="date" value={clearDate} onChange={(e) => setClearDate(e.target.value)} />
+                        </div>
+                        <button type="submit" style={{ width: "auto", marginTop: 0 }}>تأیید وصول</button>
+                        <button type="button" className="secondary" style={{ width: "auto", marginTop: 0 }} onClick={() => setClearing(null)}>انصراف</button>
+                      </form>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
+            {cheques.length === 0 && (
+              <tr><td colSpan={9} style={{ textAlign: "center", opacity: 0.6 }}>چکی ثبت نشده</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {error && <div className="error">{error}</div>}
+    </div>
   );
 }

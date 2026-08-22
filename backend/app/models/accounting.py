@@ -17,6 +17,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 from app.models.enums import (
     CashAccountType,
+    ChequeDirection,
+    ChequeStatus,
     FinancialType,
     PaymentDirection,
     PaymentMethod,
@@ -115,3 +117,50 @@ class Payment(Base, TimestampMixin):
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Payment {self.id} {self.direction.value} {self.amount}>"
+
+
+class Cheque(Base, TimestampMixin):
+    """چک‌های دریافتی و پرداختی — تعهد پرداخت با سررسید (پایهٔ اقساط).
+
+    چند چک با سررسیدهای مختلف روی یک فاکتور/خرید = پرداخت اقساطی. چک تا زمان
+    «وصول/پاس‌شدن» اثری روی نقدینگی ندارد؛ هنگام وصول، یک سند دریافت/پرداخت واقعی
+    ساخته می‌شود و فاکتور/خرید مرتبط تسویه می‌گردد.
+    """
+
+    __tablename__ = "cheques"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    direction: Mapped[ChequeDirection] = mapped_column(
+        Enum(ChequeDirection, native_enum=False, length=10), nullable=False
+    )  # دریافتی یا پرداختی
+    number: Mapped[str] = mapped_column(String(60), nullable=False)  # شماره چک
+    bank_name: Mapped[str | None] = mapped_column(String(120))  # بانک
+    amount: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)  # مبلغ
+    due_date: Mapped[date] = mapped_column(Date, nullable=False)  # سررسید
+    status: Mapped[ChequeStatus] = mapped_column(
+        Enum(ChequeStatus, native_enum=False, length=12),
+        default=ChequeStatus.registered,
+        nullable=False,
+    )  # وضعیت
+    party_id: Mapped[int | None] = mapped_column(
+        ForeignKey("parties.id"), index=True
+    )  # طرف‌حساب (صادرکنندهٔ چک دریافتی / گیرندهٔ چک پرداختی)
+    invoice_id: Mapped[int | None] = mapped_column(
+        ForeignKey("invoices.id"), index=True
+    )  # فاکتور مرتبط (چک دریافتی)
+    purchase_id: Mapped[int | None] = mapped_column(
+        ForeignKey("purchases.id"), index=True
+    )  # سند خرید مرتبط (چک پرداختی)
+    account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("cash_accounts.id"), index=True
+    )  # حسابی که چک هنگام وصول به آن می‌نشیند / از آن پرداخت می‌شود
+    payment_id: Mapped[int | None] = mapped_column(
+        ForeignKey("payments.id"), index=True
+    )  # سند نقدیِ ساخته‌شده هنگام وصول
+    recorder_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), index=True
+    )
+    note: Mapped[str | None] = mapped_column(String(500))
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<Cheque {self.id} {self.direction.value} {self.amount} {self.status.value}>"
