@@ -15,11 +15,14 @@ from app.models.enums import PurchaseStatus
 class PurchaseItemCreate(BaseModel):
     """One purchased line.
 
-    Serial model     -> provide `serial_number` (the received unit; qty is 1).
-    Non-serial model -> provide `quantity`.
+    - Existing warehouse product: give `product_model_id` (+ `serial_number` for
+      a serial model, or `quantity` for a bulk one) — the goods enter stock.
+    - Free item / service: give `description` (no product link) — it is
+      auto-registered as a catalog service and does NOT affect stock.
     """
 
-    product_model_id: int
+    product_model_id: int | None = None
+    description: str | None = Field(default=None, max_length=400)
     serial_number: str | None = Field(default=None, max_length=120)
     quantity: float | None = Field(default=None, gt=0)
     unit_cost: float = Field(ge=0)  # بهای تمام‌شدهٔ هر واحد
@@ -30,6 +33,7 @@ class PurchaseItemOut(BaseModel):
 
     id: int
     purchase_id: int
+    description: str | None
     stock_item_id: int | None
     product_model_id: int | None
     quantity: float | None

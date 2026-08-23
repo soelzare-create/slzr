@@ -20,7 +20,7 @@ export default function Purchases() {
   const [dueDate, setDueDate] = useState("");
 
   // line being composed + the collected lines
-  const [modelId, setModelId] = useState("");
+  const [itemName, setItemName] = useState("");
   const [serial, setSerial] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unitCost, setUnitCost] = useState("");
@@ -33,8 +33,11 @@ export default function Purchases() {
     return m;
   }, [suppliers]);
 
-  const selectedModel = models.find((m) => String(m.id) === String(modelId));
-  const isSerial = selectedModel?.tracking_type === "serial";
+  // match the typed name against an existing product (pick), else it's a new item
+  const matched = models.find(
+    (m) => m.name.trim().toLowerCase() === itemName.trim().toLowerCase()
+  );
+  const isSerial = matched && !matched.is_service && matched.tracking_type === "serial";
 
   function reload() {
     api.listPurchases().then(setPurchases).catch((e) => setError(e.message));
@@ -50,27 +53,34 @@ export default function Purchases() {
   function addLine(e) {
     e.preventDefault();
     setError("");
-    if (!modelId) return setError("یک کالا انتخاب کنید");
+    if (!itemName.trim()) return setError("نام کالا یا خدمت را وارد کنید");
     if (!unitCost) return setError("بهای واحد را وارد کنید");
-    const line = {
-      product_model_id: Number(modelId),
-      unit_cost: Number(unitCost),
-      _name: selectedModel?.name || `#${modelId}`,
-      _unit: selectedModel?.unit_of_measure || "",
-    };
-    if (isSerial) {
-      if (!serial) return setError("برای کالای سریال‌دار، شماره سریال لازم است");
-      line.serial_number = serial;
-      line._label = `سریال ${serial}`;
-      line._total = Number(unitCost);
+    const line = { unit_cost: Number(unitCost) };
+    if (matched) {
+      line.product_model_id = matched.id;
+      line._name = matched.name;
+      if (isSerial) {
+        if (!serial) return setError("برای کالای سریال‌دار، شماره سریال لازم است");
+        line.serial_number = serial;
+        line._label = `سریال ${serial}`;
+        line._total = Number(unitCost);
+      } else {
+        if (!quantity) return setError("مقدار را وارد کنید");
+        line.quantity = Number(quantity);
+        line._label = `${quantity} ${matched.unit_of_measure || ""}`;
+        line._total = Number(unitCost) * Number(quantity);
+      }
     } else {
+      // a new free item / service — will be auto-registered in the catalog
       if (!quantity) return setError("مقدار را وارد کنید");
+      line.description = itemName.trim();
       line.quantity = Number(quantity);
-      line._label = `${quantity} ${line._unit}`;
+      line._name = `${itemName.trim()} (جدید)`;
+      line._label = String(quantity);
       line._total = Number(unitCost) * Number(quantity);
     }
     setLines([...lines, line]);
-    setModelId("");
+    setItemName("");
     setSerial("");
     setQuantity("");
     setUnitCost("");
@@ -93,8 +103,9 @@ export default function Purchases() {
         supplier_id: Number(supplierId),
         reference: reference || null,
         settlement_due_date: dueDate || null,
-        items: lines.map(({ product_model_id, serial_number, quantity, unit_cost }) => ({
-          product_model_id,
+        items: lines.map(({ product_model_id, description, serial_number, quantity, unit_cost }) => ({
+          product_model_id: product_model_id ?? null,
+          description: description || null,
           serial_number: serial_number || null,
           quantity: quantity ?? null,
           unit_cost,
@@ -243,33 +254,39 @@ export default function Purchases() {
           </div>
 
           <form className="row" style={{ gap: 8, marginTop: 12, flexWrap: "wrap" }} onSubmit={addLine}>
-            <select value={modelId} onChange={(e) => setModelId(e.target.value)} style={{ width: 200 }}>
-              <option value="">— انتخاب کالا —</option>
+            <input
+              list="purchase-products"
+              placeholder="کالا از انبار یا مورد جدید…"
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+              style={{ width: 220 }}
+            />
+            <datalist id="purchase-products">
               {models.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({m.tracking_type === "serial" ? "سریال‌دار" : "بدون سریال"})
+                <option key={m.id} value={m.name}>
+                  {m.is_service ? "خدمت" : m.tracking_type === "serial" ? "سریال‌دار" : "کالا"}
+                  {m.part_number ? ` · ${m.part_number}` : ""}
                 </option>
               ))}
-            </select>
-            {selectedModel &&
-              (isSerial ? (
-                <input
-                  placeholder="شماره سریال دریافتی"
-                  value={serial}
-                  onChange={(e) => setSerial(e.target.value)}
-                  style={{ width: 170 }}
-                />
-              ) : (
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder={`مقدار (${selectedModel.unit_of_measure})`}
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  style={{ width: 150 }}
-                />
-              ))}
+            </datalist>
+            {isSerial ? (
+              <input
+                placeholder="شماره سریال دریافتی"
+                value={serial}
+                onChange={(e) => setSerial(e.target.value)}
+                style={{ width: 170 }}
+              />
+            ) : (
+              <input
+                type="number"
+                min="0"
+                step="any"
+                placeholder={`مقدار${matched ? ` (${matched.unit_of_measure})` : ""}`}
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                style={{ width: 150 }}
+              />
+            )}
             <input
               type="number"
               min="0"
@@ -283,6 +300,10 @@ export default function Purchases() {
               افزودن قلم
             </button>
           </form>
+          <p style={{ opacity: 0.65, fontSize: 13, marginTop: 6 }}>
+            نام کالای موجود را انتخاب کنید تا وارد انبار شود، یا نام یک مورد جدید
+            (خدمت/کالا) را تایپ کنید تا خودکار در کاتالوگ ثبت شود.
+          </p>
 
           {error && <div className="error">{error}</div>}
           <button

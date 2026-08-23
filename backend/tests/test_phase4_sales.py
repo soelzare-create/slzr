@@ -222,6 +222,19 @@ def test_invoice_needs_activity_or_customer():
     assert r.status_code == 422
 
 
+def test_free_invoice_line_is_registered_as_a_service():
+    ctx = _activity()
+    sales, mgr = _h("0911"), _h("0910")
+    before = client.get("/api/product-models", headers=mgr).json()
+    fin = client.post("/api/invoices", headers=sales, json={
+        "activity_id": ctx["aid"], "kind": "final",
+        "items": [{"description": "خدمات مشاوره", "quantity": 1, "unit_price": 4_000_000}]})
+    assert fin.status_code == 201, fin.text  # no stock error for a free line
+    models = client.get("/api/product-models", headers=mgr).json()
+    svc = next(m for m in models if m["name"] == "خدمات مشاوره")
+    assert svc["is_service"] is True and len(models) == len(before) + 1
+
+
 def test_final_invoice_needs_items():
     ctx = _activity()
     sales = _h("0911")

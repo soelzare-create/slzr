@@ -83,7 +83,9 @@ function ProductCombo({ value, products, onPick }) {
               {p.name}
               {p.part_number ? ` · ${p.part_number}` : ""}
               <span style={{ opacity: 0.6, fontSize: 12 }}>
-                {p.tracking_type === "serial"
+                {p.is_service
+                  ? " (خدمت)"
+                  : p.tracking_type === "serial"
                   ? " (سریال‌دار)"
                   : ` (${Number(p.current_stock).toLocaleString("fa-IR")} ${p.unit_of_measure})`}
               </span>

@@ -16,7 +16,7 @@ Rule (blueprint): inventory only raises/lowers stock; pricing is not its job.
 """
 from __future__ import annotations
 
-from sqlalchemy import Enum, ForeignKey, Numeric, String
+from sqlalchemy import Boolean, Enum, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.enums import MovementDirection, TrackingType, UnitItemStatus
@@ -34,6 +34,9 @@ class ProductModel(Base, TimestampMixin):
     part_number: Mapped[str | None] = mapped_column(
         String(120), index=True
     )  # پارت‌نامبر (کد کالای سازنده)
+    is_service: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )  # خدمت است؟ (خدمات موجودی انبار ندارند)
     tracking_type: Mapped[TrackingType] = mapped_column(
         Enum(TrackingType, native_enum=False, length=20), nullable=False
     )  # سریال‌دار یا بدون سریال

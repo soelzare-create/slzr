@@ -70,12 +70,14 @@ export const TRACKING_TYPE_FA = {
 // The most-used ones come first; "سایر" (custom) is handled by the form itself.
 export const UNITS_OF_MEASURE = [
   "عدد",
+  "دستگاه",
   "بسته",
   "متر",
   "حلقه",
   "رول",
   "کیلوگرم",
   "لیتر",
+  "خدمت",
 ];
 
 export const UNIT_STATUS_FA = {
