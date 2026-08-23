@@ -328,8 +328,51 @@ export default function Accounting() {
       </div>
 
       {/* Accrual ledger */}
-      <div className="card" style={{ marginTop: 20 }}>
-        <h2 style={{ marginTop: 0 }}>دفتر اسناد مالی (تعهدی)</h2>
+      <DocumentsLedger docs={docs} partyName={partyName} onChanged={reload} />
+    </Layout>
+  );
+}
+
+function DocumentsLedger({ docs, partyName, onChanged }) {
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState({});
+  const [error, setError] = useState("");
+
+  function startEdit(d) {
+    setError("");
+    setEditId(d.id);
+    setForm({ amount: String(d.amount), type: d.type });
+  }
+
+  async function save(id) {
+    setError("");
+    try {
+      await api.updateDocument(id, { amount: Number(form.amount), type: form.type });
+      setEditId(null);
+      onChanged();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function remove(id) {
+    setError("");
+    try {
+      await api.deleteDocument(id);
+      onChanged();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  return (
+    <div className="card" style={{ marginTop: 20 }}>
+      <h2 style={{ marginTop: 0 }}>دفتر اسناد مالی (تعهدی)</h2>
+      <p style={{ opacity: 0.7, marginTop: 0, fontSize: 13 }}>
+        این اسناد خودکار از فاکتور/خرید ساخته می‌شوند؛ ویرایش اینجا یک «اصلاح دستی»
+        است و مبلغ فاکتور/خرید را تغییر نمی‌دهد.
+      </p>
+      <div style={{ overflowX: "auto" }}>
         <table>
           <thead>
             <tr>
@@ -338,37 +381,67 @@ export default function Accounting() {
               <th>مبلغ</th>
               <th>طرف‌حساب</th>
               <th>منبع</th>
+              <th>اقدام</th>
             </tr>
           </thead>
           <tbody>
-            {docs.map((d) => (
-              <tr key={d.id}>
-                <td>{d.id}</td>
-                <td>
-                  <span className="badge">{FINANCIAL_TYPE_FA[d.type] || d.type}</span>
-                </td>
-                <td>{fa(d.amount)}</td>
-                <td>{partyName[d.party_id] || (d.party_id ? `#${d.party_id}` : "—")}</td>
-                <td style={{ opacity: 0.75 }}>
-                  {d.invoice_id
-                    ? `فاکتور #${d.invoice_id}`
-                    : d.purchase_id
-                    ? `خرید #${d.purchase_id}`
-                    : "—"}
-                </td>
-              </tr>
-            ))}
+            {docs.map((d) => {
+              if (editId === d.id) {
+                return (
+                  <tr key={d.id}>
+                    <td>{d.id}</td>
+                    <td>
+                      <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                        {Object.entries(FINANCIAL_TYPE_FA).map(([k, v]) => (
+                          <option key={k} value={k}>{v}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <input type="number" min="0" step="any" value={form.amount}
+                        onChange={(e) => setForm({ ...form, amount: e.target.value })} style={{ width: 120 }} />
+                    </td>
+                    <td>{partyName[d.party_id] || (d.party_id ? `#${d.party_id}` : "—")}</td>
+                    <td style={{ opacity: 0.75 }}>
+                      {d.invoice_id ? `فاکتور #${d.invoice_id}` : d.purchase_id ? `خرید #${d.purchase_id}` : "—"}
+                    </td>
+                    <td>
+                      <div className="row" style={{ gap: 6 }}>
+                        <button style={{ width: "auto", marginTop: 0, padding: "3px 10px" }} onClick={() => save(d.id)}>ذخیره</button>
+                        <button className="secondary" style={{ width: "auto", marginTop: 0, padding: "3px 10px" }} onClick={() => setEditId(null)}>لغو</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              }
+              return (
+                <tr key={d.id}>
+                  <td>{d.id}</td>
+                  <td><span className="badge">{FINANCIAL_TYPE_FA[d.type] || d.type}</span></td>
+                  <td>{fa(d.amount)}</td>
+                  <td>{partyName[d.party_id] || (d.party_id ? `#${d.party_id}` : "—")}</td>
+                  <td style={{ opacity: 0.75 }}>
+                    {d.invoice_id ? `فاکتور #${d.invoice_id}` : d.purchase_id ? `خرید #${d.purchase_id}` : "—"}
+                  </td>
+                  <td>
+                    <div className="row" style={{ gap: 6 }}>
+                      <button className="secondary" style={{ width: "auto", marginTop: 0, padding: "3px 10px" }} onClick={() => startEdit(d)}>ویرایش</button>
+                      <button className="secondary" style={{ width: "auto", marginTop: 0, padding: "3px 10px" }} onClick={() => remove(d.id)}>حذف</button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {docs.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ textAlign: "center", opacity: 0.6 }}>
-                  سندی ثبت نشده
-                </td>
+                <td colSpan={6} style={{ textAlign: "center", opacity: 0.6 }}>سندی ثبت نشده</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-    </Layout>
+      {error && <div className="error">{error}</div>}
+    </div>
   );
 }
 

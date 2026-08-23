@@ -213,6 +213,25 @@ def test_only_finance_roles_record_vouchers():
     assert r.status_code == 403
 
 
+def test_edit_and_delete_accrual_document():
+    cust = _party("مشتری سند", cust=True)
+    _final_invoice(cust, 700_000)  # books an income document
+    docs = client.get("/api/accounting/documents", headers=_h("0914")).json()
+    doc = next(d for d in docs if d["party_id"] == cust and d["type"] == "income")
+
+    # manual correction of the amount
+    r = client.patch(f"/api/accounting/documents/{doc['id']}", headers=_h("0914"),
+                     json={"amount": 650_000})
+    assert r.status_code == 200 and r.json()["amount"] == 650_000
+    bal = client.get(f"/api/accounting/parties/{cust}/balance", headers=_h("0914")).json()
+    assert bal["income"] == 650_000  # balance reflects the correction
+
+    # delete it
+    assert client.delete(f"/api/accounting/documents/{doc['id']}", headers=_h("0914")).status_code == 204
+    bal = client.get(f"/api/accounting/parties/{cust}/balance", headers=_h("0914")).json()
+    assert bal["income"] == 0
+
+
 def test_edit_and_delete_receipt_recomputes_invoice_status():
     cust = _party("مشتری ویرایش", cust=True)
     inv = _final_invoice(cust, 1_000_000)

@@ -37,6 +37,7 @@ from app.schemas.accounting import (
     ChequeOut,
     ExpenseCategoryOut,
     FinancialDocumentOut,
+    FinancialDocumentUpdate,
     PartyBalanceOut,
     PaymentCreate,
     PaymentOut,
@@ -66,6 +67,39 @@ def list_documents(
     if type_ is not None:
         stmt = stmt.where(FinancialDocument.type == type_)
     return list(db.scalars(stmt))
+
+
+@router.patch(
+    "/documents/{doc_id}",
+    response_model=FinancialDocumentOut,
+    dependencies=[Depends(can_write)],
+)
+def update_document(
+    doc_id: int, payload: FinancialDocumentUpdate, db: Session = Depends(get_db)
+) -> FinancialDocument:
+    """Manually correct an accounting document (income/expense). This is a direct
+    override — the linked invoice/purchase total is left as-is."""
+    doc = db.get(FinancialDocument, doc_id)
+    if doc is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "سند یافت نشد")
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(doc, field, value)
+    db.commit()
+    db.refresh(doc)
+    return doc
+
+
+@router.delete(
+    "/documents/{doc_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(can_write)],
+)
+def delete_document(doc_id: int, db: Session = Depends(get_db)) -> None:
+    doc = db.get(FinancialDocument, doc_id)
+    if doc is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "سند یافت نشد")
+    db.delete(doc)
+    db.commit()
 
 
 @router.get(

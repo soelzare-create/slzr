@@ -27,6 +27,12 @@ class FinancialDocumentOut(BaseModel):
     created_at: datetime
 
 
+class FinancialDocumentUpdate(BaseModel):
+    amount: float | None = Field(default=None, gt=0)
+    type: FinancialType | None = None
+    party_id: int | None = None
+
+
 class PartyBalanceOut(BaseModel):
     party_id: int
     party_name: str | None = None
