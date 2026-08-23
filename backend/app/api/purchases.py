@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, require_roles
 from app.database import get_db
 from app.models.enums import PurchaseStatus, UserRole
+from app.models.inventory import ProductModel
 from app.models.party import Party
 from app.models.purchase import Purchase, PurchaseItem
 from app.models.user import User
@@ -71,19 +72,52 @@ def create_purchase(
 
     total = Decimal("0")
     for line in payload.items:
-        # Inventory brings the goods in and tells us what kind of row it created.
-        unit = inventory_service.receive_item(
-            db,
-            model_id=line.product_model_id,
-            serial_number=line.serial_number,
-            quantity=float(line.quantity) if line.quantity is not None else None,
-        )
         unit_cost = Decimal(str(line.unit_cost))
-        if unit.serial_number is not None:  # serialized receipt (qty = 1)
+
+        # Resolve the product: an existing one, or auto-register a free item.
+        if line.product_model_id is not None:
+            model = db.get(ProductModel, line.product_model_id)
+            if model is None:
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_ENTITY, "کالای انتخاب‌شده معتبر نیست"
+                )
+        elif line.description and line.description.strip():
+            model = inventory_service.ensure_product(
+                db, name=line.description, is_service=True, unit_price=line.unit_cost
+            )
+        else:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "هر قلم باید کالا یا شرحی داشته باشد"
+            )
+
+        if model.is_service:
+            # a service / free item: no stock movement, cost only
             db.add(
                 PurchaseItem(
                     purchase_id=purchase.id,
-                    stock_item_id=unit.id,
+                    product_model_id=model.id,
+                    description=model.name,
+                    quantity=line.quantity,
+                    unit_cost=line.unit_cost,
+                )
+            )
+            qty = Decimal(str(line.quantity)) if line.quantity is not None else Decimal("1")
+            total += unit_cost * qty
+            continue
+
+        # a real good: bring it into stock (serial or bulk)
+        stock_unit = inventory_service.receive_item(
+            db,
+            model_id=model.id,
+            serial_number=line.serial_number,
+            quantity=float(line.quantity) if line.quantity is not None else None,
+        )
+        if stock_unit.serial_number is not None:  # serialized receipt (qty = 1)
+            db.add(
+                PurchaseItem(
+                    purchase_id=purchase.id,
+                    stock_item_id=stock_unit.id,
+                    description=model.name,
                     unit_cost=line.unit_cost,
                 )
             )
@@ -92,7 +126,8 @@ def create_purchase(
             db.add(
                 PurchaseItem(
                     purchase_id=purchase.id,
-                    product_model_id=line.product_model_id,
+                    product_model_id=model.id,
+                    description=model.name,
                     quantity=line.quantity,
                     unit_cost=line.unit_cost,
                 )

@@ -46,9 +46,39 @@ def bulk_stock(db: Session, model_id: int | None = None) -> dict[int, float]:
 
 
 def stock_for(db: Session, model: ProductModel) -> float:
+    if model.is_service:
+        return 0.0  # services are not stocked
     if model.tracking_type == TrackingType.serial:
         return serial_stock(db, model.id).get(model.id, 0.0)
     return bulk_stock(db, model.id).get(model.id, 0.0)
+
+
+def ensure_product(
+    db: Session,
+    *,
+    name: str,
+    is_service: bool = True,
+    unit_price: float = 0.0,
+) -> ProductModel:
+    """Find a catalog entry by name, or create one. Used to auto-register a
+    free-text good/service typed on an invoice or purchase line so it is kept
+    for reuse. New auto-entries default to a (non-stocked) service."""
+    name = (name or "").strip()
+    existing = db.scalar(
+        select(ProductModel).where(func.lower(ProductModel.name) == name.lower())
+    )
+    if existing is not None:
+        return existing
+    model = ProductModel(
+        name=name,
+        tracking_type=TrackingType.quantity,
+        is_service=is_service,
+        unit_of_measure="خدمت" if is_service else "عدد",
+        base_price=unit_price,
+    )
+    db.add(model)
+    db.flush()
+    return model
 
 
 # --- stock adjustments -----------------------------------------------------

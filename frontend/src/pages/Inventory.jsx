@@ -13,6 +13,7 @@ import {
 const EMPTY = {
   name: "",
   part_number: "",
+  is_service: false,
   tracking_type: "serial",
   unit_of_measure: "عدد",
   base_price: "",
@@ -46,7 +47,9 @@ export default function Inventory() {
       await api.createProductModel({
         name: form.name,
         part_number: form.part_number || null,
-        tracking_type: form.tracking_type,
+        is_service: form.is_service,
+        // services are never serial-tracked
+        tracking_type: form.is_service ? "quantity" : form.tracking_type,
         unit_of_measure: form.unit_of_measure,
         base_price: form.base_price ? Number(form.base_price) : 0,
         specs: form.specs || null,
@@ -86,22 +89,28 @@ export default function Inventory() {
                 <td>{m.id}</td>
                 <td>{m.name}</td>
                 <td>{m.part_number || "—"}</td>
-                <td>{TRACKING_TYPE_FA[m.tracking_type]}</td>
+                <td>{m.is_service ? "خدمت" : TRACKING_TYPE_FA[m.tracking_type]}</td>
                 <td>{m.unit_of_measure}</td>
                 <td>{Number(m.base_price).toLocaleString("fa-IR")}</td>
                 <td>
-                  <span className="badge">
-                    {Number(m.current_stock).toLocaleString("fa-IR")} {m.unit_of_measure}
-                  </span>
+                  {m.is_service ? (
+                    <span style={{ opacity: 0.5 }}>—</span>
+                  ) : (
+                    <span className="badge">
+                      {Number(m.current_stock).toLocaleString("fa-IR")} {m.unit_of_measure}
+                    </span>
+                  )}
                 </td>
                 <td>
-                  <button
-                    className="secondary"
-                    style={{ width: "auto", marginTop: 0, padding: "4px 10px" }}
-                    onClick={() => setOpenId(openId === m.id ? null : m.id)}
-                  >
-                    جزئیات
-                  </button>
+                  {!m.is_service && (
+                    <button
+                      className="secondary"
+                      style={{ width: "auto", marginTop: 0, padding: "4px 10px" }}
+                      onClick={() => setOpenId(openId === m.id ? null : m.id)}
+                    >
+                      جزئیات
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -147,18 +156,37 @@ export default function Inventory() {
               />
             </div>
             <div>
-              <label>نوع *</label>
+              <label>کالا یا خدمت *</label>
               <select
-                value={form.tracking_type}
-                onChange={(e) => setForm({ ...form, tracking_type: e.target.value })}
+                value={form.is_service ? "service" : "good"}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    is_service: e.target.value === "service",
+                    unit_of_measure:
+                      e.target.value === "service" ? "خدمت" : form.unit_of_measure,
+                  })
+                }
               >
-                {Object.entries(TRACKING_TYPE_FA).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
+                <option value="good">کالا</option>
+                <option value="service">خدمت</option>
               </select>
             </div>
+            {!form.is_service && (
+              <div>
+                <label>نوع ردیابی *</label>
+                <select
+                  value={form.tracking_type}
+                  onChange={(e) => setForm({ ...form, tracking_type: e.target.value })}
+                >
+                  {Object.entries(TRACKING_TYPE_FA).map(([k, v]) => (
+                    <option key={k} value={k}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label>واحد شمارش *</label>
               <select

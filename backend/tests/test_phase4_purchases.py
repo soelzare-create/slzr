@@ -162,3 +162,40 @@ def test_mark_purchase_paid():
     r = client.patch(f"/api/purchases/{pid}", headers=_h("0910"),
                      json={"status": "paid"})
     assert r.status_code == 200 and r.json()["status"] == "paid"
+
+
+def test_purchase_free_service_item_creates_catalog_entry_no_stock():
+    supplier = _supplier()
+    before = client.get("/api/product-models", headers=_h("0910")).json()
+    r = client.post("/api/purchases", headers=_h("0913"), json={
+        "supplier_id": supplier,
+        "items": [{"description": "خدمات حمل و نقل", "quantity": 1, "unit_cost": 800_000}],
+    })
+    assert r.status_code == 201, r.text
+    assert float(r.json()["total_amount"]) == 800_000
+
+    models = client.get("/api/product-models", headers=_h("0910")).json()
+    svc = next(m for m in models if m["name"] == "خدمات حمل و نقل")
+    assert svc["is_service"] is True
+    assert svc["current_stock"] == 0
+    assert len(models) == len(before) + 1  # a new catalog entry was kept
+
+    # the expense is still booked for the supplier
+    db = SessionLocal()
+    try:
+        docs = db.query(FinancialDocument).filter_by(party_id=supplier,
+                                                     type=FinancialType.expense).all()
+        assert any(float(d.amount) == 800_000 for d in docs)
+    finally:
+        db.close()
+
+
+def test_purchase_reuses_existing_product_by_name():
+    supplier = _supplier()
+    # buy a free item twice by the same name → only one catalog entry
+    for _ in range(2):
+        client.post("/api/purchases", headers=_h("0913"), json={
+            "supplier_id": supplier,
+            "items": [{"description": "لایسنس نرم‌افزار", "quantity": 1, "unit_cost": 100}]})
+    models = client.get("/api/product-models", headers=_h("0910")).json()
+    assert sum(1 for m in models if m["name"] == "لایسنس نرم‌افزار") == 1

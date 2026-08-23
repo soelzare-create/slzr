@@ -66,6 +66,9 @@ class PurchaseItem(Base, TimestampMixin):
     purchase_id: Mapped[int] = mapped_column(
         ForeignKey("purchases.id"), nullable=False, index=True
     )  # خرید
+    description: Mapped[str | None] = mapped_column(
+        String(400)
+    )  # شرح ردیف (نام کالا یا خدمت)
     # A line is either one serialized stock item OR a quantity of a bulk model.
     stock_item_id: Mapped[int | None] = mapped_column(
         ForeignKey("stock_items.id")

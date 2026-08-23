@@ -78,12 +78,14 @@ def _apply_effects(db: Session, invoice: Invoice, activity: Activity) -> None:
             if unit is not None:
                 _touch_last_price(db, unit.model_id, float(it.unit_price))
         elif it.product_model_id is not None:
-            inventory_service.consume_item(
-                db,
-                stock_item_id=None,
-                product_model_id=it.product_model_id,
-                quantity=float(it.quantity),
-            )
+            model = db.get(ProductModel, it.product_model_id)
+            if model is not None and not model.is_service:
+                inventory_service.consume_item(
+                    db,
+                    stock_item_id=None,
+                    product_model_id=it.product_model_id,
+                    quantity=float(it.quantity),
+                )
             _touch_last_price(db, it.product_model_id, float(it.unit_price))
     accounting_service.record_income(
         db,
@@ -227,17 +229,26 @@ def create_invoice(
         settlement_due_date=payload.settlement_due_date,
         source_proforma_id=payload.source_proforma_id,
     )
-    invoice.items = [
-        InvoiceItem(
-            description=line.description,
-            product_model_id=line.product_model_id,
-            stock_item_id=line.stock_item_id,
-            # a serial unit is always exactly one physical item
-            quantity=1 if line.stock_item_id is not None else line.quantity,
-            unit_price=line.unit_price,
+    invoice.items = []
+    for line in payload.items:
+        product_model_id = line.product_model_id
+        # A free-text line (no warehouse link) is auto-registered as a catalog
+        # service so it is kept for reuse; it never affects stock.
+        if product_model_id is None and line.stock_item_id is None and line.description.strip():
+            prod = inventory_service.ensure_product(
+                db, name=line.description, is_service=True, unit_price=line.unit_price
+            )
+            product_model_id = prod.id
+        invoice.items.append(
+            InvoiceItem(
+                description=line.description,
+                product_model_id=product_model_id,
+                stock_item_id=line.stock_item_id,
+                # a serial unit is always exactly one physical item
+                quantity=1 if line.stock_item_id is not None else line.quantity,
+                unit_price=line.unit_price,
+            )
         )
-        for line in payload.items
-    ]
     invoice.total_amount = _items_total(invoice.items)
 
     db.add(invoice)
