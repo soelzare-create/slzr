@@ -110,6 +110,7 @@ export const INVOICE_STATUS_FA = {
 // Purchases (buying side)
 export const PURCHASE_STATUS_FA = {
   unpaid: "پرداخت‌نشده",
+  partial: "قسمتی پرداخت‌شده",
   paid: "پرداخت‌شده",
   overdue: "معوق",
 };
