@@ -28,7 +28,8 @@ class ProformaSerializer(serializers.ModelSerializer):
         fields = ["id", "number", "customer", "customer_name", "owner", "owner_name",
                   "status", "status_display", "confirmed_at", "reservation_expires_at",
                   "notes", "total", "lines", "created_at"]
-        read_only_fields = ["number", "status", "confirmed_at", "reservation_expires_at"]
+        read_only_fields = ["number", "status", "confirmed_at", "reservation_expires_at",
+                            "owner"]
 
     def create(self, validated):
         lines = validated.pop("lines", [])

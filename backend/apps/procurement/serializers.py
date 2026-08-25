@@ -28,6 +28,7 @@ class PurchaseSerializer(serializers.ModelSerializer):
                   "status", "status_display", "date", "notes", "origin_ref",
                   "total", "lines", "created_at"]
         read_only_fields = ["number", "status"]
+        extra_kwargs = {"owner": {"required": False}}
 
     def create(self, validated):
         lines = validated.pop("lines", [])
