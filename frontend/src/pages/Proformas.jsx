@@ -1,189 +1,146 @@
-import React, { useEffect, useState } from "react";
-import { api } from "../api";
-import { useMe } from "../hooks/useMe";
-import Layout from "../components/Layout";
-import InvoiceLines from "../components/InvoiceLines";
-import InvoiceEditor from "../components/InvoiceEditor";
-import { WRITE_ROLES } from "../labels";
+import { useState, useEffect } from "react";
+import { api, rows, toman } from "../api";
+import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
 
-// Standalone list of every proforma (پیش‌فاکتور) across activities.
 export default function Proformas() {
-  const { me, loading } = useMe();
-  const [rows, setRows] = useState([]);
-  const [finals, setFinals] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [parties, setParties] = useState([]);
-  const [openId, setOpenId] = useState(null);
-  const [convert, setConvert] = useState(null); // {activityId, sourceProformaId, items}
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState("");
+  const { data, loading, error, reload, setError } = useList("/proformas");
+  const customers = useOptions("/parties?role=customer");
+  const items = useOptions("/items");
+  const [purchaseLines, setPurchaseLines] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(blank());
 
-  const canWrite = me && WRITE_ROLES.includes(me.role);
-  const customers = parties.filter((p) => p.is_customer);
-
-  function reload() {
-    api.listInvoices({ kind: "proforma" }).then(setRows).catch((e) => setError(e.message));
-    api.listInvoices({ kind: "final" }).then(setFinals).catch(() => {});
-  }
-
+  // Build a flat list of registered purchase lines to attach sales lines to.
   useEffect(() => {
-    if (!me) return;
-    api.listActivities().then(setActivities).catch(() => {});
-    api.listParties().then(setParties).catch(() => {});
-    reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me]);
+    api.get("/purchases").then((d) => {
+      const opts = [];
+      rows(d).filter((p) => p.status === "REGISTERED").forEach((p) => {
+        (p.lines || []).forEach((l) => {
+          opts.push({ id: l.id, label: `${p.number} · ${l.item_name} · ${toman(l.unit_price)}`, unit_price: l.unit_price });
+        });
+      });
+      setPurchaseLines(opts);
+    }).catch(() => {});
+  }, [open]);
 
-  const partyName = (id) => parties.find((p) => p.id === id)?.name || "—";
-  const customerOf = (activityId) => {
-    const a = activities.find((x) => x.id === activityId);
-    return a ? partyName(a.customer_id) : "—";
-  };
-  const isConverted = (pfId) => finals.some((f) => f.source_proforma_id === pfId);
-
-  async function startConvert(pf) {
-    setError("");
-    const full = await api.getInvoice(pf.id);
-    setConvert({
-      activityId: pf.activity_id,
-      sourceProformaId: pf.id,
-      items: full.items,
-    });
+  function blank() { return { customer: "", notes: "", lines: [emptyLine()] }; }
+  function emptyLine() { return { item: "", description: "", quantity: 1, unit_price: 0, source_purchase_line: "" }; }
+  function setLine(i, patch) {
+    setForm({ ...form, lines: form.lines.map((l, idx) => (idx === i ? { ...l, ...patch } : l)) });
   }
 
-  async function remove(id) {
-    setError("");
+  async function save(e) {
+    e.preventDefault();
     try {
-      await api.deleteInvoice(id);
-      reload();
-    } catch (e) {
-      setError(e.message);
-    }
+      const payload = {
+        customer: Number(form.customer),
+        notes: form.notes,
+        lines: form.lines.filter((l) => l.item).map((l) => ({
+          item: Number(l.item), description: l.description,
+          quantity: Number(l.quantity), unit_price: Number(l.unit_price),
+          source_purchase_line: l.source_purchase_line ? Number(l.source_purchase_line) : null,
+        })),
+      };
+      await api.post("/proformas", payload);
+      setOpen(false); setForm(blank()); reload();
+    } catch (err) { setError(err.message); }
   }
 
-  if (loading || !me) return <div className="container">در حال بارگذاری…</div>;
+  async function act(id, action, body) {
+    try { await api.post(`/proformas/${id}/${action}`, body); reload(); }
+    catch (err) { setError(err.message); }
+  }
 
   return (
-    <Layout me={me}>
+    <div>
+      <div className="toolbar">
+        <h1 className="page-title">پیش‌فاکتورها</h1>
+        <button className="btn primary" onClick={() => setOpen(true)}>+ پیش‌فاکتور جدید</button>
+      </div>
+      {error && <div className="error">{error}</div>}
       <div className="card">
-        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-          <h2 style={{ marginTop: 0 }}>پیش‌فاکتورها</h2>
-          {canWrite && !creating && !convert && (
-            <button
-              style={{ width: "auto", marginTop: 0 }}
-              onClick={() => setCreating(true)}
-            >
-              ثبت پیش‌فاکتور جدید
-            </button>
-          )}
-        </div>
-        <p style={{ marginTop: 0, opacity: 0.75, fontSize: 14 }}>
-          می‌توانید همین‌جا مستقیم پیش‌فاکتور بزنید (فقط مشتری را انتخاب کنید — یک
-          فعالیت «فروش کالا» خودکار ساخته می‌شود)، یا از صفحه‌ی «فعالیت‌ها» برای یک
-          فعالیت مشخص پیش‌فاکتور صادر کنید. هر پیش‌فاکتوری را که مشتری تأیید کرد
-          می‌توانید به فاکتور تبدیل کنید.
-        </p>
-
-        {creating && (
-          <InvoiceEditor
-            customerMode
-            customers={customers}
-            kind="proforma"
-            onSaved={() => {
-              setCreating(false);
-              reload();
-            }}
-            onCancel={() => setCreating(false)}
-          />
-        )}
-        <table>
-          <thead>
-            <tr>
-              <th>شناسه</th>
-              <th>مشتری</th>
-              <th>مبلغ</th>
-              <th>تصفیه</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((inv) => (
-              <React.Fragment key={inv.id}>
-                <tr>
-                  <td>
-                    #{inv.id}
-                    {isConverted(inv.id) && (
-                      <span className="badge" style={{ marginInlineStart: 6 }}>
-                        تبدیل‌شده
-                      </span>
-                    )}
-                  </td>
-                  <td>{customerOf(inv.activity_id)}</td>
-                  <td>{Number(inv.total_amount).toLocaleString("fa-IR")}</td>
-                  <td>{inv.settlement_due_date || "—"}</td>
-                  <td>
-                    <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
-                      <button
-                        className="secondary"
-                        style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
-                        onClick={() => setOpenId(openId === inv.id ? null : inv.id)}
-                      >
-                        ردیف‌ها
-                      </button>
-                      {canWrite && (
-                        <button
-                          style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
-                          onClick={() => startConvert(inv)}
-                        >
-                          تبدیل به فاکتور
-                        </button>
-                      )}
-                      {canWrite && (
-                        <button
-                          className="secondary"
-                          style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
-                          onClick={() => remove(inv.id)}
-                        >
-                          حذف
-                        </button>
-                      )}
-                    </div>
+        {loading ? <div className="empty">در حال بارگذاری…</div> : (
+          <table>
+            <thead><tr><th>شماره</th><th>مشتری</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+            <tbody>
+              {data.map((p) => (
+                <tr key={p.id}>
+                  <td className="mono">{p.number}</td>
+                  <td>{p.customer_name}</td>
+                  <td className="mono">{toman(p.total)}</td>
+                  <td><StatusBadge status={p.status} display={p.status_display} /></td>
+                  <td className="flex" style={{ flexWrap: "wrap" }}>
+                    {p.status === "DRAFT" && <button className="btn sm" onClick={() => act(p.id, "confirm")}>تأیید</button>}
+                    {(p.status === "DRAFT" || p.status === "CONFIRMED") &&
+                      <button className="btn sm" onClick={() => act(p.id, "request_purchase")}>درخواست خرید</button>}
+                    {["CONFIRMED", "READY"].includes(p.status) &&
+                      <button className="btn success sm" onClick={() => act(p.id, "convert")}>تبدیل به فاکتور</button>}
+                    {!["INVOICED", "CANCELLED"].includes(p.status) &&
+                      <button className="btn danger sm" onClick={() => act(p.id, "cancel")}>ابطال</button>}
                   </td>
                 </tr>
-                {openId === inv.id && (
-                  <tr>
-                    <td colSpan={5}>
-                      <InvoiceLines items={inv.items} />
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={5} style={{ textAlign: "center", opacity: 0.6 }}>
-                  پیش‌فاکتوری ثبت نشده
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        {error && <div className="error">{error}</div>}
+              ))}
+              {data.length === 0 && <tr><td colSpan={5} className="empty">هنوز پیش‌فاکتوری ثبت نشده.</td></tr>}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {convert && (
-        <InvoiceEditor
-          activityId={convert.activityId}
-          kind="final"
-          initialItems={convert.items}
-          sourceProformaId={convert.sourceProformaId}
-          onSaved={() => {
-            setConvert(null);
-            reload();
-          }}
-          onCancel={() => setConvert(null)}
-        />
+      {open && (
+        <Modal title="پیش‌فاکتور جدید" onClose={() => setOpen(false)} wide>
+          <form onSubmit={save}>
+            <div className="row">
+              <div className="field">
+                <label>مشتری</label>
+                <select value={form.customer} onChange={(e) => setForm({ ...form, customer: e.target.value })} required>
+                  <option value="">— انتخاب —</option>
+                  {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="card" style={{ background: "#fafbfc" }}>
+              <table className="line-items">
+                <thead><tr><th>کالا/خدمت</th><th>تعداد</th><th>قیمت فروش</th><th>خرید مبدأ</th><th></th></tr></thead>
+                <tbody>
+                  {form.lines.map((l, i) => {
+                    const src = purchaseLines.find((s) => String(s.id) === String(l.source_purchase_line));
+                    const floor = src ? Math.ceil(Number(src.unit_price) * 1.05) : null;
+                    const low = floor && Number(l.unit_price) < floor;
+                    return (
+                      <tr key={i}>
+                        <td style={{ minWidth: 150 }}>
+                          <select value={l.item} onChange={(e) => setLine(i, { item: e.target.value })}>
+                            <option value="">— انتخاب —</option>
+                            {items.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
+                          </select>
+                        </td>
+                        <td style={{ width: 70 }}><input type="number" min="0" value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} /></td>
+                        <td style={{ width: 150 }}>
+                          <input type="number" min="0" value={l.unit_price} onChange={(e) => setLine(i, { unit_price: e.target.value })}
+                            style={low ? { borderColor: "#dc2626" } : undefined} />
+                          {floor && <div className="muted" style={{ fontSize: 11 }}>حداقل مجاز: {toman(floor)}</div>}
+                        </td>
+                        <td style={{ minWidth: 180 }}>
+                          <select value={l.source_purchase_line} onChange={(e) => setLine(i, { source_purchase_line: e.target.value })}>
+                            <option value="">— بدون خرید —</option>
+                            {purchaseLines.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                          </select>
+                        </td>
+                        <td><button type="button" className="btn danger sm" onClick={() => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) })}>✕</button></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <button type="button" className="btn sm" onClick={() => setForm({ ...form, lines: [...form.lines, emptyLine()] })}>+ افزودن ردیف</button>
+            </div>
+            <p className="muted" style={{ fontSize: 13 }}>
+              قانون ۵٪: قیمت فروش هر قلم کالا باید حداقل ۱٫۰۵ برابر قیمت خرید مبدأ باشد؛ در غیر این‌صورت هنگام «تبدیل به فاکتور» رد می‌شود.
+            </p>
+            <button className="btn primary">ذخیره پیش‌فاکتور</button>
+          </form>
+        </Modal>
       )}
-    </Layout>
+    </div>
   );
 }

@@ -1,165 +1,139 @@
-import React, { useEffect, useState } from "react";
-import { api } from "../api";
-import { useMe } from "../hooks/useMe";
-import Layout from "../components/Layout";
-import InvoiceLines from "../components/InvoiceLines";
-import { INVOICE_STATUS_FA, WRITE_ROLES } from "../labels";
+import { useState } from "react";
+import { api, toman } from "../api";
+import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
+import { useAuth } from "../auth.jsx";
 
-// Standalone list of every FINAL invoice (فاکتور) across activities.
 export default function Invoices() {
-  const { me, loading } = useMe();
-  const [rows, setRows] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [parties, setParties] = useState([]);
-  const [team, setTeam] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [openId, setOpenId] = useState(null);
-  const [error, setError] = useState("");
+  const { data, loading, error, reload, setError } = useList("/invoices");
+  const { can } = useAuth();
+  const customers = useOptions("/parties?role=customer");
+  const items = useOptions("/items");
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(blank());
 
-  const canWrite = me && WRITE_ROLES.includes(me.role);
-
-  function reload() {
-    api
-      .listInvoices({ kind: "final", status: statusFilter })
-      .then(setRows)
-      .catch((e) => setError(e.message));
+  function blank() {
+    return { type: "SERVICE", customer: "", period_start: "", period_end: "", notes: "", lines: [line()] };
+  }
+  function line() { return { item: "", description: "", quantity: 1, unit_price: 0 }; }
+  function setLine(i, patch) {
+    setForm({ ...form, lines: form.lines.map((l, idx) => (idx === i ? { ...l, ...patch } : l)) });
   }
 
-  useEffect(() => {
-    if (!me) return;
-    api.listActivities().then(setActivities).catch(() => {});
-    api.listParties().then(setParties).catch(() => {});
-    api.listTeam().then(setTeam).catch(() => {});
-  }, [me]);
-
-  useEffect(() => {
-    if (me) reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me, statusFilter]);
-
-  const partyName = (id) => parties.find((p) => p.id === id)?.name || "—";
-  const customerOf = (activityId) => {
-    const a = activities.find((x) => x.id === activityId);
-    return a ? partyName(a.customer_id) : "—";
-  };
-  const issuerName = (id) => team.find((u) => u.id === id)?.name || `#${id}`;
-
-  async function setStatus(id, status) {
-    setError("");
+  async function save(e) {
+    e.preventDefault();
     try {
-      await api.updateInvoice(id, { status });
-      reload();
-    } catch (e) {
-      setError(e.message);
-    }
+      const payload = {
+        type: form.type,
+        customer: Number(form.customer),
+        notes: form.notes,
+        period_start: form.type === "SUPPORT" ? form.period_start || null : null,
+        period_end: form.type === "SUPPORT" ? form.period_end || null : null,
+        lines: form.lines.filter((l) => l.item).map((l) => ({
+          item: Number(l.item), description: l.description,
+          quantity: Number(l.quantity), unit_price: Number(l.unit_price),
+        })),
+      };
+      await api.post("/technical/invoices", payload);
+      setOpen(false); setForm(blank()); reload();
+    } catch (err) { setError(err.message); }
   }
 
-  if (loading || !me) return <div className="container">در حال بارگذاری…</div>;
+  async function reverse(id, returned) {
+    try { await api.post(`/invoices/${id}/reverse`, { returned }); reload(); }
+    catch (err) { setError(err.message); }
+  }
 
   return (
-    <Layout me={me}>
+    <div>
+      <div className="toolbar">
+        <h1 className="page-title">فاکتورها</h1>
+        {can("technical.edit") && (
+          <button className="btn primary" onClick={() => setOpen(true)}>+ فاکتور خدمات/پشتیبانی</button>
+        )}
+      </div>
+      {error && <div className="error">{error}</div>}
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>فاکتورها</h2>
-        <p style={{ marginTop: 0, opacity: 0.75, fontSize: 14 }}>
-          فاکتور نهایی از صفحه‌ی «فعالیت‌ها» (یا با تبدیل یک پیش‌فاکتور) صادر می‌شود.
-          فاکتور نهایی درآمد را در حسابداری ثبت و موجودی کالاهای متصل را کم می‌کند.
-        </p>
-
-        <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ width: 180 }}
-          >
-            <option value="">همه‌ی وضعیت‌ها</option>
-            {Object.entries(INVOICE_STATUS_FA).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>شناسه</th>
-              <th>مشتری</th>
-              <th>مبلغ</th>
-              <th>وضعیت</th>
-              <th>تصفیه</th>
-              <th>صادرکننده</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((inv) => (
-              <React.Fragment key={inv.id}>
-                <tr>
-                  <td>
-                    #{inv.id}
-                    {inv.source_proforma_id && (
-                      <span style={{ opacity: 0.6, fontSize: 12 }}>
-                        {" "}
-                        (از پیش‌فاکتور #{inv.source_proforma_id})
-                      </span>
+        {loading ? <div className="empty">در حال بارگذاری…</div> : (
+          <table>
+            <thead><tr><th>شماره</th><th>نوع</th><th>مشتری</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+            <tbody>
+              {data.map((inv) => (
+                <tr key={inv.id}>
+                  <td className="mono">{inv.number}</td>
+                  <td><span className="badge gray">{inv.type_display}</span></td>
+                  <td>{inv.customer_name}</td>
+                  <td className="mono">{toman(inv.total)}</td>
+                  <td><StatusBadge status={inv.status} display={inv.status_display} kind="invoice" /></td>
+                  <td className="flex">
+                    {inv.status === "ISSUED" && (
+                      <>
+                        <button className="btn sm" onClick={() => reverse(inv.id, true)}>مرجوعی</button>
+                        <button className="btn danger sm" onClick={() => reverse(inv.id, false)}>ابطال</button>
+                      </>
                     )}
                   </td>
-                  <td>{customerOf(inv.activity_id)}</td>
-                  <td>{Number(inv.total_amount).toLocaleString("fa-IR")}</td>
-                  <td>{INVOICE_STATUS_FA[inv.status]}</td>
-                  <td>{inv.settlement_due_date || "—"}</td>
-                  <td>{issuerName(inv.issuer_id)}</td>
-                  <td>
-                    <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
-                      <button
-                        className="secondary"
-                        style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
-                        onClick={() => setOpenId(openId === inv.id ? null : inv.id)}
-                      >
-                        ردیف‌ها
-                      </button>
-                      {canWrite &&
-                        (inv.status !== "paid" ? (
-                          <button
-                            className="secondary"
-                            style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
-                            onClick={() => setStatus(inv.id, "paid")}
-                          >
-                            ثبت پرداخت
-                          </button>
-                        ) : (
-                          <button
-                            className="secondary"
-                            style={{ width: "auto", marginTop: 0, padding: "3px 10px" }}
-                            onClick={() => setStatus(inv.id, "unpaid")}
-                          >
-                            لغو پرداخت
-                          </button>
-                        ))}
-                    </div>
-                  </td>
                 </tr>
-                {openId === inv.id && (
-                  <tr>
-                    <td colSpan={7}>
-                      <InvoiceLines items={inv.items} />
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={7} style={{ textAlign: "center", opacity: 0.6 }}>
-                  فاکتوری یافت نشد
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        {error && <div className="error">{error}</div>}
+              ))}
+              {data.length === 0 && <tr><td colSpan={6} className="empty">هنوز فاکتوری صادر نشده.</td></tr>}
+            </tbody>
+          </table>
+        )}
       </div>
-    </Layout>
+      <p className="muted" style={{ fontSize: 13 }}>
+        فاکتور فروش کالا از مسیر «پیش‌فاکتور → تبدیل به فاکتور» ساخته می‌شود. اینجا فقط فاکتور خدمات و پشتیبانی ماهانه به‌صورت مستقیم صادر می‌شود.
+      </p>
+
+      {open && (
+        <Modal title="فاکتور خدمات / پشتیبانی" onClose={() => setOpen(false)} wide>
+          <form onSubmit={save}>
+            <div className="row">
+              <div className="field">
+                <label>نوع فاکتور</label>
+                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                  <option value="SERVICE">خدمات</option>
+                  <option value="SUPPORT">پشتیبانی ماهانه</option>
+                </select>
+              </div>
+              <div className="field">
+                <label>مشتری</label>
+                <select value={form.customer} onChange={(e) => setForm({ ...form, customer: e.target.value })} required>
+                  <option value="">— انتخاب —</option>
+                  {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            </div>
+            {form.type === "SUPPORT" && (
+              <div className="row">
+                <div className="field"><label>شروع دوره</label><input type="date" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} /></div>
+                <div className="field"><label>پایان دوره</label><input type="date" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} /></div>
+              </div>
+            )}
+            <div className="card" style={{ background: "#fafbfc" }}>
+              <table className="line-items">
+                <thead><tr><th>خدمت</th><th>شرح</th><th>تعداد</th><th>قیمت واحد</th><th></th></tr></thead>
+                <tbody>
+                  {form.lines.map((l, i) => (
+                    <tr key={i}>
+                      <td style={{ minWidth: 160 }}>
+                        <select value={l.item} onChange={(e) => setLine(i, { item: e.target.value })}>
+                          <option value="">— انتخاب —</option>
+                          {items.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
+                        </select>
+                      </td>
+                      <td><input value={l.description} onChange={(e) => setLine(i, { description: e.target.value })} /></td>
+                      <td style={{ width: 70 }}><input type="number" min="0" value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} /></td>
+                      <td style={{ width: 140 }}><input type="number" min="0" value={l.unit_price} onChange={(e) => setLine(i, { unit_price: e.target.value })} /></td>
+                      <td><button type="button" className="btn danger sm" onClick={() => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) })}>✕</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <button type="button" className="btn sm" onClick={() => setForm({ ...form, lines: [...form.lines, line()] })}>+ افزودن ردیف</button>
+            </div>
+            <button className="btn primary">صدور فاکتور</button>
+          </form>
+        </Modal>
+      )}
+    </div>
   );
 }
