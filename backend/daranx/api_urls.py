@@ -6,8 +6,8 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from apps.accounting.api import (
-    AccountViewSet, BalanceSheetView, JournalEntryViewSet, LedgerView,
-    PartyBalancesView,
+    AccountViewSet, BalanceSheetView, ExpenseViewSet, JournalEntryViewSet, LedgerView,
+    PartyBalancesView, PaymentViewSet,
 )
 from apps.accounts.api import (
     RoleViewSet, SystemViewSet, UserViewSet, login_view, me_view,
@@ -30,6 +30,8 @@ router.register("proformas", ProformaViewSet, basename="proforma")
 router.register("invoices", InvoiceViewSet, basename="invoice")
 router.register("accounts", AccountViewSet, basename="account")
 router.register("journal", JournalEntryViewSet, basename="journal")
+router.register("expenses", ExpenseViewSet, basename="expense")
+router.register("payments", PaymentViewSet, basename="payment")
 
 urlpatterns = [
     # Auth

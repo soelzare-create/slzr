@@ -7,14 +7,20 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import Sum
 from rest_framework import viewsets, views
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from apps.accounts.permissions import HasPermissionCode
 
-from .models import Account, JournalEntry, JournalLine
-from .serializers import AccountSerializer, JournalEntrySerializer
+from . import services
+from .models import Account, Expense, JournalEntry, JournalLine, Payment
+from .serializers import (
+    AccountSerializer, ExpenseSerializer, JournalEntrySerializer, PaymentSerializer,
+)
 
 
 class AccountViewSet(viewsets.ModelViewSet):
@@ -22,6 +28,70 @@ class AccountViewSet(viewsets.ModelViewSet):
     serializer_class = AccountSerializer
     permission_classes = [HasPermissionCode]
     required_permissions = {"read": "accounting.view", "write": "accounting.edit"}
+
+    @action(detail=False, methods=["get"])
+    def cash(self, request):
+        """Cash & bank accounts selectable for expenses/payments (code 11xx)."""
+        qs = self.get_queryset().filter(type=Account.Type.ASSET, code__startswith="11",
+                                        is_active=True).exclude(code="1100")
+        return Response(AccountSerializer(qs, many=True).data)
+
+
+class ExpenseViewSet(viewsets.ModelViewSet):
+    """Expenses (هزینه) — direct / overhead. Posts a journal entry on create."""
+
+    queryset = Expense.objects.select_related("paid_from", "party", "owner")
+    serializer_class = ExpenseSerializer
+    permission_classes = [HasPermissionCode]
+    required_permissions = {"read": "accounting.view", "write": "accounting.edit"}
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            expense = serializer.save(owner=self.request.user)
+            services.register_expense(expense, actor=self.request.user)
+
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        expense = self.get_object()
+        with transaction.atomic():
+            services.reverse_document(f"accounting.expense:{expense.id}",
+                                      actor=request.user,
+                                      description=f"ابطال هزینه {expense.number}")
+            expense.status = Expense.Status.CANCELLED
+            expense.save(update_fields=["status", "updated_at"])
+        return Response(ExpenseSerializer(expense).data)
+
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    """Receipts (دریافت) and payments (پرداخت) against party balances."""
+
+    queryset = Payment.objects.select_related("account", "party", "owner")
+    serializer_class = PaymentSerializer
+    permission_classes = [HasPermissionCode]
+    required_permissions = {"read": "accounting.view", "write": "accounting.edit"}
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        party = self.request.query_params.get("party")
+        if party:
+            qs = qs.filter(party_id=party)
+        return qs
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            payment = serializer.save(owner=self.request.user)
+            services.register_payment(payment, actor=self.request.user)
+
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        payment = self.get_object()
+        with transaction.atomic():
+            services.reverse_document(f"accounting.payment:{payment.id}",
+                                      actor=request.user,
+                                      description=f"ابطال {payment.number}")
+            payment.status = Payment.Status.CANCELLED
+            payment.save(update_fields=["status", "updated_at"])
+        return Response(PaymentSerializer(payment).data)
 
 
 class JournalEntryViewSet(viewsets.ReadOnlyModelViewSet):

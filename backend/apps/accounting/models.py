@@ -11,7 +11,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 
-from apps.core.models import Party, TimeStampedModel
+from apps.core.models import NumberedModel, Party, TimeStampedModel
 
 
 class Account(TimeStampedModel):
@@ -100,3 +100,87 @@ class JournalLine(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.account.code} بدهکار {self.debit} / بستانکار {self.credit}"
+
+
+class Expense(NumberedModel):
+    """A recorded expense (هزینه). Split into direct vs overhead (decision).
+
+    Financial effect: expense account (debit) / cash-or-bank account (credit).
+    """
+
+    number_prefix = "EX"
+
+    class Kind(models.TextChoices):
+        DIRECT = "DIRECT", "مستقیم"
+        OVERHEAD = "OVERHEAD", "سربار"
+
+    class Status(models.TextChoices):
+        REGISTERED = "REGISTERED", "ثبت‌شده"
+        CANCELLED = "CANCELLED", "ابطال‌شده"
+
+    number = models.CharField(max_length=30, unique=True, blank=True)
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.DIRECT)
+    category = models.CharField(max_length=120)  # e.g. اجاره، حقوق، حمل‌ونقل
+    amount = models.DecimalField(max_digits=18, decimal_places=0)
+    paid_from = models.ForeignKey(
+        Account, on_delete=models.PROTECT, related_name="expenses_paid",
+        help_text="حساب صندوق/بانک",
+    )
+    party = models.ForeignKey(
+        Party, null=True, blank=True, on_delete=models.PROTECT, related_name="expenses"
+    )
+    date = models.DateField()
+    description = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.REGISTERED)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="expenses"
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "هزینه"
+        verbose_name_plural = "هزینه‌ها"
+
+    def __str__(self) -> str:
+        return f"{self.number} — {self.category}"
+
+
+class Payment(NumberedModel):
+    """A cash receipt (دریافت) or payment (پرداخت) against a party balance.
+
+    RECEIPT: cash/bank (debit) / receivable (credit) — customer paid us.
+    PAYMENT: payable (debit) / cash/bank (credit) — we paid a supplier.
+    """
+
+    number_prefix = "PY"
+
+    class Direction(models.TextChoices):
+        RECEIPT = "RECEIPT", "دریافت"
+        PAYMENT = "PAYMENT", "پرداخت"
+
+    class Status(models.TextChoices):
+        REGISTERED = "REGISTERED", "ثبت‌شده"
+        CANCELLED = "CANCELLED", "ابطال‌شده"
+
+    number = models.CharField(max_length=30, unique=True, blank=True)
+    direction = models.CharField(max_length=10, choices=Direction.choices)
+    party = models.ForeignKey(Party, on_delete=models.PROTECT, related_name="payments")
+    amount = models.DecimalField(max_digits=18, decimal_places=0)
+    account = models.ForeignKey(
+        Account, on_delete=models.PROTECT, related_name="payments",
+        help_text="حساب صندوق/بانک",
+    )
+    date = models.DateField()
+    description = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.REGISTERED)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="payments"
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "دریافت/پرداخت"
+        verbose_name_plural = "دریافت‌ها و پرداخت‌ها"
+
+    def __str__(self) -> str:
+        return f"{self.number} — {self.get_direction_display()}"

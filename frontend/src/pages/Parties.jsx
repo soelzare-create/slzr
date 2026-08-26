@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, rows, toman } from "../api";
+import { useAuth } from "../auth.jsx";
 import { Avatar, Icon, Menu, Modal } from "../ui.jsx";
 
 const SETTLE = {
@@ -11,6 +12,7 @@ const SETTLE = {
 
 export default function Parties() {
   const navigate = useNavigate();
+  const { can } = useAuth();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,6 +46,12 @@ export default function Parties() {
     if (c.is_supplier) {
       items.push({ label: "ثبت خرید", icon: "cart", color: "#e0912f",
         onClick: () => navigate(`/purchases?supplier=${c.id}`) });
+    }
+    if (can("accounting.edit")) {
+      if (c.is_customer) items.push({ label: "دریافت وجه", icon: "receive", color: "#10a86b",
+        onClick: () => navigate(`/accounting?doc=receipt&party=${c.id}`) });
+      if (c.is_supplier) items.push({ label: "پرداخت وجه", icon: "pay", color: "#e0483d",
+        onClick: () => navigate(`/accounting?doc=payment&party=${c.id}`) });
     }
     items.push({ label: "کارنامهٔ مالی", icon: "ledger", onClick: () => navigate("/accounting") });
     items.push({ sep: true });

@@ -28,6 +28,8 @@ SALES_INCOME = "4100"        # درآمد فروش کالا
 SERVICE_INCOME = "4200"      # درآمد خدمات
 SUPPORT_INCOME = "4300"      # درآمد پشتیبانی
 COGS = "5100"                # بهای تمام‌شده کالای فروش‌رفته
+DIRECT_EXPENSE = "5200"      # هزینه‌های مستقیم
+OVERHEAD_EXPENSE = "5300"    # هزینه‌های سربار
 
 
 @dataclass
@@ -90,6 +92,63 @@ def post_entry(
     log_action(actor, "accounting.post_entry", f"accounting.journalentry:{entry.id}",
                source_ref=source_ref, amount=str(total_debit))
     return entry
+
+
+@transaction.atomic
+def register_expense(expense, *, actor=None):
+    """Post an expense: expense account (debit) / cash-bank (credit). Atomic."""
+    from .models import Expense
+
+    code = DIRECT_EXPENSE if expense.kind == Expense.Kind.DIRECT else OVERHEAD_EXPENSE
+    entry = post_entry(
+        description=f"هزینه {expense.category} ({expense.get_kind_display()})",
+        source_ref=f"accounting.expense:{expense.id}",
+        actor=actor,
+        on_date=expense.date,
+        lines=[
+            Line(code, debit=expense.amount, party=expense.party,
+                 description=expense.description or expense.category),
+            Line(expense.paid_from.code, credit=expense.amount,
+                 description="پرداخت هزینه"),
+        ],
+    )
+    return entry
+
+
+@transaction.atomic
+def register_payment(payment, *, actor=None):
+    """Post a receipt/payment against a party balance. Atomic.
+
+    RECEIPT: cash/bank (debit) / receivable (credit).
+    PAYMENT: payable (debit) / cash/bank (credit).
+    """
+    from .models import Payment
+
+    if payment.direction == Payment.Direction.RECEIPT:
+        lines = [
+            Line(payment.account.code, debit=payment.amount, description="دریافت وجه"),
+            Line(ACCOUNTS_RECEIVABLE, credit=payment.amount, party=payment.party,
+                 description=f"دریافت از {payment.party.name}"),
+        ]
+        desc = f"دریافت از {payment.party.name}"
+    else:
+        lines = [
+            Line(ACCOUNTS_PAYABLE, debit=payment.amount, party=payment.party,
+                 description=f"پرداخت به {payment.party.name}"),
+            Line(payment.account.code, credit=payment.amount, description="پرداخت وجه"),
+        ]
+        desc = f"پرداخت به {payment.party.name}"
+    return post_entry(description=desc, source_ref=f"accounting.payment:{payment.id}",
+                      actor=actor, on_date=payment.date, lines=lines)
+
+
+@transaction.atomic
+def reverse_document(source_ref: str, *, actor=None, description: str = ""):
+    """Reverse the journal entry posted for a financial document, if any."""
+    origin = JournalEntry.objects.filter(source_ref=source_ref, is_reversal=False).first()
+    if origin and not origin.reversed_by.exists():
+        return reverse_entry(origin, actor=actor, description=description)
+    return None
 
 
 @transaction.atomic
