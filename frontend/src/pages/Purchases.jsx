@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, toman } from "../api";
 import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
+import { Avatar, Icon } from "../ui.jsx";
 
 export default function Purchases() {
   const { data, loading, error, reload, setError } = useList("/purchases");
@@ -57,8 +58,11 @@ export default function Purchases() {
   return (
     <div>
       <div className="toolbar">
-        <h1 className="page-title">خریدها</h1>
-        <button className="btn primary" onClick={() => setOpen(true)}>+ خرید جدید</button>
+        <div>
+          <h1 className="page-title">خریدها</h1>
+          <div className="page-sub">ثبت خرید از تأمین‌کننده و اثر مالی خودکار</div>
+        </div>
+        <button className="btn primary" onClick={() => setOpen(true)}><Icon name="plus" size={16} color="#fff" /> خرید جدید</button>
       </div>
       {error && <div className="error">{error}</div>}
       <div className="card">
@@ -69,7 +73,7 @@ export default function Purchases() {
               {data.map((p) => (
                 <tr key={p.id}>
                   <td className="mono">{p.number}</td>
-                  <td>{p.supplier_name}</td>
+                  <td><div className="flex" style={{ gap: 10 }}><Avatar name={p.supplier_name} size={32} radius={9} />{p.supplier_name}</div></td>
                   <td className="mono">{toman(p.total)}</td>
                   <td><StatusBadge status={p.status} display={p.status_display} kind="purchase" /></td>
                   <td className="flex">

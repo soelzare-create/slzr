@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../api";
 import { Modal, useList } from "../components.jsx";
+import { Icon } from "../ui.jsx";
 
 export default function Items() {
   const { data, loading, error, reload, setError } = useList("/items");
@@ -26,8 +27,11 @@ export default function Items() {
   return (
     <div>
       <div className="toolbar">
-        <h1 className="page-title">کالا و خدمات</h1>
-        <button className="btn primary" onClick={() => setOpen(true)}>+ مورد جدید</button>
+        <div>
+          <h1 className="page-title">کالا و خدمات</h1>
+          <div className="page-sub">فهرست کالاها و خدمات قابل فروش</div>
+        </div>
+        <button className="btn primary" onClick={() => setOpen(true)}><Icon name="plus" size={16} color="#fff" /> مورد جدید</button>
       </div>
       {error && <div className="error">{error}</div>}
       <div className="card">
@@ -37,7 +41,10 @@ export default function Items() {
             <tbody>
               {data.map((it) => (
                 <tr key={it.id}>
-                  <td>{it.name}</td>
+                  <td><div className="flex" style={{ gap: 10 }}>
+                    <div className="avatar" style={{ width: 32, height: 32, borderRadius: 9, background: it.kind === "GOODS" ? "#eaf0ff" : "#e5f6ee" }}>
+                      <Icon name={it.kind === "GOODS" ? "cart" : "doc"} size={15} color={it.kind === "GOODS" ? "#2f6bff" : "#10a86b"} />
+                    </div>{it.name}</div></td>
                   <td><span className={`badge ${it.kind === "GOODS" ? "blue" : "green"}`}>{it.kind_display}</span></td>
                   <td>{it.unit}</td>
                   <td dir="ltr" style={{ textAlign: "right" }}>{it.sku || "—"}</td>

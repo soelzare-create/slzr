@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, toman } from "../api";
 import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
-import { JalaliDatePicker } from "../ui.jsx";
+import { JalaliDatePicker, Avatar, Icon } from "../ui.jsx";
+import { jalali } from "../api";
 import { useAuth } from "../auth.jsx";
 
 export default function Invoices() {
@@ -59,22 +60,26 @@ export default function Invoices() {
   return (
     <div>
       <div className="toolbar">
-        <h1 className="page-title">فاکتورها</h1>
+        <div>
+          <h1 className="page-title">فاکتورها</h1>
+          <div className="page-sub">فاکتورهای فروش کالا، خدمات و پشتیبانی ماهانه</div>
+        </div>
         {can("technical.edit") && (
-          <button className="btn primary" onClick={() => setOpen(true)}>+ فاکتور خدمات/پشتیبانی</button>
+          <button className="btn primary" onClick={() => setOpen(true)}><Icon name="plus" size={16} color="#fff" /> فاکتور خدمات/پشتیبانی</button>
         )}
       </div>
       {error && <div className="error">{error}</div>}
       <div className="card">
         {loading ? <div className="empty">در حال بارگذاری…</div> : (
           <table>
-            <thead><tr><th>شماره</th><th>نوع</th><th>مشتری</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+            <thead><tr><th>شماره</th><th>نوع</th><th>مشتری</th><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
             <tbody>
               {data.map((inv) => (
                 <tr key={inv.id}>
                   <td className="mono">{inv.number}</td>
                   <td><span className="badge gray">{inv.type_display}</span></td>
-                  <td>{inv.customer_name}</td>
+                  <td><div className="flex" style={{ gap: 10 }}><Avatar name={inv.customer_name} size={32} radius={9} />{inv.customer_name}</div></td>
+                  <td className="muted" style={{ fontSize: 12.5 }}>{jalali(inv.date)}</td>
                   <td className="mono">{toman(inv.total)}</td>
                   <td><StatusBadge status={inv.status} display={inv.status_display} kind="invoice" /></td>
                   <td className="flex">
@@ -87,7 +92,7 @@ export default function Invoices() {
                   </td>
                 </tr>
               ))}
-              {data.length === 0 && <tr><td colSpan={6} className="empty">هنوز فاکتوری صادر نشده.</td></tr>}
+              {data.length === 0 && <tr><td colSpan={7} className="empty">هنوز فاکتوری صادر نشده.</td></tr>}
             </tbody>
           </table>
         )}
