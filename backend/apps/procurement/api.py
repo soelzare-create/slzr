@@ -2,14 +2,24 @@ from __future__ import annotations
 
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
+from apps.accounts.models import User
 from apps.accounts.permissions import HasPermissionCode, OwnershipQuerysetMixin
+from apps.core.models import Notification
+from apps.core.services import log_action, notify
 
 from . import services
 from .models import Purchase
 from .serializers import PurchaseSerializer
+
+
+def _procurement_users():
+    """Users with a role in the procurement department (assignable)."""
+    return User.objects.filter(
+        userrole__role__system__code="procurement", is_active=True
+    ).distinct()
 
 
 class PurchaseViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
@@ -26,9 +36,46 @@ class PurchaseViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
         return self.filter_by_ownership(super().get_queryset())
 
     def perform_create(self, serializer):
-        # If no explicit owner (assignee), default to the creator.
-        owner = serializer.validated_data.get("owner") or self.request.user
-        serializer.save(owner=owner)
+        # Only a manager (procurement.assign) may assign to someone else on
+        # create; everyone else owns what they create.
+        requested = serializer.validated_data.get("owner")
+        if requested and self.request.user.has_perm_code("procurement.assign"):
+            owner = requested
+        else:
+            owner = self.request.user
+        purchase = serializer.save(owner=owner)
+        if owner != self.request.user:
+            self._notify_assignee(purchase, owner, self.request.user)
+
+    @action(detail=False, methods=["get"])
+    def team(self, request):
+        """Procurement users available for assignment (managers only)."""
+        if not request.user.has_perm_code("procurement.assign"):
+            return Response([])
+        return Response(list(_procurement_users().values("id", "full_name")))
+
+    @action(detail=True, methods=["post"])
+    def assign(self, request, pk=None):
+        """Re-assign a purchase to a procurement user (Section 5)."""
+        if not request.user.has_perm_code("procurement.assign"):
+            raise PermissionDenied("اساین خرید فقط توسط مدیر بازرگانی ممکن است.")
+        purchase = self.get_object()
+        owner = _procurement_users().filter(pk=request.data.get("owner")).first()
+        if not owner:
+            raise ValidationError("کاربر بازرگانی معتبر انتخاب کنید.")
+        purchase.owner = owner
+        purchase.save(update_fields=["owner", "updated_at"])
+        log_action(request.user, "procurement.assign_purchase",
+                   f"procurement.purchase:{purchase.id}", owner=owner.id)
+        self._notify_assignee(purchase, owner, request.user)
+        return Response(PurchaseSerializer(purchase).data)
+
+    def _notify_assignee(self, purchase, owner, actor):
+        if owner == actor:
+            return
+        notify(owner, Notification.Kind.GENERAL,
+               f"خرید {purchase.number or purchase.id} به شما اساین شد.",
+               f"procurement.purchase:{purchase.id}")
 
     @action(detail=True, methods=["post"])
     def register(self, request, pk=None):

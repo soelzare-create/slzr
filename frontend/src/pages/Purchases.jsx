@@ -17,8 +17,10 @@ export default function Purchases() {
   const navigate = useNavigate();
   const suppliers = useOptions("/parties?role=supplier");
   const items = useOptions("/items");
+  const team = useOptions("/purchases/team"); // procurement users (managers only)
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(blank());
+  const [assigning, setAssigning] = useState(null); // purchase being (re)assigned
   const [params, setParams] = useSearchParams();
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function Purchases() {
   }, []); // eslint-disable-line
 
   function blank() {
-    return { supplier: "", notes: "", lines: [emptyLine()] };
+    return { supplier: "", notes: "", owner: "", lines: [emptyLine()] };
   }
   function emptyLine() {
     return { item: "", description: "", quantity: 1, unit_price: 0 };
@@ -49,6 +51,7 @@ export default function Purchases() {
       const payload = {
         supplier: Number(form.supplier),
         notes: form.notes,
+        owner: form.owner ? Number(form.owner) : undefined,
         lines: form.lines.filter((l) => l.item).map((l) => ({
           item: Number(l.item), description: l.description,
           quantity: Number(l.quantity), unit_price: Number(l.unit_price),
@@ -64,6 +67,12 @@ export default function Purchases() {
     catch (err) { setError(err.message); }
   }
 
+  async function assign(owner) {
+    try { await api.post(`/purchases/${assigning.id}/assign`, { owner: Number(owner) }); setAssigning(null); reload(); }
+    catch (err) { setError(err.message); }
+  }
+  const isManager = team.length > 0;
+
   return (
     <div>
       <div className="toolbar">
@@ -77,7 +86,7 @@ export default function Purchases() {
       <div className="card">
         {loading ? <div className="empty">در حال بارگذاری…</div> : (
           <table>
-            <thead><tr><th>شماره</th><th>تأمین‌کننده</th><th>مبلغ</th><th>پرداخت</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+            <thead><tr><th>شماره</th><th>تأمین‌کننده</th><th>مسئول</th><th>مبلغ</th><th>پرداخت</th><th>وضعیت</th><th>عملیات</th></tr></thead>
             <tbody>
               {data.map((p) => {
                 const ps = PAY_STATUS[p.payment_status] || PAY_STATUS.UNPAID;
@@ -86,6 +95,7 @@ export default function Purchases() {
                 <tr key={p.id}>
                   <td className="mono">{p.number}</td>
                   <td><div className="flex" style={{ gap: 10 }}><Avatar name={p.supplier_name} size={32} radius={9} />{p.supplier_name}</div></td>
+                  <td><div className="flex" style={{ gap: 8 }}><Avatar name={p.owner_name} size={28} radius={8} /><span style={{ fontSize: 12.5 }}>{p.owner_name}</span></div></td>
                   <td className="mono">{toman(p.total)}</td>
                   <td>
                     {p.status === "REGISTERED"
@@ -98,6 +108,9 @@ export default function Purchases() {
                     {p.status === "DRAFT" && (
                       <button className="btn success sm" onClick={() => act(p.id, "register")}>ثبت خرید</button>
                     )}
+                    {isManager && p.status !== "CANCELLED" && (
+                      <button className="btn sm" onClick={() => setAssigning(p)}>اساین</button>
+                    )}
                     {canPay && (
                       <button className="btn sm" onClick={() => navigate(`/accounting?doc=payment&party=${p.supplier}&purchase=${p.id}&amount=${p.remaining}`)}>پرداخت</button>
                     )}
@@ -108,7 +121,7 @@ export default function Purchases() {
                 </tr>
                 );
               })}
-              {data.length === 0 && <tr><td colSpan={6} className="empty">هنوز خریدی ثبت نشده.</td></tr>}
+              {data.length === 0 && <tr><td colSpan={7} className="empty">هنوز خریدی ثبت نشده.</td></tr>}
             </tbody>
           </table>
         )}
@@ -125,6 +138,15 @@ export default function Purchases() {
                   {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
+              {isManager && (
+                <div className="field">
+                  <label>اساین به</label>
+                  <select value={form.owner} onChange={(e) => setForm({ ...form, owner: e.target.value })}>
+                    <option value="">خودم</option>
+                    {team.map((u) => <option key={u.id} value={u.id}>{u.full_name}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
             <LineTable items={items} lines={form.lines} setLine={setLine}
               onAdd={() => setForm({ ...form, lines: [...form.lines, emptyLine()] })}
@@ -136,6 +158,19 @@ export default function Purchases() {
             <button className="btn primary">ذخیره خرید</button>
             <span className="muted" style={{ marginInlineStart: 12 }}>پس از ذخیره، دکمهٔ «ثبت خرید» سند مالی می‌سازد.</span>
           </form>
+        </Modal>
+      )}
+
+      {assigning && (
+        <Modal title={`اساین خرید ${assigning.number || ""}`} icon="users" onClose={() => setAssigning(null)}>
+          <div className="field">
+            <label>اساین به کارمند بازرگانی</label>
+            <select id="assign-sel" defaultValue={assigning.owner || ""}>
+              {team.map((u) => <option key={u.id} value={u.id}>{u.full_name}</option>)}
+            </select>
+          </div>
+          <button className="btn primary" style={{ width: "100%" }}
+            onClick={() => assign(document.getElementById("assign-sel").value)}>ثبت اساین</button>
         </Modal>
       )}
     </div>
