@@ -9,7 +9,7 @@ const NAV = [
   { to: "/parties", label: "مشتری‌ها", icon: "users", perm: null },
   { to: "/proformas", label: "پیش‌فاکتورها", icon: "proforma", perm: "sales.view" },
   { to: "/purchases", label: "خریدها", icon: "cart", perm: "procurement.view" },
-  { to: "/invoices", label: "فاکتورها", icon: "invoice", perm: "sales.view" },
+  { to: "/invoices", label: "فاکتورها", icon: "invoice", perm: ["sales.view", "technical.view"] },
   { to: "/accounting", label: "حسابداری", icon: "chart", perm: "accounting.view" },
   { to: "/items", label: "کالا و خدمات", icon: "doc", perm: null },
   { to: "/notifications", label: "اعلان‌ها", icon: "bell", perm: null },
@@ -28,7 +28,8 @@ export default function Layout({ children }) {
     api.get("/notifications/unread_count").then((d) => setUnread(d.count)).catch(() => {});
   }, []);
 
-  const items = NAV.filter((n) => !n.perm || can(n.perm));
+  const items = NAV.filter((n) =>
+    !n.perm || (Array.isArray(n.perm) ? n.perm.some((p) => can(p)) : can(n.perm)));
   const dept = (user?.department_codes || [])[0];
   const roleLabel = user?.is_system_admin ? "ادمین سیستم" : (ROLE_LABEL[dept] || "کاربر");
 

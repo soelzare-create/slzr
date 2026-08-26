@@ -24,10 +24,24 @@ class HasPermissionCode(BasePermission):
         user = request.user
         if not (user and user.is_authenticated):
             return False
+        # "any of" form: a view shared by two departments (e.g. an invoice a
+        # salesperson or a technician may both touch) lists several codes.
+        any_codes = self._required_codes_any(request, view)
+        if any_codes is not None:
+            return any(user.has_perm_code(c) for c in any_codes)
         code = self._required_code(request, view)
         if code is None:
             return True
         return user.has_perm_code(code)
+
+    @staticmethod
+    def _required_codes_any(request, view):
+        per_action = getattr(view, "required_permissions_any", None)
+        if not per_action:
+            return None
+        if request.method in SAFE_METHODS:
+            return per_action.get("read") or per_action.get("GET")
+        return per_action.get("write") or per_action.get(request.method)
 
     @staticmethod
     def _required_code(request, view) -> str | None:
@@ -42,17 +56,22 @@ class HasPermissionCode(BasePermission):
 class OwnershipQuerysetMixin:
     """Filter a queryset to the caller's own records unless they can view all.
 
-    Set ``view_all_permission = "sales.view_all"`` and ``owner_field = "owner"``.
-    Managers / management / accounting-read hold ``*.view_all`` and see everything.
+    Set ``view_all_permission = "sales.view_all"`` (or ``view_all_permissions``
+    for a list) and ``owner_field = "owner"``. Managers / management /
+    accounting-read hold ``*.view_all`` and see everything.
     """
 
     view_all_permission: str | None = None
+    view_all_permissions: list[str] | None = None
     owner_field: str = "owner"
 
     def filter_by_ownership(self, queryset):
         user = self.request.user
         if user.is_system_admin:
             return queryset
-        if self.view_all_permission and user.has_perm_code(self.view_all_permission):
+        codes = list(self.view_all_permissions or [])
+        if self.view_all_permission:
+            codes.append(self.view_all_permission)
+        if any(user.has_perm_code(c) for c in codes):
             return queryset
         return queryset.filter(**{self.owner_field: user})

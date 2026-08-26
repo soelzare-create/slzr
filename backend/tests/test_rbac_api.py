@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from apps.core.models import Party
+from apps.core.models import Item, Party
 from apps.sales.models import Proforma
 
 pytestmark = pytest.mark.django_db
@@ -55,3 +55,52 @@ def test_employee_cannot_administer_users(seeded, make_user, api):
     _auth(api, e1)
     resp = api.get("/api/users")
     assert resp.status_code == 403
+
+
+def test_technical_sees_only_own_invoices(seeded, make_user, api):
+    """A technician can read the service/support invoices they own — and only those."""
+    from apps.sales.models import Invoice
+    from apps.sales import services as sales
+
+    tech = make_user("09120000061", "فنی", role_code="technical_employee")
+    seller = make_user("09120000062", "فروشنده", role_code="sales_employee")
+    customer = Party.objects.create(name="مشتری", is_customer=True)
+    item = Item.objects.create(name="خدمت")
+
+    sales.create_direct_invoice(
+        invoice_type=Invoice.Type.SERVICE, customer=customer, owner=tech,
+        lines_data=[{"item": item.id, "quantity": 1, "unit_price": 100}], actor=tech)
+    sales.create_direct_invoice(
+        invoice_type=Invoice.Type.SERVICE, customer=customer, owner=seller,
+        lines_data=[{"item": item.id, "quantity": 1, "unit_price": 200}], actor=seller)
+
+    _auth(api, tech)
+    resp = api.get("/api/invoices")
+    assert resp.status_code == 200
+    results = resp.data["results"] if "results" in resp.data else resp.data
+    assert len(results) == 1
+    assert results[0]["owner"] == tech.id
+
+
+def test_technical_manager_never_sees_goods_invoices(seeded, make_user, api):
+    """technical.view_all scopes to service/support — not sales' goods invoices."""
+    from apps.sales.models import Invoice
+    from apps.sales import services as sales
+
+    mgr = make_user("09120000071", "مدیر فنی", role_code="technical_manager")
+    seller = make_user("09120000072", "فروشنده", role_code="sales_employee")
+    customer = Party.objects.create(name="مشتری", is_customer=True)
+    item = Item.objects.create(name="خدمت")
+
+    sales.create_direct_invoice(
+        invoice_type=Invoice.Type.SUPPORT, customer=customer, owner=seller,
+        lines_data=[{"item": item.id, "quantity": 1, "unit_price": 100}], actor=seller)
+    # A goods invoice owned by sales — must stay invisible to the technical manager.
+    Invoice.objects.create(number="", type=Invoice.Type.GOODS, customer=customer,
+                           owner=seller, date=__import__("datetime").date.today())
+
+    _auth(api, mgr)
+    results = api.get("/api/invoices").data
+    results = results["results"] if "results" in results else results
+    assert all(r["type"] in ("SERVICE", "SUPPORT") for r in results)
+    assert len(results) == 1  # the SUPPORT one only

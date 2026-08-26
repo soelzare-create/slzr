@@ -84,12 +84,23 @@ class InvoiceViewSet(OwnershipQuerysetMixin, viewsets.ReadOnlyModelViewSet):
     queryset = Invoice.objects.select_related("customer", "owner").prefetch_related("lines")
     serializer_class = InvoiceSerializer
     permission_classes = [HasPermissionCode]
-    required_permissions = {"read": "sales.view", "write": "sales.edit"}
-    view_all_permission = "sales.view_all"
+    # Invoices are shared by sales (goods) and technical (service/support); either
+    # department may read/manage them, scoped to their own records by ownership.
+    required_permissions_any = {
+        "read": ["sales.view", "technical.view"],
+        "write": ["sales.edit", "technical.edit"],
+    }
+    view_all_permissions = ["sales.view_all", "technical.view_all"]
     owner_field = "owner"
 
     def get_queryset(self):
         qs = self.filter_by_ownership(super().get_queryset())
+        user = self.request.user
+        # A technical-only viewer (no sales access) sees only their department's
+        # service/support invoices, never sales' goods invoices — even a manager.
+        if (not user.is_system_admin and not user.has_perm_code("sales.view")
+                and user.has_perm_code("technical.view")):
+            qs = qs.filter(type__in=[Invoice.Type.SERVICE, Invoice.Type.SUPPORT])
         type_ = self.request.query_params.get("type")
         if type_:
             qs = qs.filter(type=type_)
