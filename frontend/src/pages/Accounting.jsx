@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, rows, toman } from "../api";
-import { Avatar, Icon, Modal } from "../ui.jsx";
+import { api, rows, toman, jalali } from "../api";
+import { Avatar, Icon, Modal, JalaliDatePicker } from "../ui.jsx";
 
 const TYPE_FA = { ASSET: "دارایی", LIABILITY: "بدهی", EQUITY: "سرمایه", INCOME: "درآمد", EXPENSE: "هزینه" };
 
@@ -113,7 +113,7 @@ function FinanceDocs({ reloadKey }) {
                   </td>
                   <td>
                     <div style={{ fontWeight: 600, fontSize: 13.5 }}>{m.title}{cancelled && <span className="badge red" style={{ marginInlineStart: 8 }}>ابطال</span>}</div>
-                    <div className="muted" style={{ fontSize: 11.5 }}>{m.sub} · {d.date}</div>
+                    <div className="muted" style={{ fontSize: 11.5 }}>{m.sub} · {jalali(d.date)}</div>
                   </td>
                   <td className="num" style={{ textAlign: "left", fontWeight: 700, color: m.color, width: 160 }}>{m.sign} {toman(d.amount)}</td>
                 </tr>
@@ -133,7 +133,7 @@ function FinanceDocModal({ init, onClose, onSaved }) {
   const [customers, setCustomers] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [form, setForm] = useState({
-    amount: "", category: "", account: "", party: init.party || "", description: "",
+    amount: "", category: "", account: "", party: init.party || "", description: "", date: "",
   });
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -154,17 +154,18 @@ function FinanceDocModal({ init, onClose, onSaved }) {
     e.preventDefault();
     setError(null); setBusy(true);
     try {
+      const date = form.date || undefined;
       if (type === "expense") {
         await api.post("/expenses", {
           kind, category: form.category, amount: Number(form.amount),
           paid_from: Number(form.account), description: form.description,
-          party: form.party ? Number(form.party) : null,
+          party: form.party ? Number(form.party) : null, date,
         });
       } else {
         await api.post("/payments", {
           direction: type === "receipt" ? "RECEIPT" : "PAYMENT",
           party: Number(form.party), amount: Number(form.amount),
-          account: Number(form.account), description: form.description,
+          account: Number(form.account), description: form.description, date,
         });
       }
       onSaved();
@@ -226,9 +227,15 @@ function FinanceDocModal({ init, onClose, onSaved }) {
           </div>
         </div>
 
-        <div className="field">
-          <label>شرح</label>
-          <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <div className="row">
+          <div className="field">
+            <label>تاریخ</label>
+            <JalaliDatePicker value={form.date} onChange={(d) => setForm({ ...form, date: d })} placeholder="امروز" />
+          </div>
+          <div className="field">
+            <label>شرح</label>
+            <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
         </div>
 
         <button className="btn primary" style={{ width: "100%" }} disabled={busy}>
@@ -327,7 +334,7 @@ function Journal() {
         <div className="card" key={e.id} style={{ marginBottom: 14 }}>
           <div className="toolbar" style={{ marginBottom: 8 }}>
             <b className="num">{e.number} — {e.description}</b>
-            <span className="muted">{e.date} {e.is_reversal && <span className="badge amber">سند برگشت</span>}</span>
+            <span className="muted">{jalali(e.date)} {e.is_reversal && <span className="badge amber">سند برگشت</span>}</span>
           </div>
           <table>
             <thead><tr><th>حساب</th><th>طرف‌حساب</th><th>بدهکار</th><th>بستانکار</th></tr></thead>

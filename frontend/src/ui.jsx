@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { toJalaali, toGregorian, jalaaliMonthLength } from "jalaali-js";
+import { jalali } from "./api";
 
 // --- Icons (inline SVG, stroke-based, no emoji) ---------------------------
 const PATHS = {
@@ -96,6 +98,88 @@ export function Menu({ items, title }) {
               {it.label}
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Jalali (Shamsi) date picker ------------------------------------------
+const J_MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
+  "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+const J_WEEK = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
+const fa = (n) => Number(n).toLocaleString("fa-IR", { useGrouping: false });
+const pad = (n) => String(n).padStart(2, "0");
+
+function isoToJalali(iso) {
+  if (!iso) return null;
+  const [y, m, d] = iso.split("-").map(Number);
+  return toJalaali(y, m, d);
+}
+
+export function JalaliDatePicker({ value, onChange, placeholder = "انتخاب تاریخ" }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const todayJ = toJalaali(new Date());
+  const sel = isoToJalali(value);
+  const [view, setView] = useState(sel ? { jy: sel.jy, jm: sel.jm } : { jy: todayJ.jy, jm: todayJ.jm });
+
+  useEffect(() => {
+    function onDoc(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  function pick(jd) {
+    const g = toGregorian(view.jy, view.jm, jd);
+    onChange(`${g.gy}-${pad(g.gm)}-${pad(g.gd)}`);
+    setOpen(false);
+  }
+  function shift(delta) {
+    let { jy, jm } = view;
+    jm += delta;
+    if (jm < 1) { jm = 12; jy--; } else if (jm > 12) { jm = 1; jy++; }
+    setView({ jy, jm });
+  }
+
+  const first = toGregorian(view.jy, view.jm, 1);
+  const offset = (new Date(first.gy, first.gm - 1, first.gd).getDay() + 1) % 7;
+  const len = jalaaliMonthLength(view.jy, view.jm);
+  const cells = [...Array(offset).fill(null), ...Array.from({ length: len }, (_, i) => i + 1)];
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <div onClick={() => setOpen(!open)} style={{
+        border: "1px solid #e3e7f0", borderRadius: 10, padding: "10px 12px", background: "#fafbfe",
+        fontSize: 14, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer",
+      }}>
+        <span style={{ color: value ? "#10151f" : "#9aa3b5" }}>{value ? jalali(value) : placeholder}</span>
+        <Icon name="calendar" size={15} color="#b6becb" />
+      </div>
+      {open && (
+        <div style={{
+          position: "absolute", bottom: 48, right: 0, width: 258, background: "#fff",
+          border: "1px solid var(--line)", borderRadius: 14, boxShadow: "var(--shadow-pop)",
+          padding: 12, zIndex: 40,
+        }}>
+          <div className="flex" style={{ justifyContent: "space-between", marginBottom: 10 }}>
+            <button type="button" className="dot-btn" onClick={() => shift(-1)}><Icon name="chevron" size={16} /></button>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{J_MONTHS[view.jm - 1]} {fa(view.jy)}</div>
+            <button type="button" className="dot-btn" onClick={() => shift(1)} style={{ transform: "rotate(180deg)" }}><Icon name="chevron" size={16} /></button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, textAlign: "center" }}>
+            {J_WEEK.map((w) => <div key={w} style={{ fontSize: 11, color: "var(--muted-2)", padding: "4px 0" }}>{w}</div>)}
+            {cells.map((jd, i) => jd === null ? <div key={i} /> : (
+              <button type="button" key={i} onClick={() => pick(jd)} style={{
+                border: "none", borderRadius: 8, padding: "7px 0", fontSize: 12.5, fontFamily: "inherit",
+                background: sel && sel.jy === view.jy && sel.jm === view.jm && sel.jd === jd ? "var(--brand)" : "transparent",
+                color: sel && sel.jy === view.jy && sel.jm === view.jm && sel.jd === jd ? "#fff" : "#10151f",
+                outline: todayJ.jy === view.jy && todayJ.jm === view.jm && todayJ.jd === jd ? "1px solid #cdd9f5" : "none",
+              }}>{fa(jd)}</button>
+            ))}
+          </div>
+          <button type="button" onClick={() => { const t = toJalaali(new Date()); setView({ jy: t.jy, jm: t.jm }); pick(t.jd); }}
+            style={{ marginTop: 10, width: "100%", border: "1px solid var(--line)", borderRadius: 9, padding: "7px", background: "#f6f8fc", fontSize: 12.5, fontFamily: "inherit" }}>امروز</button>
         </div>
       )}
     </div>
