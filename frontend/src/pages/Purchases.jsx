@@ -1,11 +1,20 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { api, toman } from "../api";
 import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
 import { Avatar, Icon } from "../ui.jsx";
+import { useAuth } from "../auth.jsx";
+
+const PAY_STATUS = {
+  UNPAID: { cls: "red", label: "پرداخت‌نشده" },
+  PARTIAL: { cls: "amber", label: "قسمتی" },
+  PAID: { cls: "green", label: "تسویه‌شده" },
+};
 
 export default function Purchases() {
   const { data, loading, error, reload, setError } = useList("/purchases");
+  const { can } = useAuth();
+  const navigate = useNavigate();
   const suppliers = useOptions("/parties?role=supplier");
   const items = useOptions("/items");
   const [open, setOpen] = useState(false);
@@ -68,25 +77,38 @@ export default function Purchases() {
       <div className="card">
         {loading ? <div className="empty">در حال بارگذاری…</div> : (
           <table>
-            <thead><tr><th>شماره</th><th>تأمین‌کننده</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+            <thead><tr><th>شماره</th><th>تأمین‌کننده</th><th>مبلغ</th><th>پرداخت</th><th>وضعیت</th><th>عملیات</th></tr></thead>
             <tbody>
-              {data.map((p) => (
+              {data.map((p) => {
+                const ps = PAY_STATUS[p.payment_status] || PAY_STATUS.UNPAID;
+                const canPay = p.status === "REGISTERED" && Number(p.remaining) > 0 && can("accounting.edit");
+                return (
                 <tr key={p.id}>
                   <td className="mono">{p.number}</td>
                   <td><div className="flex" style={{ gap: 10 }}><Avatar name={p.supplier_name} size={32} radius={9} />{p.supplier_name}</div></td>
                   <td className="mono">{toman(p.total)}</td>
+                  <td>
+                    {p.status === "REGISTERED"
+                      ? <><span className={`badge ${ps.cls}`}>{ps.label}</span>
+                          {p.payment_status === "PARTIAL" && <div className="muted num" style={{ fontSize: 11, marginTop: 2 }}>مانده: {toman(p.remaining)}</div>}</>
+                      : <span className="muted">—</span>}
+                  </td>
                   <td><StatusBadge status={p.status} display={p.status_display} kind="purchase" /></td>
-                  <td className="flex">
+                  <td className="flex" style={{ flexWrap: "wrap" }}>
                     {p.status === "DRAFT" && (
                       <button className="btn success sm" onClick={() => act(p.id, "register")}>ثبت خرید</button>
+                    )}
+                    {canPay && (
+                      <button className="btn sm" onClick={() => navigate(`/accounting?doc=payment&party=${p.supplier}&purchase=${p.id}&amount=${p.remaining}`)}>پرداخت</button>
                     )}
                     {p.status !== "CANCELLED" && (
                       <button className="btn danger sm" onClick={() => act(p.id, "cancel")}>ابطال</button>
                     )}
                   </td>
                 </tr>
-              ))}
-              {data.length === 0 && <tr><td colSpan={5} className="empty">هنوز خریدی ثبت نشده.</td></tr>}
+                );
+              })}
+              {data.length === 0 && <tr><td colSpan={6} className="empty">هنوز خریدی ثبت نشده.</td></tr>}
             </tbody>
           </table>
         )}

@@ -72,8 +72,8 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = ["id", "number", "direction", "direction_display", "party", "party_name",
-                  "amount", "account", "account_name", "date", "description", "status",
-                  "status_display", "owner_name", "created_at"]
+                  "amount", "account", "account_name", "invoice", "purchase", "date",
+                  "description", "status", "status_display", "owner_name", "created_at"]
         read_only_fields = ["number", "status", "owner"]
 
     def validate_amount(self, v):

@@ -87,7 +87,8 @@ class InvoiceViewSet(OwnershipQuerysetMixin, viewsets.ReadOnlyModelViewSet):
     # Invoices are shared by sales (goods) and technical (service/support); either
     # department may read/manage them, scoped to their own records by ownership.
     required_permissions_any = {
-        "read": ["sales.view", "technical.view"],
+        # view_all included so accounting's cross-department read grant passes.
+        "read": ["sales.view", "sales.view_all", "technical.view", "technical.view_all"],
         "write": ["sales.edit", "technical.edit"],
     }
     view_all_permissions = ["sales.view_all", "technical.view_all"]

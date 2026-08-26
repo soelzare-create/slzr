@@ -21,12 +21,16 @@ class PurchaseSerializer(serializers.ModelSerializer):
     owner_name = serializers.CharField(source="owner.full_name", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     total = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
+    paid_amount = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
+    remaining = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
+    payment_status = serializers.CharField(read_only=True)
 
     class Meta:
         model = Purchase
         fields = ["id", "number", "supplier", "supplier_name", "owner", "owner_name",
                   "status", "status_display", "date", "notes", "origin_ref",
-                  "total", "lines", "created_at"]
+                  "total", "paid_amount", "remaining", "payment_status",
+                  "lines", "created_at"]
         read_only_fields = ["number", "status"]
         extra_kwargs = {"owner": {"required": False}}
 

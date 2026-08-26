@@ -54,6 +54,23 @@ class Purchase(NumberedModel):
     def total(self) -> Decimal:
         return sum((l.line_total for l in self.lines.all()), Decimal("0"))
 
+    @property
+    def paid_amount(self) -> Decimal:
+        from django.db.models import Sum
+        agg = self.settlements.filter(status="REGISTERED").aggregate(s=Sum("amount"))
+        return agg["s"] or Decimal("0")
+
+    @property
+    def remaining(self) -> Decimal:
+        return self.total - self.paid_amount
+
+    @property
+    def payment_status(self) -> str:
+        paid = self.paid_amount
+        if paid <= 0:
+            return "UNPAID"
+        return "PAID" if paid >= self.total else "PARTIAL"
+
 
 class PurchaseLine(TimeStampedModel):
     """One line of a purchase — the source a sale line attaches to (one-to-one)."""

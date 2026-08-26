@@ -11,13 +11,17 @@ export default function Accounting() {
   const [docModal, setDocModal] = useState(null); // {type, party}
   const [reloadKey, setReloadKey] = useState(0);
 
-  // Deep link from a customer/supplier card: ?doc=receipt&party=ID
+  // Deep link from a card/invoice/purchase: ?doc=receipt&party=ID&invoice=ID&amount=N
   useEffect(() => {
     const doc = params.get("doc");
     if (doc) {
       setTab("docs");
-      setDocModal({ type: doc, party: params.get("party") || "" });
-      params.delete("doc"); params.delete("party"); params.delete("tab");
+      setDocModal({
+        type: doc, party: params.get("party") || "",
+        invoice: params.get("invoice") || "", purchase: params.get("purchase") || "",
+        amount: params.get("amount") || "",
+      });
+      ["doc", "party", "invoice", "purchase", "amount", "tab"].forEach((k) => params.delete(k));
       setParams(params, { replace: true });
     }
   }, []); // eslint-disable-line
@@ -133,7 +137,8 @@ function FinanceDocModal({ init, onClose, onSaved }) {
   const [customers, setCustomers] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [form, setForm] = useState({
-    amount: "", category: "", account: "", party: init.party || "", description: "", date: "",
+    amount: init.amount || "", category: "", account: "", party: init.party || "",
+    description: "", date: "",
   });
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -166,6 +171,8 @@ function FinanceDocModal({ init, onClose, onSaved }) {
           direction: type === "receipt" ? "RECEIPT" : "PAYMENT",
           party: Number(form.party), amount: Number(form.amount),
           account: Number(form.account), description: form.description, date,
+          invoice: init.invoice ? Number(init.invoice) : null,
+          purchase: init.purchase ? Number(init.purchase) : null,
         });
       }
       onSaved();
@@ -178,6 +185,11 @@ function FinanceDocModal({ init, onClose, onSaved }) {
     <Modal title="ثبت سند مالی" icon="doc" onClose={onClose}>
       <form onSubmit={save}>
         {error && <div className="error">{error}</div>}
+        {(init.invoice || init.purchase) && (
+          <div style={{ background: "#eaf0ff", color: "#2b4a8f", borderRadius: 10, padding: "9px 13px", fontSize: 12.5, marginBottom: 14 }}>
+            این سند بابت تسویهٔ {init.invoice ? "فاکتور" : "خرید"} انتخاب‌شده ثبت می‌شود.
+          </div>
+        )}
         <div className="seg" style={{ marginBottom: 18 }}>
           {TYPES.map(([k, l, ic]) => (
             <button type="button" key={k} className={type === k ? "active" : ""} onClick={() => setType(k)}>

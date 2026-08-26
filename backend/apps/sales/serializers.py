@@ -67,10 +67,13 @@ class InvoiceSerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source="get_type_display", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     total = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
+    paid_amount = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
+    remaining = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
+    payment_status = serializers.CharField(read_only=True)
 
     class Meta:
         model = Invoice
         fields = ["id", "number", "type", "type_display", "status", "status_display",
                   "customer", "customer_name", "owner", "owner_name", "proforma",
-                  "date", "period_start", "period_end", "notes", "total", "lines",
-                  "created_at"]
+                  "date", "period_start", "period_end", "notes", "total",
+                  "paid_amount", "remaining", "payment_status", "lines", "created_at"]

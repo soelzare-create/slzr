@@ -135,6 +135,24 @@ class Invoice(NumberedModel):
     def total(self) -> Decimal:
         return sum((l.line_total for l in self.lines.all()), Decimal("0"))
 
+    @property
+    def paid_amount(self) -> Decimal:
+        # Sum of registered receipts linked to this invoice (reverse of Payment).
+        from django.db.models import Sum
+        agg = self.receipts.filter(status="REGISTERED").aggregate(s=Sum("amount"))
+        return agg["s"] or Decimal("0")
+
+    @property
+    def remaining(self) -> Decimal:
+        return self.total - self.paid_amount
+
+    @property
+    def payment_status(self) -> str:
+        paid = self.paid_amount
+        if paid <= 0:
+            return "UNPAID"
+        return "PAID" if paid >= self.total else "PARTIAL"
+
 
 class InvoiceLine(TimeStampedModel):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="lines")

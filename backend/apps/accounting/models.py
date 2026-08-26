@@ -166,6 +166,16 @@ class Payment(NumberedModel):
     direction = models.CharField(max_length=10, choices=Direction.choices)
     party = models.ForeignKey(Party, on_delete=models.PROTECT, related_name="payments")
     amount = models.DecimalField(max_digits=18, decimal_places=0)
+    # Optional settlement target: a receipt against an invoice, a payment against
+    # a purchase. String refs keep the accounting app free of import cycles.
+    invoice = models.ForeignKey(
+        "sales.Invoice", null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="receipts",
+    )
+    purchase = models.ForeignKey(
+        "procurement.Purchase", null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="settlements",
+    )
     account = models.ForeignKey(
         Account, on_delete=models.PROTECT, related_name="payments",
         help_text="حساب صندوق/بانک",

@@ -1,14 +1,21 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { api, toman } from "../api";
 import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
 import { JalaliDatePicker, Avatar, Icon } from "../ui.jsx";
 import { jalali } from "../api";
 import { useAuth } from "../auth.jsx";
 
+const PAY_STATUS = {
+  UNPAID: { cls: "red", label: "پرداخت‌نشده" },
+  PARTIAL: { cls: "amber", label: "قسمتی" },
+  PAID: { cls: "green", label: "تسویه‌شده" },
+};
+
 export default function Invoices() {
   const { data, loading, error, reload, setError } = useList("/invoices");
   const { can } = useAuth();
+  const navigate = useNavigate();
   const customers = useOptions("/parties?role=customer");
   const items = useOptions("/items");
   const [open, setOpen] = useState(false);
@@ -72,17 +79,27 @@ export default function Invoices() {
       <div className="card">
         {loading ? <div className="empty">در حال بارگذاری…</div> : (
           <table>
-            <thead><tr><th>شماره</th><th>نوع</th><th>مشتری</th><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+            <thead><tr><th>شماره</th><th>نوع</th><th>مشتری</th><th>تاریخ</th><th>مبلغ</th><th>پرداخت</th><th>وضعیت</th><th>عملیات</th></tr></thead>
             <tbody>
-              {data.map((inv) => (
+              {data.map((inv) => {
+                const ps = PAY_STATUS[inv.payment_status] || PAY_STATUS.UNPAID;
+                const canReceive = inv.status === "ISSUED" && Number(inv.remaining) > 0 && can("accounting.edit");
+                return (
                 <tr key={inv.id}>
                   <td className="mono">{inv.number}</td>
                   <td><span className="badge gray">{inv.type_display}</span></td>
                   <td><div className="flex" style={{ gap: 10 }}><Avatar name={inv.customer_name} size={32} radius={9} />{inv.customer_name}</div></td>
                   <td className="muted" style={{ fontSize: 12.5 }}>{jalali(inv.date)}</td>
                   <td className="mono">{toman(inv.total)}</td>
+                  <td>
+                    <span className={`badge ${ps.cls}`}>{ps.label}</span>
+                    {inv.payment_status === "PARTIAL" && <div className="muted num" style={{ fontSize: 11, marginTop: 2 }}>مانده: {toman(inv.remaining)}</div>}
+                  </td>
                   <td><StatusBadge status={inv.status} display={inv.status_display} kind="invoice" /></td>
-                  <td className="flex">
+                  <td className="flex" style={{ flexWrap: "wrap" }}>
+                    {canReceive && (
+                      <button className="btn success sm" onClick={() => navigate(`/accounting?doc=receipt&party=${inv.customer}&invoice=${inv.id}&amount=${inv.remaining}`)}>دریافت</button>
+                    )}
                     {inv.status === "ISSUED" && (
                       <>
                         <button className="btn sm" onClick={() => reverse(inv.id, true)}>مرجوعی</button>
@@ -91,8 +108,9 @@ export default function Invoices() {
                     )}
                   </td>
                 </tr>
-              ))}
-              {data.length === 0 && <tr><td colSpan={7} className="empty">هنوز فاکتوری صادر نشده.</td></tr>}
+                );
+              })}
+              {data.length === 0 && <tr><td colSpan={8} className="empty">هنوز فاکتوری صادر نشده.</td></tr>}
             </tbody>
           </table>
         )}
