@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, rows, toman } from "../api";
 import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
 
@@ -9,6 +10,18 @@ export default function Proformas() {
   const [purchaseLines, setPurchaseLines] = useState([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(blank());
+  const [params, setParams] = useSearchParams();
+
+  // Deep link from a customer's 3-dot menu: ?customer=ID preopens the modal.
+  useEffect(() => {
+    const cid = params.get("customer");
+    if (cid) {
+      setForm((f) => ({ ...f, customer: cid }));
+      setOpen(true);
+      params.delete("customer");
+      setParams(params, { replace: true });
+    }
+  }, []); // eslint-disable-line
 
   // Build a flat list of registered purchase lines to attach sales lines to.
   useEffect(() => {

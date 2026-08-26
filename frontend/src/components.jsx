@@ -1,19 +1,8 @@
 import { useEffect, useState } from "react";
 import { api, rows } from "./api";
 
-export function Modal({ title, onClose, children, wide }) {
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" style={wide ? { width: 820 } : undefined} onClick={(e) => e.stopPropagation()}>
-        <div className="toolbar">
-          <h2>{title}</h2>
-          <button className="btn sm" onClick={onClose}>بستن</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
+// Modal now lives in ui.jsx (icon header, close button). Re-export for pages.
+export { Modal } from "./ui.jsx";
 
 const PROFORMA_BADGE = {
   DRAFT: "gray", CONFIRMED: "blue", AWAITING_PURCHASE: "amber",
