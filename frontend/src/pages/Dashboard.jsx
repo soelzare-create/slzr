@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, toman } from "../api";
+import { api, toman, jalali } from "../api";
 import { useAuth } from "../auth.jsx";
 import { Avatar, Icon } from "../ui.jsx";
 
@@ -21,9 +21,10 @@ export default function Dashboard() {
   if (error) return <div className="error">{error}</div>;
   if (!data) return <div className="empty">در حال بارگذاری…</div>;
 
-  return data.role === "sales"
-    ? <SalesDashboard data={data} user={user} />
-    : <FinancialDashboard data={data} />;
+  if (data.role === "sales") return <SalesDashboard data={data} user={user} />;
+  if (data.role === "procurement") return <ProcurementDashboard data={data} user={user} />;
+  if (data.role === "technical") return <TechnicalDashboard data={data} user={user} />;
+  return <FinancialDashboard data={data} />;
 }
 
 function Kpi({ icon, iconBg, iconColor, label, value, trend, variant }) {
@@ -67,6 +68,68 @@ function SalesDashboard({ data, user }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ListCard({ icon, color, title, rows, empty }) {
+  return (
+    <div className="card">
+      <div className="flex" style={{ gap: 8, marginBottom: 14 }}>
+        <Icon name={icon} size={17} color={color} /><b style={{ fontSize: 15 }}>{title}</b>
+      </div>
+      {rows.length === 0 ? <div className="empty">{empty}</div> : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>{rows}</div>
+      )}
+    </div>
+  );
+}
+
+function ProcurementDashboard({ data, user }) {
+  return (
+    <div>
+      <h1 className="page-title">داشبورد بازرگانی</h1>
+      <div className="page-sub" style={{ marginBottom: 18 }}>خرید، تأمین و بدهی به تأمین‌کنندگان</div>
+      <div className="kpis" style={{ marginBottom: 16 }}>
+        <Kpi variant="brand" icon="cart" iconBg="#ffffff22" iconColor="#fff" label="خرید ثبت‌شدهٔ من" value={toman(data.my_purchases)} />
+        <Kpi icon="alert" iconBg="#fdeee0" iconColor="#e0912f" label="درخواست‌های خرید باز" value={data.open_requests} trend={data.open_requests ? "نیازمند اقدام" : null} />
+        <Kpi icon="proforma" iconBg="#eaf0ff" iconColor="#2f6bff" label="خریدهای منتظر ثبت" value={data.pending_purchases} />
+        <Kpi variant="dark" icon="pay" iconBg="#ffffff1f" iconColor="#ef8f88" label="بدهی به تأمین‌کنندگان" value={toman(data.payable)} />
+      </div>
+      <ListCard icon="cart" color="#e0912f" title="تأمین‌کنندگان برتر" empty="هنوز خریدی ثبت نشده."
+        rows={(data.top_suppliers || []).map((s) => (
+          <div className="flex" key={s.party_id} style={{ gap: 11 }}>
+            <Avatar name={s.party_name} size={36} radius={11} />
+            <div style={{ flex: 1, fontSize: 13.5, fontWeight: 600 }}>{s.party_name}</div>
+            <div className="num" style={{ fontWeight: 700, fontSize: 13 }}>{toman(s.amount)}</div>
+          </div>
+        ))} />
+    </div>
+  );
+}
+
+function TechnicalDashboard({ data, user }) {
+  return (
+    <div>
+      <h1 className="page-title">داشبورد فنی و پشتیبانی</h1>
+      <div className="page-sub" style={{ marginBottom: 18 }}>خدمات، پشتیبانی ماهانه و یادآوری سررسیدها</div>
+      <div className="kpis" style={{ marginBottom: 16 }}>
+        <Kpi variant="brand" icon="trend" iconBg="#ffffff22" iconColor="#fff" label="درآمد خدمات/پشتیبانی من" value={toman(data.my_income)} />
+        <Kpi icon="invoice" iconBg="#e5f6ee" iconColor="#10a86b" label="فاکتور خدمات" value={data.service_count} />
+        <Kpi icon="bell" iconBg="#eaf0ff" iconColor="#2f6bff" label="فاکتور پشتیبانی ماهانه" value={data.support_count} />
+        <Kpi icon="calendar" iconBg="#fdeee0" iconColor="#e0912f" label="سررسیدهای نزدیک" value={(data.support_due || []).length} />
+      </div>
+      <ListCard icon="calendar" color="#e0912f" title="پشتیبانی‌های نزدیک به سررسید" empty="سررسید نزدیکی وجود ندارد."
+        rows={(data.support_due || []).map((s) => (
+          <div className="flex" key={s.invoice} style={{ gap: 11 }}>
+            <Avatar name={s.party_name} size={36} radius={11} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600 }}>{s.party_name}</div>
+              <div className="muted" style={{ fontSize: 11.5 }}>{s.invoice}</div>
+            </div>
+            <span className="badge amber">{jalali(s.period_end)}</span>
+          </div>
+        ))} />
     </div>
   );
 }

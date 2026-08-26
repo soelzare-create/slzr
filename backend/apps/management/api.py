@@ -36,6 +36,10 @@ def _resolve_role(user) -> str:
         return "management"
     if user.has_perm_code("accounting.view"):
         return "accounting"
+    if user.has_perm_code("procurement.view"):
+        return "procurement"
+    if user.has_perm_code("technical.view"):
+        return "technical"
     if user.has_perm_code("sales.view"):
         return "sales"
     return "generic"
@@ -48,6 +52,10 @@ class DashboardView(views.APIView):
         role = _resolve_role(request.user)
         if role == "sales":
             return Response({"role": role, **self._sales(request.user)})
+        if role == "procurement":
+            return Response({"role": role, **self._procurement(request.user)})
+        if role == "technical":
+            return Response({"role": role, **self._technical(request.user)})
         return Response({"role": role, **self._financial()})
 
     # -- sales view ---------------------------------------------------------
@@ -83,6 +91,57 @@ class DashboardView(views.APIView):
             "open_proformas": open_count,
             "conversion_rate": round(invoiced / total * 100) if total else 0,
             "top_debtors": top_debtors[:5],
+        }
+
+    # -- procurement (بازرگانی) view ---------------------------------------
+    def _procurement(self, user) -> dict:
+        my = Purchase.objects.filter(owner=user)
+        my_registered = my.filter(status=Purchase.Status.REGISTERED)
+        my_total = my_registered.aggregate(t=Sum(_LINE_TOTAL))["t"] or Decimal("0")
+        pending = my.filter(status=Purchase.Status.DRAFT).count()
+
+        # Proformas department-wide awaiting a purchase to be registered.
+        open_requests = Proforma.objects.filter(
+            status=ProformaStatus.AWAITING_PURCHASE).count()
+
+        top_suppliers = [
+            {"party_id": r["supplier_id"], "party_name": r["supplier__name"],
+             "amount": r["total"] or Decimal("0")}
+            for r in (Purchase.objects.filter(status=Purchase.Status.REGISTERED)
+                      .values("supplier_id", "supplier__name")
+                      .annotate(total=Sum(_LINE_TOTAL)).order_by("-total")[:5])
+        ]
+        return {
+            "my_purchases": my_total,
+            "pending_purchases": pending,
+            "open_requests": open_requests,
+            "payable": -_account_balance(ACCOUNTS_PAYABLE),
+            "top_suppliers": top_suppliers,
+        }
+
+    # -- technical / support (فنی) view ------------------------------------
+    def _technical(self, user) -> dict:
+        from datetime import date, timedelta
+
+        my = Invoice.objects.filter(owner=user, status=Invoice.Status.ISSUED)
+        my_income = my.exclude(type=Invoice.Type.GOODS).aggregate(t=Sum(_LINE_TOTAL))["t"] or Decimal("0")
+        service_count = my.filter(type=Invoice.Type.SERVICE).count()
+        support_count = my.filter(type=Invoice.Type.SUPPORT).count()
+
+        soon = date.today() + timedelta(days=30)
+        support_due = [
+            {"invoice": inv.number, "party_name": inv.customer.name,
+             "period_end": inv.period_end}
+            for inv in Invoice.objects.filter(
+                owner=user, type=Invoice.Type.SUPPORT, status=Invoice.Status.ISSUED,
+                period_end__isnull=False, period_end__lte=soon
+            ).select_related("customer").order_by("period_end")[:5]
+        ]
+        return {
+            "my_income": my_income,
+            "service_count": service_count,
+            "support_count": support_count,
+            "support_due": support_due,
         }
 
     # -- accounting / management view --------------------------------------
