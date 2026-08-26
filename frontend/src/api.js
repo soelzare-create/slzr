@@ -66,3 +66,28 @@ export function toman(n) {
   const v = Number(n || 0);
   return v.toLocaleString("fa-IR") + " تومان";
 }
+
+// --- Jalali (Shamsi) date display -----------------------------------------
+// Uses jalaali-js (deterministic) rather than Intl's Persian calendar, which
+// is unreliable in some engines. Keeps display consistent with the date picker.
+import { toJalaali } from "jalaali-js";
+
+const J_MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
+  "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+const faDigits = (n) => String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
+
+/** Format an ISO date/datetime string as a Persian (Jalali) date. */
+export function jalali(value, withTime = false) {
+  if (!value) return "—";
+  let gy, gm, gd, time = "";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    [gy, gm, gd] = value.split("-").map(Number); // date-only, no TZ shift
+  } else {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    gy = d.getFullYear(); gm = d.getMonth() + 1; gd = d.getDate();
+    if (withTime) time = ` ${faDigits(String(d.getHours()).padStart(2, "0"))}:${faDigits(String(d.getMinutes()).padStart(2, "0"))}`;
+  }
+  const j = toJalaali(gy, gm, gd);
+  return `${faDigits(j.jd)} ${J_MONTHS[j.jm - 1]} ${faDigits(j.jy)}${time}`;
+}

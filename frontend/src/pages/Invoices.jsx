@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, toman } from "../api";
 import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
+import { JalaliDatePicker } from "../ui.jsx";
 import { useAuth } from "../auth.jsx";
 
 export default function Invoices() {
@@ -10,6 +12,17 @@ export default function Invoices() {
   const items = useOptions("/items");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(blank());
+  const [params, setParams] = useSearchParams();
+
+  useEffect(() => {
+    const cid = params.get("customer");
+    if (cid) {
+      setForm((f) => ({ ...f, customer: cid }));
+      setOpen(true);
+      params.delete("customer");
+      setParams(params, { replace: true });
+    }
+  }, []); // eslint-disable-line
 
   function blank() {
     return { type: "SERVICE", customer: "", period_start: "", period_end: "", notes: "", lines: [line()] };
@@ -104,8 +117,8 @@ export default function Invoices() {
             </div>
             {form.type === "SUPPORT" && (
               <div className="row">
-                <div className="field"><label>شروع دوره</label><input type="date" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} /></div>
-                <div className="field"><label>پایان دوره</label><input type="date" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} /></div>
+                <div className="field"><label>شروع دوره</label><JalaliDatePicker value={form.period_start} onChange={(d) => setForm({ ...form, period_start: d })} /></div>
+                <div className="field"><label>پایان دوره</label><JalaliDatePicker value={form.period_end} onChange={(d) => setForm({ ...form, period_end: d })} /></div>
               </div>
             )}
             <div className="card" style={{ background: "#fafbfc" }}>

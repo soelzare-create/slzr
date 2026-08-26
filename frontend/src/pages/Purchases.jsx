@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, toman } from "../api";
 import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
 
@@ -8,6 +9,17 @@ export default function Purchases() {
   const items = useOptions("/items");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(blank());
+  const [params, setParams] = useSearchParams();
+
+  useEffect(() => {
+    const sid = params.get("supplier");
+    if (sid) {
+      setForm((f) => ({ ...f, supplier: sid }));
+      setOpen(true);
+      params.delete("supplier");
+      setParams(params, { replace: true });
+    }
+  }, []); // eslint-disable-line
 
   function blank() {
     return { supplier: "", notes: "", lines: [emptyLine()] };
