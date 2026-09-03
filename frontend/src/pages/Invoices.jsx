@@ -4,6 +4,7 @@ import { api, toman } from "../api";
 import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
 import { JalaliDatePicker } from "../ui.jsx";
 import { useAuth } from "../auth.jsx";
+import { KindSplit } from "./Proformas.jsx";
 
 export default function Invoices() {
   const { data, loading, error, reload, setError } = useList("/invoices");
@@ -11,6 +12,7 @@ export default function Invoices() {
   const customers = useOptions("/parties?role=customer");
   const items = useOptions("/items");
   const [open, setOpen] = useState(false);
+  const [editingMeta, setEditingMeta] = useState(null); // invoice being metadata-edited
   const [form, setForm] = useState(blank());
   const [params, setParams] = useSearchParams();
 
@@ -75,9 +77,15 @@ export default function Invoices() {
                   <td className="mono">{inv.number}</td>
                   <td><span className="badge gray">{inv.type_display}</span></td>
                   <td>{inv.customer_name}</td>
-                  <td className="mono">{toman(inv.total)}</td>
+                  <td className="mono">
+                    {toman(inv.total)}
+                    <KindSplit goods={inv.goods_total} service={inv.service_total} />
+                  </td>
                   <td><StatusBadge status={inv.status} display={inv.status_display} kind="invoice" /></td>
                   <td className="flex">
+                    {can("sales.edit") && (
+                      <button className="btn sm" onClick={() => setEditingMeta(inv)}>ویرایش</button>
+                    )}
                     {inv.status === "ISSUED" && (
                       <>
                         <button className="btn sm" onClick={() => reverse(inv.id, true)}>مرجوعی</button>
@@ -130,7 +138,7 @@ export default function Invoices() {
                       <td style={{ minWidth: 160 }}>
                         <select value={l.item} onChange={(e) => setLine(i, { item: e.target.value })}>
                           <option value="">— انتخاب —</option>
-                          {items.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
+                          {items.map((it) => <option key={it.id} value={it.id}>{it.name} ({it.kind_display})</option>)}
                         </select>
                       </td>
                       <td><input value={l.description} onChange={(e) => setLine(i, { description: e.target.value })} /></td>
@@ -147,6 +155,69 @@ export default function Invoices() {
           </form>
         </Modal>
       )}
+
+      {editingMeta && (
+        <InvoiceMetaModal
+          invoice={editingMeta}
+          onClose={() => setEditingMeta(null)}
+          onSaved={() => { setEditingMeta(null); reload(); }}
+          onError={setError}
+        />
+      )}
     </div>
+  );
+}
+
+// A finalized invoice's amounts/lines are immutable (they posted a journal
+// entry). Only descriptive metadata — notes, date, support period — is editable.
+function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
+  const [form, setForm] = useState({
+    notes: invoice.notes || "",
+    date: invoice.date || "",
+    period_start: invoice.period_start || "",
+    period_end: invoice.period_end || "",
+  });
+  const [error, setError] = useState(null);
+  const isSupport = invoice.type === "SUPPORT";
+
+  async function save(e) {
+    e.preventDefault();
+    try {
+      const payload = { notes: form.notes, date: form.date || null };
+      if (isSupport) {
+        payload.period_start = form.period_start || null;
+        payload.period_end = form.period_end || null;
+      }
+      await api.patch(`/invoices/${invoice.id}`, payload);
+      onSaved();
+    } catch (err) { setError(err.message); onError && onError(err.message); }
+  }
+
+  return (
+    <Modal title={`ویرایش فاکتور ${invoice.number}`} onClose={onClose}>
+      <form onSubmit={save}>
+        {error && <div className="error">{error}</div>}
+        <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
+          مبلغ، اقلام و مشتریِ فاکتور صادرشده تغییرناپذیر است (سند مالی ثبت شده). برای
+          اصلاح مبلغ، فاکتور را «ابطال/مرجوعی» و دوباره صادر کنید. اینجا فقط اطلاعات
+          توصیفی قابل ویرایش است.
+        </p>
+        <div className="field">
+          <label>تاریخ</label>
+          <JalaliDatePicker value={form.date} onChange={(d) => setForm({ ...form, date: d })} />
+        </div>
+        {isSupport && (
+          <div className="row">
+            <div className="field"><label>شروع دوره</label><JalaliDatePicker value={form.period_start} onChange={(d) => setForm({ ...form, period_start: d })} /></div>
+            <div className="field"><label>پایان دوره</label><JalaliDatePicker value={form.period_end} onChange={(d) => setForm({ ...form, period_end: d })} /></div>
+          </div>
+        )}
+        <div className="field">
+          <label>یادداشت</label>
+          <textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+        </div>
+        <button className="btn primary">ذخیرهٔ تغییرات</button>
+      </form>
+    </Modal>
   );
 }
