@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import MethodNotAllowed, ValidationError
 from rest_framework.response import Response
 
 from apps.accounts.models import Role, UserRole
@@ -78,8 +78,15 @@ class ProformaViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
         return Response(ProformaSerializer(proforma).data)
 
 
-class InvoiceViewSet(OwnershipQuerysetMixin, viewsets.ReadOnlyModelViewSet):
-    """Invoices — read + reverse. Accounting (cross-dept) reads all, read-only."""
+class InvoiceViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
+    """Invoices — read, edit metadata, and reverse.
+
+    A finalized invoice's financial substance (lines, amounts, customer, type)
+    is immutable: it has posted a journal entry. Only descriptive metadata
+    (notes, date, support period) may be edited here — the serializer's
+    ``read_only_fields`` enforce that. Direct creation and deletion are blocked;
+    invoices are created via «تبدیل به فاکتور»/خدمات and removed via ابطال/مرجوعی.
+    """
 
     queryset = Invoice.objects.select_related("customer", "owner").prefetch_related("lines")
     serializer_class = InvoiceSerializer
@@ -94,6 +101,16 @@ class InvoiceViewSet(OwnershipQuerysetMixin, viewsets.ReadOnlyModelViewSet):
         if type_:
             qs = qs.filter(type=type_)
         return qs
+
+    def create(self, request, *args, **kwargs):
+        raise MethodNotAllowed(
+            "POST", detail="فاکتور مستقیم ساخته نمی‌شود؛ از «تبدیل پیش‌فاکتور» یا فاکتور خدمات استفاده کنید."
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed(
+            "DELETE", detail="فاکتور حذف نمی‌شود؛ برای لغو اثر مالی از «ابطال» یا «مرجوعی» استفاده کنید."
+        )
 
     @action(detail=True, methods=["post"])
     def reverse(self, request, pk=None):

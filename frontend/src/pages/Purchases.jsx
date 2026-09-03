@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, toman } from "../api";
 import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
+import { KindSplit } from "./Proformas.jsx";
 
 export default function Purchases() {
   const { data, loading, error, reload, setError } = useList("/purchases");
   const suppliers = useOptions("/parties?role=supplier");
   const items = useOptions("/items");
   const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState(null); // null = creating a new purchase
   const [form, setForm] = useState(blank());
   const [params, setParams] = useSearchParams();
 
@@ -33,6 +35,23 @@ export default function Purchases() {
     setForm({ ...form, lines });
   }
 
+  function openNew() { setEditId(null); setForm(blank()); setOpen(true); }
+
+  function startEdit(p) {
+    setEditId(p.id);
+    setForm({
+      supplier: String(p.supplier),
+      notes: p.notes || "",
+      lines: (p.lines || []).map((l) => ({
+        item: String(l.item), description: l.description || "",
+        quantity: l.quantity, unit_price: l.unit_price,
+      })),
+    });
+    setOpen(true);
+  }
+
+  function closeModal() { setOpen(false); setEditId(null); setForm(blank()); }
+
   async function save(e) {
     e.preventDefault();
     try {
@@ -44,8 +63,9 @@ export default function Purchases() {
           quantity: Number(l.quantity), unit_price: Number(l.unit_price),
         })),
       };
-      await api.post("/purchases", payload);
-      setOpen(false); setForm(blank()); reload();
+      if (editId) await api.put(`/purchases/${editId}`, payload);
+      else await api.post("/purchases", payload);
+      closeModal(); reload();
     } catch (err) { setError(err.message); }
   }
 
@@ -58,7 +78,7 @@ export default function Purchases() {
     <div>
       <div className="toolbar">
         <h1 className="page-title">خریدها</h1>
-        <button className="btn primary" onClick={() => setOpen(true)}>+ خرید جدید</button>
+        <button className="btn primary" onClick={openNew}>+ خرید جدید</button>
       </div>
       {error && <div className="error">{error}</div>}
       <div className="card">
@@ -70,11 +90,17 @@ export default function Purchases() {
                 <tr key={p.id}>
                   <td className="mono">{p.number}</td>
                   <td>{p.supplier_name}</td>
-                  <td className="mono">{toman(p.total)}</td>
+                  <td className="mono">
+                    {toman(p.total)}
+                    <KindSplit goods={p.goods_total} service={p.service_total} />
+                  </td>
                   <td><StatusBadge status={p.status} display={p.status_display} kind="purchase" /></td>
                   <td className="flex">
                     {p.status === "DRAFT" && (
                       <button className="btn success sm" onClick={() => act(p.id, "register")}>ثبت خرید</button>
+                    )}
+                    {p.status === "DRAFT" && (
+                      <button className="btn sm" onClick={() => startEdit(p)}>ویرایش</button>
                     )}
                     {p.status !== "CANCELLED" && (
                       <button className="btn danger sm" onClick={() => act(p.id, "cancel")}>ابطال</button>
@@ -89,7 +115,7 @@ export default function Purchases() {
       </div>
 
       {open && (
-        <Modal title="خرید جدید" onClose={() => setOpen(false)} wide>
+        <Modal title={editId ? "ویرایش خرید" : "خرید جدید"} onClose={closeModal} wide>
           <form onSubmit={save}>
             <div className="row">
               <div className="field">
@@ -107,7 +133,7 @@ export default function Purchases() {
               <label>توضیحات</label>
               <textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
-            <button className="btn primary">ذخیره خرید</button>
+            <button className="btn primary">{editId ? "ذخیرهٔ تغییرات" : "ذخیره خرید"}</button>
             <span className="muted" style={{ marginInlineStart: 12 }}>پس از ذخیره، دکمهٔ «ثبت خرید» سند مالی می‌سازد.</span>
           </form>
         </Modal>
@@ -127,7 +153,7 @@ function LineTable({ items, lines, setLine, onAdd, onRemove }) {
               <td style={{ minWidth: 160 }}>
                 <select value={l.item} onChange={(e) => setLine(i, { item: e.target.value })}>
                   <option value="">— انتخاب —</option>
-                  {items.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
+                  {items.map((it) => <option key={it.id} value={it.id}>{it.name} ({it.kind_display})</option>)}
                 </select>
               </td>
               <td><input value={l.description} onChange={(e) => setLine(i, { description: e.target.value })} /></td>

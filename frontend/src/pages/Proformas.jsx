@@ -9,6 +9,7 @@ export default function Proformas() {
   const items = useOptions("/items");
   const [purchaseLines, setPurchaseLines] = useState([]);
   const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState(null); // null = creating a new proforma
   const [form, setForm] = useState(blank());
   const [params, setParams] = useSearchParams();
 
@@ -42,6 +43,24 @@ export default function Proformas() {
     setForm({ ...form, lines: form.lines.map((l, idx) => (idx === i ? { ...l, ...patch } : l)) });
   }
 
+  function openNew() { setEditId(null); setForm(blank()); setOpen(true); }
+
+  function startEdit(p) {
+    setEditId(p.id);
+    setForm({
+      customer: String(p.customer),
+      notes: p.notes || "",
+      lines: (p.lines || []).map((l) => ({
+        item: String(l.item), description: l.description || "",
+        quantity: l.quantity, unit_price: l.unit_price,
+        source_purchase_line: l.source_purchase_line ? String(l.source_purchase_line) : "",
+      })),
+    });
+    setOpen(true);
+  }
+
+  function closeModal() { setOpen(false); setEditId(null); setForm(blank()); }
+
   async function save(e) {
     e.preventDefault();
     try {
@@ -54,8 +73,9 @@ export default function Proformas() {
           source_purchase_line: l.source_purchase_line ? Number(l.source_purchase_line) : null,
         })),
       };
-      await api.post("/proformas", payload);
-      setOpen(false); setForm(blank()); reload();
+      if (editId) await api.put(`/proformas/${editId}`, payload);
+      else await api.post("/proformas", payload);
+      closeModal(); reload();
     } catch (err) { setError(err.message); }
   }
 
@@ -68,7 +88,7 @@ export default function Proformas() {
     <div>
       <div className="toolbar">
         <h1 className="page-title">پیش‌فاکتورها</h1>
-        <button className="btn primary" onClick={() => setOpen(true)}>+ پیش‌فاکتور جدید</button>
+        <button className="btn primary" onClick={openNew}>+ پیش‌فاکتور جدید</button>
       </div>
       {error && <div className="error">{error}</div>}
       <div className="card">
@@ -80,10 +100,14 @@ export default function Proformas() {
                 <tr key={p.id}>
                   <td className="mono">{p.number}</td>
                   <td>{p.customer_name}</td>
-                  <td className="mono">{toman(p.total)}</td>
+                  <td className="mono">
+                    {toman(p.total)}
+                    <KindSplit goods={p.goods_total} service={p.service_total} />
+                  </td>
                   <td><StatusBadge status={p.status} display={p.status_display} /></td>
                   <td className="flex" style={{ flexWrap: "wrap" }}>
                     {p.status === "DRAFT" && <button className="btn sm" onClick={() => act(p.id, "confirm")}>تأیید</button>}
+                    {p.status === "DRAFT" && <button className="btn sm" onClick={() => startEdit(p)}>ویرایش</button>}
                     {(p.status === "DRAFT" || p.status === "CONFIRMED") &&
                       <button className="btn sm" onClick={() => act(p.id, "request_purchase")}>درخواست خرید</button>}
                     {["CONFIRMED", "READY"].includes(p.status) &&
@@ -100,7 +124,7 @@ export default function Proformas() {
       </div>
 
       {open && (
-        <Modal title="پیش‌فاکتور جدید" onClose={() => setOpen(false)} wide>
+        <Modal title={editId ? "ویرایش پیش‌فاکتور" : "پیش‌فاکتور جدید"} onClose={closeModal} wide>
           <form onSubmit={save}>
             <div className="row">
               <div className="field">
@@ -124,7 +148,7 @@ export default function Proformas() {
                         <td style={{ minWidth: 150 }}>
                           <select value={l.item} onChange={(e) => setLine(i, { item: e.target.value })}>
                             <option value="">— انتخاب —</option>
-                            {items.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
+                            {items.map((it) => <option key={it.id} value={it.id}>{it.name} ({it.kind_display})</option>)}
                           </select>
                         </td>
                         <td style={{ width: 70 }}><input type="number" min="0" value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} /></td>
@@ -150,10 +174,23 @@ export default function Proformas() {
             <p className="muted" style={{ fontSize: 13 }}>
               قانون ۵٪: قیمت فروش هر قلم کالا باید حداقل ۱٫۰۵ برابر قیمت خرید مبدأ باشد؛ در غیر این‌صورت هنگام «تبدیل به فاکتور» رد می‌شود.
             </p>
-            <button className="btn primary">ذخیره پیش‌فاکتور</button>
+            <button className="btn primary">{editId ? "ذخیرهٔ تغییرات" : "ذخیره پیش‌فاکتور"}</button>
           </form>
         </Modal>
       )}
+    </div>
+  );
+}
+
+// Small کالا/خدمت breakdown under a record's total, shown only when it mixes both.
+export function KindSplit({ goods, service }) {
+  const g = Number(goods || 0);
+  const s = Number(service || 0);
+  if (g <= 0 || s <= 0) return null;
+  return (
+    <div className="flex" style={{ gap: 5, marginTop: 3 }}>
+      <span className="badge blue" style={{ fontSize: 10 }}>کالا {toman(g)}</span>
+      <span className="badge green" style={{ fontSize: 10 }}>خدمت {toman(s)}</span>
     </div>
   );
 }

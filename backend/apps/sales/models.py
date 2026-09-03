@@ -60,6 +60,22 @@ class Proforma(NumberedModel):
         return sum((l.line_total for l in self.lines.all()), Decimal("0"))
 
     @property
+    def goods_total(self) -> Decimal:
+        """Sum of goods (کالا) lines — warehouse-related sales."""
+        return sum(
+            (l.line_total for l in self.lines.all() if l.item.kind == Item.Kind.GOODS),
+            Decimal("0"),
+        )
+
+    @property
+    def service_total(self) -> Decimal:
+        """Sum of service (خدمت) lines — sales unrelated to the warehouse."""
+        return sum(
+            (l.line_total for l in self.lines.all() if l.item.kind == Item.Kind.SERVICE),
+            Decimal("0"),
+        )
+
+    @property
     def margin(self) -> Decimal:
         """Absolute profit margin — the tiebreak metric on true concurrency."""
         return sum((l.margin for l in self.lines.all()), Decimal("0"))
@@ -134,6 +150,20 @@ class Invoice(NumberedModel):
     @property
     def total(self) -> Decimal:
         return sum((l.line_total for l in self.lines.all()), Decimal("0"))
+
+    @property
+    def goods_total(self) -> Decimal:
+        return sum(
+            (l.line_total for l in self.lines.all() if l.item.kind == Item.Kind.GOODS),
+            Decimal("0"),
+        )
+
+    @property
+    def service_total(self) -> Decimal:
+        return sum(
+            (l.line_total for l in self.lines.all() if l.item.kind == Item.Kind.SERVICE),
+            Decimal("0"),
+        )
 
 
 class InvoiceLine(TimeStampedModel):

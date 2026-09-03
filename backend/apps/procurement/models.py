@@ -54,6 +54,22 @@ class Purchase(NumberedModel):
     def total(self) -> Decimal:
         return sum((l.line_total for l in self.lines.all()), Decimal("0"))
 
+    @property
+    def goods_total(self) -> Decimal:
+        """Sum of goods (کالا) lines — warehouse-related purchases."""
+        return sum(
+            (l.line_total for l in self.lines.all() if l.item.kind == Item.Kind.GOODS),
+            Decimal("0"),
+        )
+
+    @property
+    def service_total(self) -> Decimal:
+        """Sum of service (خدمت) lines — purchases unrelated to the warehouse."""
+        return sum(
+            (l.line_total for l in self.lines.all() if l.item.kind == Item.Kind.SERVICE),
+            Decimal("0"),
+        )
+
 
 class PurchaseLine(TimeStampedModel):
     """One line of a purchase — the source a sale line attaches to (one-to-one)."""
