@@ -13,6 +13,7 @@ const NAV = [
   { to: "/accounting", label: "حسابداری", icon: "chart", perm: "accounting.view" },
   { to: "/items", label: "کالا و خدمات", icon: "doc", perm: null },
   { to: "/notifications", label: "اعلان‌ها", icon: "bell", perm: null },
+  { to: "/users", label: "حساب‌های کاربری", icon: "users", perm: null, adminOnly: true },
 ];
 
 const ROLE_LABEL = {
@@ -28,7 +29,7 @@ export default function Layout({ children }) {
     api.get("/notifications/unread_count").then((d) => setUnread(d.count)).catch(() => {});
   }, []);
 
-  const items = NAV.filter((n) => !n.perm || can(n.perm));
+  const items = NAV.filter((n) => (!n.perm || can(n.perm)) && (!n.adminOnly || user?.is_system_admin));
   const dept = (user?.department_codes || [])[0];
   const roleLabel = user?.is_system_admin ? "ادمین سیستم" : (ROLE_LABEL[dept] || "کاربر");
 
