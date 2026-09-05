@@ -42,9 +42,15 @@ echo [DaranX] Seeding initial data (safe to run repeatedly)...
 echo(
 echo [DaranX] Preparing frontend...
 cd /d "%~dp0frontend"
-if not exist "node_modules" (
-    echo [DaranX] Installing frontend dependencies (first run, may take a while)...
-    call npm install
+REM Always install: after a git pull the dependencies in package.json may have
+REM changed, and a stale node_modules (e.g. left from an older stack) makes the
+REM dev server crash on start. npm is fast when everything is already up to date.
+echo [DaranX] Installing/updating frontend dependencies...
+call npm install
+if errorlevel 1 (
+    echo [DaranX] ERROR: npm install failed. Check your internet connection and that Node.js is installed.
+    pause
+    exit /b 1
 )
 
 echo(
