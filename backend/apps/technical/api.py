@@ -22,7 +22,8 @@ class _LineIn(serializers.Serializer):
 
 
 class _DirectInvoiceIn(serializers.Serializer):
-    type = serializers.ChoiceField(choices=[Invoice.Type.SERVICE, Invoice.Type.SUPPORT])
+    type = serializers.ChoiceField(
+        choices=[Invoice.Type.GOODS, Invoice.Type.SERVICE, Invoice.Type.SUPPORT])
     customer = serializers.IntegerField()
     period_start = serializers.DateField(required=False, allow_null=True)
     period_end = serializers.DateField(required=False, allow_null=True)

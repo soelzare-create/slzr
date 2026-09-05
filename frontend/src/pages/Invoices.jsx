@@ -63,7 +63,7 @@ export default function Invoices() {
       <div className="toolbar">
         <h1 className="page-title">فاکتورها</h1>
         {can("technical.edit") && (
-          <button className="btn primary" onClick={() => setOpen(true)}>+ فاکتور خدمات/پشتیبانی</button>
+          <button className="btn primary" onClick={() => setOpen(true)}>+ فاکتور جدید</button>
         )}
       </div>
       {error && <div className="error">{error}</div>}
@@ -101,16 +101,18 @@ export default function Invoices() {
         )}
       </div>
       <p className="muted" style={{ fontSize: 13 }}>
-        فاکتور فروش کالا از مسیر «پیش‌فاکتور → تبدیل به فاکتور» ساخته می‌شود. اینجا فقط فاکتور خدمات و پشتیبانی ماهانه به‌صورت مستقیم صادر می‌شود.
+        فاکتور فروش کالا با کنترل قانون ۵٪ و ثبت بهای‌تمام‌شده از مسیر «پیش‌فاکتور → تبدیل به فاکتور» ساخته می‌شود.
+        فاکتور مستقیم اینجا (خدمات، پشتیبانی، یا فروش کالای بدون خرید مبدأ) فقط درآمد را ثبت می‌کند و بهای‌تمام‌شده ندارد.
       </p>
 
       {open && (
-        <Modal title="فاکتور خدمات / پشتیبانی" onClose={() => setOpen(false)} wide>
+        <Modal title="صدور فاکتور" onClose={() => setOpen(false)} wide>
           <form onSubmit={save}>
             <div className="row">
               <div className="field">
                 <label>نوع فاکتور</label>
                 <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                  <option value="GOODS">فروش کالا</option>
                   <option value="SERVICE">خدمات</option>
                   <option value="SUPPORT">پشتیبانی ماهانه</option>
                 </select>
@@ -166,8 +168,10 @@ export default function Invoices() {
   );
 }
 
-// A finalized invoice's amounts/lines are immutable (they posted a journal
-// entry). Only descriptive metadata — notes, date, support period — is editable.
+// Edit an invoice. Descriptive metadata (notes/date/period) is always editable.
+// For an ISSUED invoice the line amounts (quantity/unit price) can also be
+// changed — that re-posts the sale journal entry (reprice); goods lines from a
+// proforma keep obeying the 5% rule. Items themselves are not changed here.
 function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
   const [form, setForm] = useState({
     notes: invoice.notes || "",
@@ -175,8 +179,27 @@ function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
     period_start: invoice.period_start || "",
     period_end: invoice.period_end || "",
   });
+  const [lines, setLines] = useState(
+    (invoice.lines || []).map((l) => ({
+      id: l.id, item_name: l.item_name, item_kind_display: l.item_kind_display,
+      quantity: l.quantity, unit_price: l.unit_price,
+    }))
+  );
   const [error, setError] = useState(null);
   const isSupport = invoice.type === "SUPPORT";
+  const canReprice = invoice.status === "ISSUED" && lines.length > 0;
+
+  function setLine(i, patch) {
+    setLines(lines.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
+  }
+  function linesChanged() {
+    return lines.some((l) => {
+      const orig = (invoice.lines || []).find((o) => o.id === l.id);
+      return orig && (Number(orig.quantity) !== Number(l.quantity) ||
+        Number(orig.unit_price) !== Number(l.unit_price));
+    });
+  }
+  const total = lines.reduce((s, l) => s + Number(l.quantity || 0) * Number(l.unit_price || 0), 0);
 
   async function save(e) {
     e.preventDefault();
@@ -187,19 +210,56 @@ function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
         payload.period_end = form.period_end || null;
       }
       await api.patch(`/invoices/${invoice.id}`, payload);
+      // Re-post the amounts only if the user actually changed a line.
+      if (canReprice && linesChanged()) {
+        await api.post(`/invoices/${invoice.id}/reprice`, {
+          lines: lines.map((l) => ({
+            id: l.id, quantity: Number(l.quantity), unit_price: Number(l.unit_price),
+          })),
+        });
+      }
       onSaved();
     } catch (err) { setError(err.message); onError && onError(err.message); }
   }
 
   return (
-    <Modal title={`ویرایش فاکتور ${invoice.number}`} onClose={onClose}>
+    <Modal title={`ویرایش فاکتور ${invoice.number}`} onClose={onClose} wide>
       <form onSubmit={save}>
         {error && <div className="error">{error}</div>}
-        <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
-          مبلغ، اقلام و مشتریِ فاکتور صادرشده تغییرناپذیر است (سند مالی ثبت شده). برای
-          اصلاح مبلغ، فاکتور را «ابطال/مرجوعی» و دوباره صادر کنید. اینجا فقط اطلاعات
-          توصیفی قابل ویرایش است.
-        </p>
+
+        {canReprice ? (
+          <>
+            <label className="field" style={{ marginBottom: 6 }}>مبلغ و اقلام</label>
+            <div className="card" style={{ background: "#fafbfc", marginBottom: 14 }}>
+              <table className="line-items">
+                <thead><tr><th>کالا/خدمت</th><th>دسته</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead>
+                <tbody>
+                  {lines.map((l, i) => (
+                    <tr key={l.id}>
+                      <td>{l.item_name}</td>
+                      <td><span className="badge gray" style={{ fontSize: 10 }}>{l.item_kind_display}</span></td>
+                      <td style={{ width: 80 }}><input type="number" min="0" value={l.quantity}
+                        onChange={(e) => setLine(i, { quantity: e.target.value })} /></td>
+                      <td style={{ width: 150 }}><input type="number" min="0" value={l.unit_price}
+                        onChange={(e) => setLine(i, { unit_price: e.target.value })} /></td>
+                      <td className="mono">{toman(Number(l.quantity || 0) * Number(l.unit_price || 0))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ textAlign: "left", fontWeight: 700, marginTop: 6 }}>جمع کل: {toman(total)}</div>
+            </div>
+            <p className="muted" style={{ fontSize: 12.5, marginTop: 0 }}>
+              تغییر مبلغ، سند حسابداری فاکتور را به‌روز می‌کند. برای فاکتور کالای برآمده از
+              پیش‌فاکتور، قیمت هر قلم باید حداقل ۱٫۰۵ برابر قیمت خرید مبدأ باشد.
+            </p>
+          </>
+        ) : (
+          <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
+            این فاکتور صادر نشده یا اقلامی ندارد؛ فقط اطلاعات توصیفی قابل ویرایش است.
+          </p>
+        )}
+
         <div className="field">
           <label>تاریخ</label>
           <JalaliDatePicker value={form.date} onChange={(d) => setForm({ ...form, date: d })} />
