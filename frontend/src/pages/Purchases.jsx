@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, toman } from "../api";
-import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
+import { Modal, StatusBadge, useList, useOptions, useItems, ItemPicker } from "../components.jsx";
 import { KindSplit } from "./Proformas.jsx";
 
 export default function Purchases() {
   const { data, loading, error, reload, setError } = useList("/purchases");
   const suppliers = useOptions("/parties?role=supplier");
-  const items = useOptions("/items");
+  const { items, reload: reloadItems } = useItems();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null); // null = creating a new purchase
   const [form, setForm] = useState(blank());
@@ -126,7 +126,7 @@ export default function Purchases() {
                 </select>
               </div>
             </div>
-            <LineTable items={items} lines={form.lines} setLine={setLine}
+            <LineTable items={items} reloadItems={reloadItems} lines={form.lines} setLine={setLine}
               onAdd={() => setForm({ ...form, lines: [...form.lines, emptyLine()] })}
               onRemove={(i) => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) })} />
             <div className="field">
@@ -142,7 +142,7 @@ export default function Purchases() {
   );
 }
 
-function LineTable({ items, lines, setLine, onAdd, onRemove }) {
+function LineTable({ items, reloadItems, lines, setLine, onAdd, onRemove }) {
   return (
     <div className="card" style={{ background: "#fafbfc" }}>
       <table className="line-items">
@@ -150,11 +150,9 @@ function LineTable({ items, lines, setLine, onAdd, onRemove }) {
         <tbody>
           {lines.map((l, i) => (
             <tr key={i}>
-              <td style={{ minWidth: 160 }}>
-                <select value={l.item} onChange={(e) => setLine(i, { item: e.target.value })}>
-                  <option value="">— انتخاب —</option>
-                  {items.map((it) => <option key={it.id} value={it.id}>{it.name} ({it.kind_display})</option>)}
-                </select>
+              <td style={{ minWidth: 190 }}>
+                <ItemPicker items={items} value={l.item} reloadItems={reloadItems}
+                  onChange={(id) => setLine(i, { item: id })} />
               </td>
               <td><input value={l.description} onChange={(e) => setLine(i, { description: e.target.value })} /></td>
               <td style={{ width: 80 }}><input type="number" min="0" value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} /></td>
