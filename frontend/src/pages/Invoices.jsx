@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, toman } from "../api";
-import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
+import { Modal, StatusBadge, useList, useOptions, useItems, ItemPicker } from "../components.jsx";
 import { JalaliDatePicker } from "../ui.jsx";
 import { useAuth } from "../auth.jsx";
 import { KindSplit } from "./Proformas.jsx";
@@ -10,7 +10,7 @@ export default function Invoices() {
   const { data, loading, error, reload, setError } = useList("/invoices");
   const { can } = useAuth();
   const customers = useOptions("/parties?role=customer");
-  const items = useOptions("/items");
+  const { items, reload: reloadItems } = useItems();
   const [open, setOpen] = useState(false);
   const [editingMeta, setEditingMeta] = useState(null); // invoice being metadata-edited
   const [form, setForm] = useState(blank());
@@ -135,11 +135,9 @@ export default function Invoices() {
                 <tbody>
                   {form.lines.map((l, i) => (
                     <tr key={i}>
-                      <td style={{ minWidth: 160 }}>
-                        <select value={l.item} onChange={(e) => setLine(i, { item: e.target.value })}>
-                          <option value="">— انتخاب —</option>
-                          {items.map((it) => <option key={it.id} value={it.id}>{it.name} ({it.kind_display})</option>)}
-                        </select>
+                      <td style={{ minWidth: 190 }}>
+                        <ItemPicker items={items} value={l.item} reloadItems={reloadItems}
+                          onChange={(id) => setLine(i, { item: id })} />
                       </td>
                       <td><input value={l.description} onChange={(e) => setLine(i, { description: e.target.value })} /></td>
                       <td style={{ width: 70 }}><input type="number" min="0" value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} /></td>

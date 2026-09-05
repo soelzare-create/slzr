@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, rows, toman } from "../api";
-import { Modal, StatusBadge, useList, useOptions } from "../components.jsx";
+import { Modal, StatusBadge, useList, useOptions, useItems, ItemPicker } from "../components.jsx";
 
 export default function Proformas() {
   const { data, loading, error, reload, setError } = useList("/proformas");
   const customers = useOptions("/parties?role=customer");
-  const items = useOptions("/items");
+  const { items, reload: reloadItems } = useItems();
   const [purchaseLines, setPurchaseLines] = useState([]);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null); // null = creating a new proforma
@@ -145,11 +145,9 @@ export default function Proformas() {
                     const low = floor && Number(l.unit_price) < floor;
                     return (
                       <tr key={i}>
-                        <td style={{ minWidth: 150 }}>
-                          <select value={l.item} onChange={(e) => setLine(i, { item: e.target.value })}>
-                            <option value="">— انتخاب —</option>
-                            {items.map((it) => <option key={it.id} value={it.id}>{it.name} ({it.kind_display})</option>)}
-                          </select>
+                        <td style={{ minWidth: 190 }}>
+                          <ItemPicker items={items} value={l.item} reloadItems={reloadItems}
+                            onChange={(id) => setLine(i, { item: id })} />
                         </td>
                         <td style={{ width: 70 }}><input type="number" min="0" value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} /></td>
                         <td style={{ width: 150 }}>
