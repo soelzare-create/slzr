@@ -118,3 +118,14 @@ class InvoiceViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
         invoice = services.reverse_invoice(self.get_object(), actor=request.user,
                                            returned=returned)
         return Response(InvoiceSerializer(invoice).data)
+
+    @action(detail=True, methods=["post"])
+    def reprice(self, request, pk=None):
+        """Edit the amounts (quantity/unit price) of an issued invoice's lines."""
+        lines = request.data.get("lines") or []
+        try:
+            invoice = services.reprice_invoice(
+                self.get_object(), lines_data=lines, actor=request.user)
+        except (services.InvalidTransition, services.FivePercentViolation) as exc:
+            raise ValidationError(str(exc))
+        return Response(InvoiceSerializer(invoice).data)

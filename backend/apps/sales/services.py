@@ -210,6 +210,15 @@ def convert_to_invoice(proforma: Proforma, *, actor=None) -> Invoice:
     return invoice
 
 
+def income_code_for(invoice_type: str) -> str:
+    """The income account a sale of the given type credits."""
+    if invoice_type == Invoice.Type.SUPPORT:
+        return acc.SUPPORT_INCOME
+    if invoice_type == Invoice.Type.SERVICE:
+        return acc.SERVICE_INCOME
+    return acc.SALES_INCOME  # GOODS
+
+
 def _post_sale_entry(invoice: Invoice, *, sale_total: Decimal, cost_total: Decimal,
                      income_code: str, actor=None) -> None:
     """Post the automatic sale document(s). Called for goods/service/support."""
@@ -237,9 +246,10 @@ def _post_sale_entry(invoice: Invoice, *, sale_total: Decimal, cost_total: Decim
 def create_direct_invoice(*, invoice_type: str, customer, owner, lines_data: list[dict],
                           actor=None, period_start=None, period_end=None,
                           notes: str = "") -> Invoice:
-    """Create a service or monthly-support invoice (no proforma, no 5% rule)."""
-    income_code = (acc.SUPPORT_INCOME if invoice_type == Invoice.Type.SUPPORT
-                   else acc.SERVICE_INCOME)
+    """Create a direct invoice (service, support, or a simple goods sale) — no
+    proforma, no 5% rule, and no cost-of-goods (a direct goods sale has no source
+    purchase to draw a cost basis from; use the proforma→purchase flow for COGS)."""
+    income_code = income_code_for(invoice_type)
     invoice = Invoice.objects.create(
         number=_next_invoice_number(),
         type=invoice_type,
@@ -265,6 +275,56 @@ def create_direct_invoice(*, invoice_type: str, customer, owner, lines_data: lis
     return invoice
 
 
+# --- Reprice (edit amounts) -------------------------------------------------
+@transaction.atomic
+def reprice_invoice(invoice: Invoice, *, lines_data: list[dict], actor=None) -> Invoice:
+    """Change the amounts (quantity / unit price) of an ISSUED invoice's lines and
+    re-post its sale journal entry, atomically.
+
+    The old entry is reversed and a fresh one posted, so the ledger always
+    reflects the current amounts. Goods lines linked to a purchase keep obeying
+    the 5% rule and keep their cost basis (COGS). Items and purchase links are
+    not changed here — only quantities and prices."""
+    from apps.accounting.models import JournalEntry
+
+    inv = Invoice.objects.select_for_update().get(pk=invoice.pk)
+    if inv.status != Invoice.Status.ISSUED:
+        raise InvalidTransition("فقط فاکتور صادرشده قابل اصلاح مبلغ است.")
+
+    by_id = {ld["id"]: ld for ld in lines_data if ld.get("id") is not None}
+    lines = list(inv.lines.select_related("source_purchase_line", "item").all())
+    for line in lines:
+        patch = by_id.get(line.id)
+        if not patch:
+            continue
+        if patch.get("quantity") is not None:
+            line.quantity = patch["quantity"]
+        if patch.get("unit_price") is not None:
+            line.unit_price = patch["unit_price"]
+        line.save(update_fields=["quantity", "unit_price", "updated_at"])
+
+    # 5% rule + cost basis apply only to goods lines linked to a source purchase.
+    priced = [l for l in lines if l.source_purchase_line is not None]
+    if priced:
+        check_five_percent(priced)
+    cost_total = sum(
+        (Decimal(l.source_purchase_line.unit_price) * Decimal(l.quantity) for l in priced),
+        Decimal("0"),
+    )
+
+    active = JournalEntry.objects.filter(
+        source_ref=f"sales.invoice:{inv.id}", is_reversal=False, reversed_by__isnull=True
+    ).order_by("-id").first()
+    if active is not None:
+        acc.reverse_entry(active, actor=actor,
+                          description=f"اصلاح مبلغ فاکتور {inv.number}")
+    _post_sale_entry(inv, sale_total=inv.total, cost_total=cost_total,
+                     income_code=income_code_for(inv.type), actor=actor)
+    log_action(actor, "sales.reprice_invoice", f"sales.invoice:{inv.id}",
+               new_total=str(inv.total))
+    return inv
+
+
 # --- Returns / cancel (reverse) ---------------------------------------------
 @transaction.atomic
 def reverse_invoice(invoice: Invoice, *, actor=None, returned: bool = False) -> Invoice:
@@ -272,10 +332,12 @@ def reverse_invoice(invoice: Invoice, *, actor=None, returned: bool = False) -> 
     from apps.accounting.models import JournalEntry
 
     inv = Invoice.objects.select_for_update().get(pk=invoice.pk)
+    # Reverse the currently-active (not-yet-reversed) sale entry — after a reprice
+    # there may be several, only the latest is live.
     origin = JournalEntry.objects.filter(
-        source_ref=f"sales.invoice:{inv.id}", is_reversal=False
-    ).first()
-    if origin and not origin.reversed_by.exists():
+        source_ref=f"sales.invoice:{inv.id}", is_reversal=False, reversed_by__isnull=True
+    ).order_by("-id").first()
+    if origin is not None:
         acc.reverse_entry(origin, actor=actor,
                           description=f"برگشت فروش فاکتور {inv.number}")
     inv.status = Invoice.Status.RETURNED if returned else Invoice.Status.CANCELLED
