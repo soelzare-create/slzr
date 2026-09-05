@@ -13,6 +13,7 @@ import Parties from "./pages/Parties.jsx";
 import Items from "./pages/Items.jsx";
 import Accounting from "./pages/Accounting.jsx";
 import Notifications from "./pages/Notifications.jsx";
+import Users from "./pages/Users.jsx";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -33,6 +34,7 @@ function App() {
       <Route path="/items" element={<Protected><Items /></Protected>} />
       <Route path="/accounting" element={<Protected><Accounting /></Protected>} />
       <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
+      <Route path="/users" element={<Protected><Users /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
