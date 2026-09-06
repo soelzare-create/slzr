@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طراحی و ارتقای زیرساخت فناوری اطلاعات اهواز تک | DaranX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#082B59;
+    --navy-2:#0B3B78;
+    --lime:#B4E000;
+    --white:#FFFFFF;
+    --gray:#F3F5F7;
+    --gray-2:#E4E9EE;
+    --ink:#1C2733;
+    --muted:#5B6B7B;
+    --line:#DDE3EA;
+    --shadow:0 18px 50px -25px rgba(8,43,89,.35);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  body{
+    font-family:'Vazirmatn','Segoe UI',Tahoma,Arial,sans-serif;
+    color:var(--ink);
+    background:var(--gray-2);
+    line-height:1.85;
+    font-size:15px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- Page frame (A4) ---------- */
+  .page{
+    position:relative;
+    width:210mm;
+    min-height:297mm;
+    margin:14px auto;
+    background:var(--white);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .page-body{
+    flex:1;
+    padding:22mm 20mm 16mm;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- Running header / footer ---------- */
+  .runhead{
+    position:absolute;top:0;right:0;left:0;
+    height:14mm;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 20mm;
+    border-bottom:1px solid var(--line);
+    font-size:10.5px;color:var(--muted);
+    letter-spacing:.2px;
+  }
+  .runhead .brand{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--navy)}
+  .runhead .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--lime)}
+  .runhead .brand b{color:var(--lime);-webkit-text-fill-color:initial}
+
+  .runfoot{
+    position:absolute;bottom:0;right:0;left:0;
+    height:12mm;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 20mm;
+    border-top:1px solid var(--line);
+    font-size:10px;color:var(--muted);
+  }
+  .runfoot .tag{color:var(--navy);font-weight:600}
+
+  /* ---------- Section eyebrow / titles ---------- */
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:11px;font-weight:700;letter-spacing:1px;
+    color:var(--navy);text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .eyebrow .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;border-radius:8px;
+    background:var(--navy);color:#fff;font-size:12px;
+  }
+  .eyebrow .rule{height:2px;width:34px;background:var(--lime);border-radius:2px}
+
+  h1,h2,h3{color:var(--navy);font-weight:800;line-height:1.4}
+  h2.section-title{font-size:30px;margin-bottom:10px;letter-spacing:-.3px}
+  h2.section-title .accent{color:var(--lime);-webkit-text-fill-color:initial}
+  .lead{font-size:16px;color:var(--muted);max-width:62ch;margin-bottom:26px}
+
+  p{color:var(--ink)}
+  .soft{color:var(--muted)}
+
+  /* ---------- COVER ---------- */
+  .cover{
+    background:
+      radial-gradient(1100px 520px at 90% -10%, rgba(180,224,0,.16), transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, rgba(11,59,120,.55), transparent 55%),
+      linear-gradient(160deg,#061f42 0%,var(--navy) 45%,#0a3467 100%);
+    color:#fff;
+    justify-content:space-between;
+    padding:26mm 20mm 20mm;
+  }
+  .cover .runhead{border-bottom-color:rgba(255,255,255,.14)}
+  .cover .runhead,.cover .runhead .brand{color:#fff}
+  .cover-top{display:flex;align-items:center;justify-content:space-between}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo .mark{
+    width:52px;height:52px;border-radius:14px;
+    background:var(--lime);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--navy);font-weight:900;font-size:24px;
+    box-shadow:0 10px 30px -8px rgba(180,224,0,.6);
+  }
+  .logo .name{font-size:26px;font-weight:900;letter-spacing:.5px}
+  .logo .name span{color:var(--lime)}
+  .logo .sub{font-size:11px;color:rgba(255,255,255,.7);font-weight:500;margin-top:2px}
+
+  .cover-pill{
+    font-size:11px;font-weight:600;letter-spacing:1px;
+    border:1px solid rgba(255,255,255,.28);
+    padding:8px 14px;border-radius:100px;color:rgba(255,255,255,.85);
+  }
+
+  .cover-center{margin:auto 0}
+  .cover-kicker{
+    display:inline-flex;align-items:center;gap:10px;
+    font-size:12px;font-weight:700;letter-spacing:2px;
+    color:var(--lime);margin-bottom:22px;
+  }
+  .cover-kicker .rule{height:2px;width:40px;background:var(--lime)}
+  .cover h1{
+    color:#fff;font-size:52px;line-height:1.25;font-weight:900;
+    letter-spacing:-.5px;max-width:16ch;
+  }
+  .cover .subtitle{
+    margin-top:20px;font-size:21px;font-weight:400;
+    color:rgba(255,255,255,.82);max-width:34ch;
+  }
+  .cover .subtitle b{color:var(--lime);font-weight:700}
+
+  .cover-meta{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:14px;overflow:hidden;margin-top:44px;
+  }
+  .cover-meta .cell{background:rgba(6,25,55,.35);padding:18px 20px}
+  .cover-meta .k{font-size:10.5px;letter-spacing:1px;color:rgba(255,255,255,.6);margin-bottom:6px}
+  .cover-meta .v{font-size:15px;font-weight:700;color:#fff}
+  .cover-meta .v span{color:var(--lime)}
+
+  .cover-bottom{display:flex;align-items:flex-end;justify-content:space-between;color:rgba(255,255,255,.7);font-size:12px}
+  .cover-bottom .slogan{font-size:15px;color:#fff;font-weight:600}
+  .cover-bottom .slogan em{color:var(--lime);font-style:normal}
+
+  /* ---------- Generic content blocks ---------- */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+  .card{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:24px 22px;
+  }
+  .card.tint{background:var(--gray);border-color:var(--gray-2)}
+  .card .ic{
+    width:44px;height:44px;border-radius:12px;
+    background:rgba(8,43,89,.08);color:var(--navy);
+    display:flex;align-items:center;justify-content:center;margin-bottom:14px;
+  }
+  .card h3{font-size:17px;margin-bottom:8px}
+  .card p{font-size:13.5px;color:var(--muted);line-height:1.8}
+
+  .callout{
+    background:linear-gradient(150deg,var(--navy),var(--navy-2));
+    color:#fff;border-radius:18px;padding:30px 30px;position:relative;overflow:hidden;
+  }
+  .callout::after{
+    content:"";position:absolute;left:-40px;bottom:-40px;
+    width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle,rgba(180,224,0,.25),transparent 70%);
+  }
+  .callout h3{color:#fff;font-size:22px;margin-bottom:10px;position:relative}
+  .callout p{color:rgba(255,255,255,.85);position:relative}
+  .callout .accent{color:var(--lime)}
+
+  /* quote / big statement */
+  .statement{
+    text-align:center;margin:auto 0;padding:20px 0;
+  }
+  .statement .mark{font-size:60px;color:var(--lime);line-height:.5;font-weight:900}
+  .statement h2{font-size:40px;line-height:1.4;max-width:20ch;margin:24px auto 0;letter-spacing:-.5px}
+  .statement h2 .hl{
+    background:linear-gradient(transparent 62%,rgba(180,224,0,.55) 62%);
+    padding:0 6px;
+  }
+  .statement p{margin-top:26px;font-size:16px;color:var(--muted);max-width:52ch;margin-inline:auto}
+
+  /* chain of growth */
+  .chain{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin-top:34px}
+  .chain .node{
+    background:var(--white);border:1.5px solid var(--navy);color:var(--navy);
+    font-weight:700;font-size:13px;padding:11px 16px;border-radius:100px;
+  }
+  .chain .arrow{color:var(--lime);font-weight:900;font-size:18px}
+
+  /* ---------- Diagram ---------- */
+  .diagram-wrap{
+    background:var(--gray);border:1px solid var(--gray-2);border-radius:18px;
+    padding:26px;margin-top:6px;
+  }
+  .diagram-wrap svg{width:100%;height:auto;display:block}
+  .legend{display:flex;gap:22px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .legend .item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .legend .sw{width:14px;height:14px;border-radius:4px}
+
+  /* ---------- Spec table ---------- */
+  .spec-table{width:100%;border-collapse:collapse;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+  .spec-table th{
+    background:var(--navy);color:#fff;text-align:right;font-size:12.5px;
+    padding:13px 18px;font-weight:700;letter-spacing:.3px;
+  }
+  .spec-table td{padding:12px 18px;font-size:13.5px;border-top:1px solid var(--line)}
+  .spec-table tr:nth-child(even) td{background:var(--gray)}
+  .spec-table td:first-child{color:var(--muted);width:42%;font-weight:600}
+  .spec-table td:last-child{color:var(--ink);font-weight:600}
+
+  .compare{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;margin-bottom:22px}
+  .compare .box{border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  .compare .old{background:var(--gray)}
+  .compare .new{background:linear-gradient(150deg,var(--navy),var(--navy-2));color:#fff;border:none}
+  .compare .new .t,.compare .new .m{color:#fff}
+  .compare .new .t span{color:var(--lime)}
+  .compare .lbl{font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+  .compare .new .lbl{color:rgba(255,255,255,.7)}
+  .compare .t{font-size:19px;font-weight:800;color:var(--navy)}
+  .compare .m{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .compare .mid{display:flex;align-items:center;justify-content:center;padding:0 14px}
+  .compare .mid span{width:38px;height:38px;border-radius:50%;background:var(--lime);color:var(--navy);
+    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px}
+
+  /* ---------- Results (key page) ---------- */
+  .results{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  .result{
+    position:relative;background:var(--white);border:1px solid var(--line);
+    border-radius:16px;padding:24px 22px 22px;overflow:hidden;
+  }
+  .result::before{content:"";position:absolute;top:0;right:0;height:100%;width:5px;background:var(--lime)}
+  .result .rn{font-size:34px;font-weight:900;color:var(--gray-2);line-height:1;position:absolute;left:20px;top:16px}
+  .result h3{font-size:18px;margin-bottom:8px}
+  .result p{font-size:13px;color:var(--muted)}
+  .result.feature{grid-column:1 / -1;background:linear-gradient(150deg,var(--navy),var(--navy-2));border:none}
+  .result.feature::before{background:var(--lime)}
+  .result.feature h3{color:#fff;font-size:20px}
+  .result.feature p{color:rgba(255,255,255,.85);max-width:60ch}
+  .result.feature .rn{color:rgba(255,255,255,.14)}
+
+  /* list with lime ticks */
+  .ticks{list-style:none;display:flex;flex-direction:column;gap:11px;margin-top:6px}
+  .ticks li{display:flex;gap:11px;align-items:flex-start;font-size:14px}
+  .ticks li .tk{
+    flex:0 0 auto;width:22px;height:22px;border-radius:6px;margin-top:2px;
+    background:var(--lime);color:var(--navy);display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:13px;
+  }
+  .ticks li b{color:var(--navy)}
+
+  /* two-col split intro */
+  .split{display:grid;grid-template-columns:1.15fr .85fr;gap:30px;align-items:start}
+
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+  .stat{background:var(--gray);border:1px solid var(--gray-2);border-radius:14px;padding:18px 16px;text-align:center}
+  .stat .big{font-size:26px;font-weight:900;color:var(--navy)}
+  .stat .big span{color:var(--lime);-webkit-text-fill-color:initial}
+  .stat .cap{font-size:11.5px;color:var(--muted);margin-top:4px}
+
+  /* closing */
+  .closing{
+    background:
+      radial-gradient(900px 500px at 100% 0%, rgba(180,224,0,.14), transparent 60%),
+      linear-gradient(165deg,#061f42,var(--navy) 60%,#0a3467);
+    color:#fff;justify-content:center;text-align:center;
+  }
+  .closing .page-body{align-items:center;justify-content:center}
+  .closing .runhead{border-bottom-color:rgba(255,255,255,.14)}
+  .closing .runhead,.closing .runhead .brand{color:#fff}
+  .closing .runfoot{border-top-color:rgba(255,255,255,.14);color:rgba(255,255,255,.6)}
+  .closing .runfoot .tag{color:var(--lime)}
+  .closing .mark{font-size:56px;color:var(--lime);line-height:.4;font-weight:900}
+  .closing h2{color:#fff;font-size:40px;line-height:1.45;max-width:22ch;margin:26px auto 0;letter-spacing:-.4px}
+  .closing h2 .hl{color:var(--lime)}
+  .closing .logo-lg{margin-top:52px}
+  .closing .logo-lg .name{font-size:40px;font-weight:900;color:#fff}
+  .closing .logo-lg .name span{color:var(--lime)}
+  .closing .logo-lg .slg{margin-top:10px;font-size:15px;color:rgba(255,255,255,.75);letter-spacing:.5px}
+  .closing .logo-lg .slg em{color:var(--lime);font-style:normal}
+
+  .toc{margin-top:6px}
+  .toc .row{
+    display:flex;align-items:center;gap:16px;padding:14px 4px;border-bottom:1px solid var(--line);
+  }
+  .toc .row .n{
+    flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--gray);
+    color:var(--navy);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px;
+  }
+  .toc .row .t{font-weight:700;color:var(--navy);font-size:15px}
+  .toc .row .d{color:var(--muted);font-size:12.5px;margin-inline-start:auto;text-align:left}
+
+  /* ---------- Screen niceties + print ---------- */
+  .toolbar{
+    position:fixed;bottom:18px;left:18px;z-index:50;
+    display:flex;gap:10px;
+  }
+  .toolbar button{
+    font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+    border:none;border-radius:100px;padding:11px 18px;
+    background:var(--navy);color:#fff;box-shadow:var(--shadow);
+    display:flex;align-items:center;gap:8px;
+  }
+  .toolbar button.alt{background:var(--lime);color:var(--navy)}
+
+  @media print{
+    body{background:#fff}
+    .toolbar{display:none}
+    .page{width:auto;min-height:auto;margin:0;box-shadow:none;page-break-after:always;break-after:page}
+    .page:last-child{page-break-after:auto}
+  }
+  @page{size:A4;margin:0}
+
+  @media (max-width:840px){
+    .page{width:auto;min-height:auto;margin:10px}
+    .page-body{padding:64px 22px 52px}
+    .runhead,.runfoot{padding:0 22px}
+    .cover{padding:64px 22px 40px}
+    .cover h1{font-size:34px}
+    .grid-2,.grid-3,.results,.split,.stat-row,.cover-meta,.compare{grid-template-columns:1fr}
+    .compare .mid{padding:10px 0}
+    h2.section-title{font-size:24px}
+    .statement h2,.closing h2{font-size:28px}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="window.print()">⬇ دریافت PDF / چاپ</button>
+</div>
+
+<!-- ============ 1 · COVER ============ -->
+<section class="page cover">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> پیشنهاد فنی</div>
+    <div>محرمانه — ویژه هیئت مدیره</div>
+  </div>
+
+  <div class="cover-top" style="margin-top:12mm">
+    <div class="logo">
+      <div class="mark">D</div>
+      <div>
+        <div class="name">Daran<span>X</span></div>
+        <div class="sub">جایی که فناوری به راهکار بدل می‌شود</div>
+      </div>
+    </div>
+    <div class="cover-pill">پروپوزال زیرساخت · ۱۴۰۴</div>
+  </div>
+
+  <div class="cover-center">
+    <div class="cover-kicker"><span class="rule"></span> پیشنهاد همکاری راهبردی</div>
+    <h1>طراحی و ارتقای زیرساخت فناوری اطلاعات اهواز تک</h1>
+    <div class="subtitle">زیرساختی برای <b>پایداری امروز</b> و <b>رشد فردا</b></div>
+
+    <div class="cover-meta">
+      <div class="cell">
+        <div class="k">تهیه‌شده برای</div>
+        <div class="v">هایپرمارکت‌های زنجیره‌ای <span>اهواز تک</span></div>
+      </div>
+      <div class="cell">
+        <div class="k">تهیه‌شده توسط</div>
+        <div class="v">شرکت <span>DaranX</span></div>
+      </div>
+      <div class="cell">
+        <div class="k">موضوع</div>
+        <div class="v">بازطراحی و <span>استانداردسازی</span> زیرساخت</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cover-bottom">
+    <div class="slogan">هدف ما ساختن شبکه‌ای بهتر نیست؛ <em>ساختن زیرساختی است که با شما رشد کند.</em></div>
+    <div>سند پیشنهادی — نسخه مدیریتی</div>
+  </div>
+</section>
+
+<!-- ============ 2 · CONTENTS ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>فهرست پیشنهاد</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="rule"></span> در این سند چه می‌خوانید</div>
+    <h2 class="section-title">یک نگاه، از <span class="accent">مسئله</span> تا <span class="accent">نتیجه</span></h2>
+    <p class="lead">این پروپوزال برای تصمیم‌گیری مدیریتی نوشته شده است؛ نه یک گزارش فنی. تمرکز ما بر یک پرسش ساده است: این سرمایه‌گذاری چه مشکلی از کسب‌وکار اهواز تک حل می‌کند و چه ارزشی می‌سازد؟</p>
+
+    <div class="toc">
+      <div class="row"><div class="n">۰۱</div><div class="t">چرا این پروژه اهمیت دارد؟</div><div class="d">وابستگی کسب‌وکار به زیرساخت</div></div>
+      <div class="row"><div class="n">۰۲</div><div class="t">چیزی که DaranX پیشنهاد می‌دهد</div><div class="d">تصویر زیرساخت هدف</div></div>
+      <div class="row"><div class="n">۰۳</div><div class="t">برای فردا طراحی می‌کنیم</div><div class="d">آینده‌نگری و مقیاس‌پذیری</div></div>
+      <div class="row"><div class="n">۰۴</div><div class="t">امنیت و حفاظت از اطلاعات</div><div class="d">امنیت به‌عنوان بخشی از طراحی</div></div>
+      <div class="row"><div class="n">۰۵</div><div class="t">پایداری و برق</div><div class="d">تداوم سرویس بدون قطعی</div></div>
+      <div class="row"><div class="n">۰۶</div><div class="t">سرور جدید</div><div class="d">بستری برای سال‌های آینده</div></div>
+      <div class="row"><div class="n">۰۷</div><div class="t">نتیجه‌ای که اهواز تک دریافت می‌کند</div><div class="d">پنج دستاورد کلیدی</div></div>
+      <div class="row"><div class="n">۰۸</div><div class="t">نقش DaranX و جمع‌بندی</div><div class="d">یک همکاری بلندمدت</div></div>
+    </div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>۲ / ۱۰</div>
+  </div>
+</section>
+
+<!-- ============ 3 · WHY IT MATTERS ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>۰۱ — چرا این پروژه اهمیت دارد</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="num">۰۱</span> چرا این پروژه اهمیت دارد؟</div>
+    <h2 class="section-title">در یک مجموعه زنجیره‌ای، شبکه صرفاً یک ابزار فنی <span class="accent">نیست</span></h2>
+    <p class="lead">شبکه در اهواز تک فقط کامپیوترها را به هم وصل نمی‌کند؛ فروش را ممکن می‌کند. فروش، صندوق‌ها، حسابداری، انبار، مدیریت و دوربین‌های همه شعب بر پایه همین زیرساخت کار می‌کنند.</p>
+
+    <div class="split">
+      <div>
+        <ul class="ticks">
+          <li><span class="tk">✓</span><div><b>فروش وابسته به شبکه است.</b> اگر صندوق‌های یک شعبه از دسترس خارج شوند، فروش همان لحظه متوقف می‌شود.</div></li>
+          <li><span class="tk">✓</span><div><b>اطلاعات به‌صورت متمرکز مدیریت می‌شود.</b> حسابداری و مدیریت مرکز، به داده‌ای که از شعب می‌آید متکی‌اند.</div></li>
+          <li><span class="tk">✓</span><div><b>نظارت و امنیت فیزیکی هم روی همین بستر است.</b> ده‌ها دوربین هر شعبه بخشی از همین زیرساخت‌اند.</div></li>
+          <li><span class="tk">✓</span><div><b>یک اختلال کوچک، اثر بزرگ دارد.</b> وقفه در زیرساخت مستقیماً به وقفه در عملیات فروشگاه تبدیل می‌شود.</div></li>
+        </ul>
+      </div>
+      <div class="callout">
+        <h3>نتیجه ساده است</h3>
+        <p>هر ساعتی که زیرساخت پایدار نباشد، هزینه‌اش را <span class="accent">کسب‌وکار</span> می‌پردازد — نه واحد فنی. به همین دلیل، زیرساخت یک موضوع فنی نیست؛ یک <span class="accent">تصمیم تجاری</span> است.</p>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="big">۱ مرکز <span>+</span> شعب</div><div class="cap">ساختار چندسایتی زنجیره‌ای</div></div>
+      <div class="stat"><div class="big"><span>۵–۱۰</span></div><div class="cap">صندوق فروش در هر شعبه</div></div>
+      <div class="stat"><div class="big"><span>۳۰–۵۰</span></div><div class="cap">دوربین Hikvision در هر شعبه</div></div>
+      <div class="stat"><div class="big">۱ نقطه</div><div class="cap">اختلال می‌تواند شعبه را متوقف کند</div></div>
+    </div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>۳ / ۱۰</div>
+  </div>
+</section>
+
+<!-- ============ 4 · WHAT WE PROPOSE + DIAGRAM ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>۰۲ — پیشنهاد DaranX</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="num">۰۲</span> چیزی که DaranX پیشنهاد می‌دهد</div>
+    <h2 class="section-title">نه فهرست تجهیزات؛ یک <span class="accent">نتیجه</span> روشن</h2>
+    <p class="lead">پیشنهاد ما یک زیرساخت یکپارچه است که مرکز اصلی و همه شعب را به‌صورت استاندارد، امن و قابل مدیریت به هم متصل می‌کند — بستری که آماده رشد اهواز تک باشد.</p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 900 340" role="img" aria-label="نمودار ارتباط مرکز اصلی با شعب">
+        <defs>
+          <linearGradient id="gnavy" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0B3B78"/><stop offset="1" stop-color="#082B59"/>
+          </linearGradient>
+          <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#082B59" flood-opacity="0.18"/>
+          </filter>
+        </defs>
+
+        <!-- connection lines -->
+        <g stroke="#B4E000" stroke-width="2.5" fill="none" stroke-dasharray="2 7" stroke-linecap="round">
+          <path d="M450,150 C300,150 250,250 170,255"/>
+          <path d="M450,150 C380,150 360,255 340,258"/>
+          <path d="M450,150 C520,150 540,255 560,258"/>
+          <path d="M450,150 C600,150 650,250 730,255"/>
+        </g>
+
+        <!-- central hub -->
+        <g filter="url(#sh)">
+          <rect x="330" y="40" width="240" height="118" rx="18" fill="url(#gnavy)"/>
+        </g>
+        <text x="450" y="72" text-anchor="middle" fill="#B4E000" font-family="Vazirmatn,sans-serif" font-size="13" font-weight="700">مرکز اصلی</text>
+        <text x="450" y="98" text-anchor="middle" fill="#ffffff" font-family="Vazirmatn,sans-serif" font-size="15" font-weight="700">سرور مرکزی و حسابداری</text>
+        <text x="450" y="122" text-anchor="middle" fill="#cdd8e8" font-family="Vazirmatn,sans-serif" font-size="11.5">هسته پردازش و مدیریت داده</text>
+        <text x="450" y="142" text-anchor="middle" fill="#8fa6c4" font-family="Vazirmatn,sans-serif" font-size="10.5">روتر مرکزی MikroTik RB1100</text>
+
+        <!-- branch nodes -->
+        <g font-family="Vazirmatn,sans-serif">
+          <!-- branch template repeated -->
+          <g filter="url(#sh)"><rect x="80" y="255" width="180" height="70" rx="14" fill="#ffffff" stroke="#DDE3EA"/></g>
+          <text x="170" y="283" text-anchor="middle" fill="#082B59" font-size="13.5" font-weight="700">شعبه ۱</text>
+          <text x="170" y="303" text-anchor="middle" fill="#5B6B7B" font-size="10.5">صندوق‌ها · انبار · دوربین‌ها</text>
+
+          <g filter="url(#sh)"><rect x="270" y="258" width="150" height="66" rx="14" fill="#ffffff" stroke="#DDE3EA"/></g>
+          <text x="345" y="285" text-anchor="middle" fill="#082B59" font-size="13.5" font-weight="700">شعبه ۲</text>
+          <text x="345" y="304" text-anchor="middle" fill="#5B6B7B" font-size="10.5">صندوق · دوربین · مدیریت</text>
+
+          <g filter="url(#sh)"><rect x="480" y="258" width="150" height="66" rx="14" fill="#ffffff" stroke="#DDE3EA"/></g>
+          <text x="555" y="285" text-anchor="middle" fill="#082B59" font-size="13.5" font-weight="700">شعبه ۳</text>
+          <text x="555" y="304" text-anchor="middle" fill="#5B6B7B" font-size="10.5">صندوق · دوربین · مدیریت</text>
+
+          <g filter="url(#sh)"><rect x="640" y="255" width="180" height="70" rx="14" fill="#ffffff" stroke="#DDE3EA"/></g>
+          <text x="730" y="283" text-anchor="middle" fill="#082B59" font-size="13.5" font-weight="700">شعبه بعدی…</text>
+          <text x="730" y="303" text-anchor="middle" fill="#B4E000" font-size="10.5" font-weight="700">آماده افزوده‌شدن</text>
+        </g>
+
+        <!-- small edge routers -->
+        <g font-family="Vazirmatn,sans-serif" font-size="9.5" fill="#5B6B7B">
+          <circle cx="170" cy="230" r="4" fill="#B4E000"/><text x="182" y="234">MikroTik hEX</text>
+          <circle cx="345" cy="234" r="4" fill="#B4E000"/><text x="357" y="238">hEX</text>
+          <circle cx="555" cy="234" r="4" fill="#B4E000"/><text x="567" y="238">hEX</text>
+          <circle cx="730" cy="230" r="4" fill="#B4E000"/><text x="742" y="234">MikroTik hEX</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <div class="item"><span class="sw" style="background:#082B59"></span> مرکز اصلی (سرور، حسابداری، روتر مرکزی)</div>
+        <div class="item"><span class="sw" style="background:#fff;border:1px solid #DDE3EA"></span> شعب فروشگاهی</div>
+        <div class="item"><span class="sw" style="background:#B4E000"></span> مسیر ارتباطی استاندارد و امن</div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-top:22px">
+      <div class="card tint"><h3 style="font-size:15px">پایدارتر و امن‌تر</h3><p>ساختاری استاندارد که اختلال را کم و کنترل را زیاد می‌کند.</p></div>
+      <div class="card tint"><h3 style="font-size:15px">قابل توسعه و مدیریت</h3><p>افزودن شعبه، کاربر یا دوربین، بدون بازطراحی از صفر.</p></div>
+      <div class="card tint"><h3 style="font-size:15px">آماده رشد</h3><p>بستری هماهنگ برای سال‌های پیش‌روی اهواز تک.</p></div>
+    </div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>۴ / ۱۰</div>
+  </div>
+</section>
+
+<!-- ============ 5 · FUTURE ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>۰۳ — آینده‌نگری</div>
+  </div>
+  <div class="page-body statement">
+    <div class="mark">”</div>
+    <div class="eyebrow" style="justify-content:center;margin-top:10px"><span class="rule"></span> آینده‌نگری <span class="rule"></span></div>
+    <h2>برای امروز طراحی نمی‌کنیم؛ <span class="hl">برای سال‌های آینده</span> طراحی می‌کنیم.</h2>
+    <p>زیرساخت جدید باید طوری طراحی شود که رشد اهواز تک را جذب کند — نه اینکه چند سال بعد، خودش تبدیل به مانع رشد شود.</p>
+
+    <div class="chain">
+      <span class="node">افزایش شعب</span><span class="arrow">←</span>
+      <span class="node">افزایش کاربران</span><span class="arrow">←</span>
+      <span class="node">افزایش صندوق‌ها</span><span class="arrow">←</span>
+      <span class="node">افزایش دوربین‌ها</span><span class="arrow">←</span>
+      <span class="node">افزایش اطلاعات</span><span class="arrow">←</span>
+      <span class="node">افزایش سرویس‌ها</span>
+    </div>
+
+    <div class="callout" style="max-width:60ch;margin:34px auto 0;text-align:right">
+      <h3>پیام اصلی</h3>
+      <p>سرمایه‌گذاری امروز باید تا حد امکان از هزینه‌های سنگین فردا جلوگیری کند. زیرساختی که درست طراحی شود، با رشد کسب‌وکار «<span class="accent">کشیده می‌شود</span>»؛ نه اینکه هر بار از نو ساخته شود.</p>
+    </div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>۵ / ۱۰</div>
+  </div>
+</section>
+
+<!-- ============ 6 · SECURITY ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>۰۴ — امنیت اطلاعات</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="num">۰۴</span> امنیت و حفاظت از اطلاعات</div>
+    <h2 class="section-title">اطلاعات اهواز تک، بخشی از <span class="accent">سرمایه</span> اهواز تک است</h2>
+    <p class="lead">داده‌های فروش، حسابداری، موجودی و عملیات شعب به‌اندازه دارایی‌های فیزیکی ارزش دارند. حفاظت از آن‌ها یک انتخاب اضافه نیست؛ بخشی از مسئولیت زیرساخت است.</p>
+
+    <div class="split">
+      <div class="callout">
+        <h3>رویکرد DaranX</h3>
+        <p>ما امنیت را یک محصول جداگانه که بعداً به شبکه اضافه شود نمی‌بینیم. امنیت باید <span class="accent">از همان ابتدا</span> در ساختار زیرساخت وجود داشته باشد — در طراحی، نه به‌عنوان وصله.</p>
+      </div>
+      <div>
+        <ul class="ticks">
+          <li><span class="tk">✓</span><div><b>کنترل بهتر دسترسی‌ها.</b> هر بخش و هر شعبه فقط به آنچه لازم دارد دسترسی داشته باشد.</div></li>
+          <li><span class="tk">✓</span><div><b>کاهش ریسک.</b> جداسازی درست بخش‌ها، دامنه اثر یک مشکل را محدود می‌کند.</div></li>
+          <li><span class="tk">✓</span><div><b>حفاظت از اطلاعات مجموعه.</b> داده‌های مالی و عملیاتی، محافظت‌شده و در کنترل مدیریت باقی بمانند.</div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-top:24px">
+      <div class="card"><div class="ic">🔒</div><h3>کاهش ریسک</h3><p>ساختاری که احتمال و دامنه اختلال‌های امنیتی را کم می‌کند.</p></div>
+      <div class="card"><div class="ic">🗝️</div><h3>کنترل دسترسی</h3><p>مدیریت روشن اینکه چه کسی به چه اطلاعاتی دسترسی دارد.</p></div>
+      <div class="card"><div class="ic">🛡️</div><h3>حفاظت از داده</h3><p>محافظت از سرمایه اطلاعاتی اهواز تک به‌عنوان یک اصل طراحی.</p></div>
+    </div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>۶ / ۱۰</div>
+  </div>
+</section>
+
+<!-- ============ 7 · POWER / UPS ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>۰۵ — پایداری و برق</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="num">۰۵</span> پایداری و برق</div>
+    <h2 class="section-title">شبکه پایدار، به <span class="accent">برق پایدار</span> نیاز دارد</h2>
+    <p class="lead">بهترین طراحی شبکه هم اگر برق پشتیبان نداشته باشد، با یک نوسان ساده متوقف می‌شود. تجهیزات حیاتی شبکه و سرورها باید تحت پوشش UPS مناسب باشند.</p>
+
+    <div class="split">
+      <div>
+        <ul class="ticks">
+          <li><span class="tk">✓</span><div><b>تداوم سرویس.</b> در قطعی یا نوسان برق، تجهیزات حیاتی روشن و در دسترس می‌مانند.</div></li>
+          <li><span class="tk">✓</span><div><b>جلوگیری از خاموشی ناگهانی.</b> خاموشی بدون هشدار می‌تواند به سرور و داده آسیب بزند.</div></li>
+          <li><span class="tk">✓</span><div><b>پیش‌بینی در دل پروژه.</b> در هر سایتی که UPS مناسب موجود نباشد، تأمین و نصب آن بخشی از این پروژه در نظر گرفته می‌شود.</div></li>
+        </ul>
+      </div>
+      <div class="callout">
+        <h3>هدف</h3>
+        <p>کاهش قطعی، جلوگیری از خاموشی ناگهانی تجهیزات و افزایش پایداری سرویس‌ها — تا شعبه به‌خاطر یک نوسان برق، فروش خود را از دست ندهد.</p>
+      </div>
+    </div>
+
+    <div class="stat-row" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat"><div class="big"><span>۰</span></div><div class="cap">خاموشی ناگهانی تجهیزات حیاتی</div></div>
+      <div class="stat"><div class="big">تداوم</div><div class="cap">سرویس در زمان نوسان برق</div></div>
+      <div class="stat"><div class="big">محافظت</div><div class="cap">از سرور و داده در برابر آسیب</div></div>
+    </div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>۷ / ۱۰</div>
+  </div>
+</section>
+
+<!-- ============ 8 · NEW SERVER ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>۰۶ — سرور جدید</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="num">۰۶</span> سرور جدید</div>
+    <h2 class="section-title">بستری <span class="accent">نو</span> برای یک سرمایه‌گذاری بلندمدت</h2>
+    <p class="lead">سرور فعلی ممکن است هنوز توان پردازشی قابل قبولی داشته باشد، اما با توجه به عمر بالای آن، تکیه بلندمدت بر آن ریسک به‌همراه دارد. پیشنهاد ما، حرکت به یک بستر نو و قابل‌توسعه است.</p>
+
+    <div class="compare">
+      <div class="box old">
+        <div class="lbl">وضعیت فعلی</div>
+        <div class="t">HPE DL380 Gen9</div>
+        <div class="m">توان قابل‌قبول، اما عمر بالا و مناسب‌نبودن برای تکیه بلندمدت.</div>
+      </div>
+      <div class="mid"><span>←</span></div>
+      <div class="box new">
+        <div class="lbl">پیشنهاد DaranX</div>
+        <div class="t">HPE DL360 Gen10 <span>(نو)</span></div>
+        <div class="m">بستری جدیدتر، قابل توسعه‌تر و مناسب‌تر برای نیازهای سال‌های آینده.</div>
+      </div>
+    </div>
+
+    <h3 style="font-size:16px;margin:6px 0 12px">مشخصات سرور پیشنهادی</h3>
+    <table class="spec-table">
+      <tr><th>مؤلفه</th><th>مشخصات</th></tr>
+      <tr><td>پردازنده</td><td>Intel Xeon Gold 6240</td></tr>
+      <tr><td>حافظه (RAM)</td><td>256GB DDR4 ECC Registered</td></tr>
+      <tr><td>کنترلر ذخیره‌سازی</td><td>HPE Smart Array P440ar</td></tr>
+      <tr><td>دیسک SSD</td><td>۲ × 480GB SSD</td></tr>
+      <tr><td>دیسک SAS</td><td>۴ × 1.2TB SAS 10K</td></tr>
+      <tr><td>کارت شبکه</td><td>HPE 560SFP+ 10Gb 2-Port</td></tr>
+      <tr><td>منبع تغذیه</td><td>800W Platinum PSU</td></tr>
+    </table>
+
+    <div class="grid-3" style="margin-top:22px">
+      <div class="card tint"><h3 style="font-size:15px">جدیدتر</h3><p>نسل به‌روز سخت‌افزار با پشتیبانی و طول عمر بیشتر.</p></div>
+      <div class="card tint"><h3 style="font-size:15px">قابل توسعه‌تر</h3><p>ظرفیت پردازش و ذخیره‌سازی برای رشد داده و کاربران.</p></div>
+      <div class="card tint"><h3 style="font-size:15px">مطمئن‌تر</h3><p>بستری مناسب برای تکیه بلندمدت کسب‌وکار.</p></div>
+    </div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>۸ / ۱۰</div>
+  </div>
+</section>
+
+<!-- ============ 9 · RESULTS (KEY PAGE) ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>۰۷ — نتیجه نهایی</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="num">۰۷</span> نتیجه‌ای که اهواز تک دریافت می‌کند</div>
+    <h2 class="section-title">پنج دستاورد، یک <span class="accent">سرمایه‌گذاری</span></h2>
+    <p class="lead">ارزش این پروژه در تجهیزات آن نیست؛ در نتیجه‌ای است که برای کسب‌وکار می‌سازد.</p>
+
+    <div class="results">
+      <div class="result">
+        <div class="rn">۰۱</div>
+        <h3>پایداری بیشتر</h3>
+        <p>کاهش اختلال در فعالیت فروشگاه‌ها و تداوم بی‌وقفه فروش و عملیات.</p>
+      </div>
+      <div class="result">
+        <div class="rn">۰۲</div>
+        <h3>امنیت بیشتر</h3>
+        <p>حفاظت بهتر از اطلاعات مجموعه و کنترل دقیق‌تر دسترسی‌ها.</p>
+      </div>
+      <div class="result">
+        <div class="rn">۰۳</div>
+        <h3>توسعه‌پذیری</h3>
+        <p>امکان رشد شعب و تجهیزات، بدون نیاز به بازطراحی اساسی زیرساخت.</p>
+      </div>
+      <div class="result">
+        <div class="rn">۰۴</div>
+        <h3>مدیریت بهتر</h3>
+        <p>دید و کنترل روشن‌تر روی کل زیرساخت، از مرکز تا شعب.</p>
+      </div>
+      <div class="result feature">
+        <div class="rn">۰۵</div>
+        <h3>کاهش هزینه‌های آینده</h3>
+        <p>جلوگیری از هزینه‌های سنگینِ اصلاح و بازسازی زیرساخت در سال‌های پیش‌رو — سرمایه‌گذاری امروز، به‌جای هزینه‌های تکراری فردا.</p>
+      </div>
+    </div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>۹ / ۱۰</div>
+  </div>
+</section>
+
+<!-- ============ 10 · ROLE + CLOSING ============ -->
+<section class="page closing">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>۰۸ — نقش DaranX و جمع‌بندی</div>
+  </div>
+  <div class="page-body">
+    <div style="max-width:70ch;margin:0 auto 30px;text-align:right;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:24px 26px">
+      <div style="color:#B4E000;font-weight:700;font-size:12px;letter-spacing:1px;margin-bottom:10px">نقش DaranX</div>
+      <p style="color:#fff;font-size:15px;line-height:1.9">
+        DaranX صرفاً تأمین‌کننده تجهیزات نیست. ما ابتدا مسئله را می‌فهمیم، سپس راهکار را طراحی می‌کنیم و در پایان تجهیزات مناسب آن را انتخاب و اجرا می‌کنیم.
+      </p>
+      <p style="color:#B4E000;font-size:16px;font-weight:700;margin-top:14px">«ما خدمات مختلف را کنار هم نمی‌گذاریم؛ آن‌ها را با هم طراحی می‌کنیم.»</p>
+      <p style="color:rgba(255,255,255,.8);font-size:13.5px;margin-top:12px">
+        هدف ما یک بار فروش تجهیزات نیست؛ هدف ما ایجاد یک زیرساخت قابل اعتماد برای یک همکاری بلندمدت است.
+      </p>
+    </div>
+
+    <div class="statement" style="margin:0">
+      <div class="mark">”</div>
+      <h2>اهواز تک به یک شبکه جدید نیاز ندارد؛ به یک <span class="hl">زیرساخت قابل اعتماد</span> برای ادامه مسیر خود نیاز دارد.</h2>
+    </div>
+
+    <div class="logo-lg" style="text-align:center">
+      <div class="name">Daran<span>X</span></div>
+      <div class="slg">جایی که فناوری به <em>راهکار</em> بدل می‌شود</div>
+    </div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>۱۰ / ۱۰</div>
+  </div>
+</section>
+
+</body>
+</html>
