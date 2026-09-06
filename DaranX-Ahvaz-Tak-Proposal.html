@@ -335,6 +335,32 @@
   .pa-total .val{font-size:26px;font-weight:900;color:var(--lime)}
   .pa-total .val small{font-size:13px;color:#fff;font-weight:600;margin-inline-start:6px}
   .pa-note{font-size:11.5px;color:var(--muted);margin-top:14px}
+  .pa-subhead{font-size:15px;font-weight:800;color:var(--navy);margin:22px 0 10px;display:flex;align-items:center;gap:9px}
+  .pa-subhead .b{width:7px;height:18px;border-radius:3px;background:var(--lime)}
+  .pa-sub{margin-top:12px;display:flex;justify-content:flex-start}
+  .pa-sub .box{background:var(--gray);border:1px solid var(--gray-2);border-radius:12px;padding:11px 20px;
+    display:flex;gap:16px;align-items:baseline;min-width:320px;justify-content:space-between}
+  .pa-sub .lbl{font-size:12.5px;color:var(--muted);font-weight:600}
+  .pa-sub .val{font-size:17px;font-weight:800;color:var(--navy)}
+  .pa-sub .val small{font-size:11px;color:var(--muted);font-weight:600;margin-inline-start:5px}
+  .scn-badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+    padding:6px 14px;border-radius:100px;margin-bottom:10px}
+  .scn-badge.cur{background:var(--gray);color:var(--navy);border:1px solid var(--gray-2)}
+  .scn-badge.new{background:rgba(180,224,0,.2);color:var(--navy);border:1px solid var(--lime)}
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  .cmp .col{border:1px solid var(--line);border-radius:16px;padding:26px 22px;text-align:center}
+  .cmp .col.new{background:linear-gradient(150deg,var(--navy),var(--navy-2));border:none;color:#fff}
+  .cmp .col .lbl{font-size:12px;letter-spacing:.5px;color:var(--muted);margin-bottom:10px}
+  .cmp .col.new .lbl{color:rgba(255,255,255,.75)}
+  .cmp .col .name{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:16px}
+  .cmp .col.new .name{color:#fff}
+  .cmp .col .amount{font-size:27px;font-weight:900;color:var(--navy)}
+  .cmp .col.new .amount{color:var(--lime)}
+  .cmp .col .amount small{font-size:12px;font-weight:600}
+  .cmp-diff{margin-top:16px;background:var(--gray);border:1px solid var(--gray-2);border-radius:14px;
+    padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .cmp-diff .t{font-size:13.5px;color:var(--muted);font-weight:600}
+  .cmp-diff .v{font-size:20px;font-weight:900;color:var(--navy)}
 
   .toc{margin-top:6px}
   .toc .row{
@@ -821,107 +847,245 @@
   </div>
 </section>
 
-<!-- ============ 11 · PRICE ANALYSIS (interactive appendix) ============ -->
+<!-- ============ 11 · PRICE ANALYSIS — SCENARIO 1 (current server) ============ -->
 <section class="page">
   <div class="runhead">
     <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
-    <div>پیوست — آنالیز قیمت</div>
+    <div>پیوست ۱ — آنالیز قیمت (سرور فعلی)</div>
   </div>
   <div class="page-body">
-    <div class="eyebrow"><span class="rule"></span> پیوست · برآورد سرمایه‌گذاری</div>
-    <h2 class="section-title">آنالیز قیمت <span class="accent">تجهیزات</span></h2>
-    <p class="lead">این جدول برای برآورد هزینه تجهیزات پروژه است. می‌توانید آیتم اضافه یا حذف کنید، تعداد و قیمت واحد را وارد کنید؛ قیمت هر ردیف و جمع کل به‌صورت خودکار محاسبه می‌شود.</p>
+    <div class="eyebrow"><span class="rule"></span> پیوست ۱ · برآورد سرمایه‌گذاری</div>
+    <span class="scn-badge cur">سناریو ۱</span>
+    <h2 class="section-title">آنالیز قیمت — با <span class="accent">سرور فعلی</span> (DL380 Gen9)</h2>
+    <p class="lead">این سناریو، هزینه پروژه را با فرض ادامه استفاده از سرور فعلی مجموعه برآورد می‌کند. کانفیگ و قیمت سرور را جداگانه وارد کنید؛ قیمت هر بخش و جمع کل خودکار محاسبه می‌شود.</p>
 
+    <div class="pa-subhead"><span class="b"></span> کانفیگ و قیمت سرور</div>
     <div class="pa-tools">
-      <button class="pa-add" type="button" onclick="paAddRow()">＋ افزودن آیتم</button>
-      <span class="pa-hint">قیمت‌ها بر حسب تومان · محاسبه خودکار جمع</span>
+      <button class="pa-add" type="button" onclick="paAddSrv(1)">＋ افزودن قطعه / کانفیگ</button>
+      <span class="pa-hint">اجزای سرور و قیمت هر کدام (تومان)</span>
     </div>
-
-    <table class="pa-table" id="paTable">
-      <thead>
-        <tr>
-          <th class="pa-col-row">#</th>
-          <th>شرح تجهیز / آیتم</th>
-          <th class="pa-col-qty">تعداد</th>
-          <th class="pa-col-price">قیمت واحد (تومان)</th>
-          <th class="pa-col-line">قیمت کل (تومان)</th>
-          <th class="pa-col-act"></th>
-        </tr>
-      </thead>
-      <tbody id="paBody"></tbody>
+    <table class="pa-table">
+      <thead><tr>
+        <th class="pa-col-row">#</th><th>کانفیگ / قطعه سرور</th>
+        <th class="pa-col-price">قیمت (تومان)</th><th class="pa-col-act"></th>
+      </tr></thead>
+      <tbody id="srvBody1"></tbody>
     </table>
+    <div class="pa-sub"><div class="box"><span class="lbl">جمع سرور</span><span class="val" id="srvSub1">۰ <small>تومان</small></span></div></div>
 
-    <div class="pa-total">
-      <div class="box">
-        <span class="lbl">جمع کل برآورد</span>
-        <span class="val" id="paGrand">۰ <small>تومان</small></span>
-      </div>
+    <div class="pa-subhead"><span class="b"></span> سایر تجهیزات و اجرا</div>
+    <div class="pa-tools">
+      <button class="pa-add" type="button" onclick="paAddEq(1)">＋ افزودن آیتم</button>
+      <span class="pa-hint">شبکه، UPS، کابل‌کشی و ...</span>
     </div>
+    <table class="pa-table">
+      <thead><tr>
+        <th class="pa-col-row">#</th><th>شرح تجهیز / آیتم</th><th class="pa-col-qty">تعداد</th>
+        <th class="pa-col-price">قیمت واحد (تومان)</th><th class="pa-col-line">قیمت کل</th><th class="pa-col-act"></th>
+      </tr></thead>
+      <tbody id="eqBody1"></tbody>
+    </table>
+    <div class="pa-sub"><div class="box"><span class="lbl">جمع تجهیزات</span><span class="val" id="eqSub1">۰ <small>تومان</small></span></div></div>
 
-    <p class="pa-note">* این برآورد جنبه اولیه دارد و پس از بازدید فنی هر سایت نهایی می‌شود. مقادیر وارد‌شده هنگام چاپ/تبدیل به PDF نیز حفظ می‌شوند.</p>
+    <div class="pa-total"><div class="box">
+      <span class="lbl">جمع کل سناریو ۱ (سرور + تجهیزات)</span>
+      <span class="val" id="scnTotal1">۰ <small>تومان</small></span>
+    </div></div>
   </div>
   <div class="runfoot">
     <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
-    <div>پیوست</div>
+    <div>پیوست ۱</div>
+  </div>
+</section>
+
+<!-- ============ 12 · PRICE ANALYSIS — SCENARIO 2 (proposed server) ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>پیوست ۲ — آنالیز قیمت (سرور پیشنهادی)</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="rule"></span> پیوست ۲ · برآورد سرمایه‌گذاری</div>
+    <span class="scn-badge new">سناریو ۲ — پیشنهاد DaranX</span>
+    <h2 class="section-title">آنالیز قیمت — با <span class="accent">سرور پیشنهادی</span> (DL360 Gen10)</h2>
+    <p class="lead">این سناریو، هزینه پروژه را با سرور نوِ پیشنهادی DaranX برآورد می‌کند. کانفیگ سرور بر اساس مشخصات پیشنهادی از پیش درج شده است؛ کافی است قیمت هر بخش را وارد کنید.</p>
+
+    <div class="pa-subhead"><span class="b"></span> کانفیگ و قیمت سرور</div>
+    <div class="pa-tools">
+      <button class="pa-add" type="button" onclick="paAddSrv(2)">＋ افزودن قطعه / کانفیگ</button>
+      <span class="pa-hint">اجزای سرور و قیمت هر کدام (تومان)</span>
+    </div>
+    <table class="pa-table">
+      <thead><tr>
+        <th class="pa-col-row">#</th><th>کانفیگ / قطعه سرور</th>
+        <th class="pa-col-price">قیمت (تومان)</th><th class="pa-col-act"></th>
+      </tr></thead>
+      <tbody id="srvBody2"></tbody>
+    </table>
+    <div class="pa-sub"><div class="box"><span class="lbl">جمع سرور</span><span class="val" id="srvSub2">۰ <small>تومان</small></span></div></div>
+
+    <div class="pa-subhead"><span class="b"></span> سایر تجهیزات و اجرا</div>
+    <div class="pa-tools">
+      <button class="pa-add" type="button" onclick="paAddEq(2)">＋ افزودن آیتم</button>
+      <span class="pa-hint">شبکه، UPS، کابل‌کشی و ...</span>
+    </div>
+    <table class="pa-table">
+      <thead><tr>
+        <th class="pa-col-row">#</th><th>شرح تجهیز / آیتم</th><th class="pa-col-qty">تعداد</th>
+        <th class="pa-col-price">قیمت واحد (تومان)</th><th class="pa-col-line">قیمت کل</th><th class="pa-col-act"></th>
+      </tr></thead>
+      <tbody id="eqBody2"></tbody>
+    </table>
+    <div class="pa-sub"><div class="box"><span class="lbl">جمع تجهیزات</span><span class="val" id="eqSub2">۰ <small>تومان</small></span></div></div>
+
+    <div class="pa-total"><div class="box">
+      <span class="lbl">جمع کل سناریو ۲ (سرور + تجهیزات)</span>
+      <span class="val" id="scnTotal2">۰ <small>تومان</small></span>
+    </div></div>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>پیوست ۲</div>
+  </div>
+</section>
+
+<!-- ============ 13 · PRICE COMPARISON ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>پیوست ۳ — مقایسه دو سناریو</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="rule"></span> پیوست ۳ · مقایسه</div>
+    <h2 class="section-title">مقایسه دو <span class="accent">سناریو</span></h2>
+    <p class="lead">جمع کل هر دو سناریو به‌صورت خودکار از صفحات قبل خوانده و در اینجا مقایسه می‌شود. مقادیری که در پیوست ۱ و ۲ وارد می‌کنید، بلافاصله در این جدول به‌روز می‌شوند.</p>
+
+    <div class="cmp">
+      <div class="col">
+        <div class="lbl">سناریو ۱ — وضعیت فعلی</div>
+        <div class="name">سرور فعلی · HPE DL380 Gen9</div>
+        <div class="amount" id="cmp1">۰ <small>تومان</small></div>
+      </div>
+      <div class="col new">
+        <div class="lbl">سناریو ۲ — پیشنهاد DaranX</div>
+        <div class="name">سرور نو · HPE DL360 Gen10</div>
+        <div class="amount" id="cmp2">۰ <small>تومان</small></div>
+      </div>
+    </div>
+
+    <div class="cmp-diff">
+      <span class="t">اختلاف دو سناریو</span>
+      <span class="v" id="cmpDiff">۰ تومان</span>
+    </div>
+
+    <div class="callout" style="margin-top:26px">
+      <h3 style="font-size:19px">نگاه سرمایه‌گذاری، نه صرفاً قیمت</h3>
+      <p>اختلاف دو سناریو را در کنار عمر مفید، پشتیبانی و توسعه‌پذیری بلندمدت بسنجید. سرور نو معمولاً از هزینه‌های تکراریِ نگهداری و بازطراحی در سال‌های آینده جلوگیری می‌کند.</p>
+    </div>
+
+    <p class="pa-note">* این برآورد اولیه است و پس از بازدید فنی هر سایت نهایی می‌شود. مقادیر واردشده هنگام چاپ / تبدیل به PDF نیز حفظ می‌شوند.</p>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>پیوست ۳</div>
   </div>
 </section>
 
 <script>
 (function(){
-  var seed = [
-    {desc:'سرور HPE DL360 Gen10 (طبق مشخصات پیشنهادی)', qty:1},
-    {desc:'روتر مرکزی MikroTik RB1100 (مرکز اصلی)', qty:1},
-    {desc:'روتر شعبه MikroTik hEX (به ازای هر شعبه)', qty:1},
-    {desc:'UPS تجهیزات حیاتی و سرور', qty:1},
-    {desc:'تجهیزات شبکه، سوئیچ و کابل‌کشی استاندارد', qty:1}
-  ];
-
   function fmt(n){ if(!isFinite(n)) n = 0; return Math.round(n).toLocaleString('fa-IR'); }
+  function money(n){ return fmt(n) + ' <small>تومان</small>'; }
   function parseNum(v){
-    if(v==null) return 0;
+    if(v == null) return 0;
     var map = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9','٬':'','،':'',',':''};
     var s = String(v).replace(/[۰-۹٬،,]/g, function(c){ return map[c] !== undefined ? map[c] : c; });
     s = s.replace(/[^0-9.]/g,'');
     var num = parseFloat(s);
     return isNaN(num) ? 0 : num;
   }
-  function recalc(){
-    var rows = document.querySelectorAll('#paBody tr'), grand = 0, i = 1;
-    rows.forEach(function(tr){
-      tr.querySelector('.pa-col-row').textContent = i.toLocaleString('fa-IR'); i++;
-      var qty = parseNum(tr.querySelector('.pa-qty').value);
-      var price = parseNum(tr.querySelector('.pa-price').value);
-      var line = qty * price;
-      tr.querySelector('.pa-line').textContent = fmt(line);
-      grand += line;
-    });
-    document.getElementById('paGrand').innerHTML = fmt(grand) + ' <small>تومان</small>';
-  }
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-  window.paAddRow = function(desc, qty){
-    var tb = document.getElementById('paBody');
+  // ---- seed data ----
+  var srvSeed1 = [
+    {c:'HPE DL380 Gen9 (طبق کانفیگ فعلی مجموعه)'}
+  ];
+  var srvSeed2 = [
+    {c:'HPE DL360 Gen10 — شاسی و مادربرد'},
+    {c:'پردازنده Intel Xeon Gold 6240'},
+    {c:'حافظه 256GB DDR4 ECC Registered'},
+    {c:'کنترلر HPE Smart Array P440ar'},
+    {c:'دیسک ۲ × 480GB SSD'},
+    {c:'دیسک ۴ × 1.2TB SAS 10K'},
+    {c:'کارت شبکه HPE 560SFP+ 10Gb 2-Port'},
+    {c:'منبع تغذیه 800W Platinum PSU'}
+  ];
+  var eqSeed = [
+    {d:'روتر مرکزی MikroTik RB1100 (مرکز اصلی)', q:1},
+    {d:'روتر شعبه MikroTik hEX (به ازای هر شعبه)', q:1},
+    {d:'UPS تجهیزات حیاتی و سرور', q:1},
+    {d:'تجهیزات شبکه، سوئیچ و کابل‌کشی استاندارد', q:1}
+  ];
+
+  function addSrvRow(n, c){
+    var tb = document.getElementById('srvBody' + n); if(!tb) return;
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td class="pa-col-row"></td>' +
-      '<td><input type="text" class="pa-desc" placeholder="نام تجهیز..." value="'+ (desc ? esc(desc) : '') +'"></td>' +
-      '<td><input type="text" inputmode="numeric" class="pa-qty num" value="'+ (qty != null ? qty : 1) +'"></td>' +
-      '<td><input type="text" inputmode="numeric" class="pa-price" placeholder="۰"></td>' +
-      '<td class="pa-line">۰</td>' +
-      '<td class="pa-col-act"><button type="button" class="pa-del" title="حذف" onclick="paDelRow(this)">×</button></td>';
+      '<td><input type="text" class="s-desc" placeholder="مثلاً پردازنده، رم، دیسک..." value="'+ (c ? esc(c) : '') +'"></td>' +
+      '<td><input type="text" inputmode="numeric" class="s-price" placeholder="۰"></td>' +
+      '<td class="pa-col-act"><button type="button" class="pa-del" title="حذف" onclick="paDel(this)">×</button></td>';
     tb.appendChild(tr);
-    tr.querySelectorAll('input').forEach(function(inp){ inp.addEventListener('input', recalc); });
-    recalc();
-  };
-  window.paDelRow = function(btn){
-    var tr = btn.closest('tr');
-    tr.parentNode.removeChild(tr);
-    recalc();
-  };
+    tr.querySelectorAll('input').forEach(function(i){ i.addEventListener('input', recalc); });
+  }
+  function addEqRow(n, d, q){
+    var tb = document.getElementById('eqBody' + n); if(!tb) return;
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="pa-col-row"></td>' +
+      '<td><input type="text" class="e-desc" placeholder="نام تجهیز..." value="'+ (d ? esc(d) : '') +'"></td>' +
+      '<td><input type="text" inputmode="numeric" class="e-qty num" value="'+ (q != null ? q : 1) +'"></td>' +
+      '<td><input type="text" inputmode="numeric" class="e-price" placeholder="۰"></td>' +
+      '<td class="pa-line">۰</td>' +
+      '<td class="pa-col-act"><button type="button" class="pa-del" title="حذف" onclick="paDel(this)">×</button></td>';
+    tb.appendChild(tr);
+    tr.querySelectorAll('input').forEach(function(i){ i.addEventListener('input', recalc); });
+  }
+
+  function sumScenario(n){
+    var srv = 0, eq = 0, el;
+    document.querySelectorAll('#srvBody' + n + ' tr').forEach(function(tr, idx){
+      tr.querySelector('.pa-col-row').textContent = (idx + 1).toLocaleString('fa-IR');
+      srv += parseNum(tr.querySelector('.s-price').value);
+    });
+    document.querySelectorAll('#eqBody' + n + ' tr').forEach(function(tr, idx){
+      tr.querySelector('.pa-col-row').textContent = (idx + 1).toLocaleString('fa-IR');
+      var line = parseNum(tr.querySelector('.e-qty').value) * parseNum(tr.querySelector('.e-price').value);
+      tr.querySelector('.pa-line').textContent = fmt(line);
+      eq += line;
+    });
+    el = document.getElementById('srvSub' + n);  if(el) el.innerHTML = money(srv);
+    el = document.getElementById('eqSub' + n);   if(el) el.innerHTML = money(eq);
+    var tot = srv + eq;
+    el = document.getElementById('scnTotal' + n); if(el) el.innerHTML = money(tot);
+    return tot;
+  }
+  function recalc(){
+    var t1 = sumScenario(1), t2 = sumScenario(2), el;
+    el = document.getElementById('cmp1');    if(el) el.innerHTML = money(t1);
+    el = document.getElementById('cmp2');    if(el) el.innerHTML = money(t2);
+    el = document.getElementById('cmpDiff'); if(el) el.textContent = fmt(Math.abs(t1 - t2)) + ' تومان';
+  }
+
+  window.paAddSrv = function(n){ addSrvRow(n); recalc(); };
+  window.paAddEq  = function(n){ addEqRow(n);  recalc(); };
+  window.paDel    = function(btn){ var tr = btn.closest('tr'); tr.parentNode.removeChild(tr); recalc(); };
 
   function init(){
-    seed.forEach(function(r){ window.paAddRow(r.desc, r.qty); });
-    if(!document.querySelectorAll('#paBody tr').length) window.paAddRow();
+    srvSeed1.forEach(function(r){ addSrvRow(1, r.c); });
+    srvSeed2.forEach(function(r){ addSrvRow(2, r.c); });
+    eqSeed.forEach(function(r){ addEqRow(1, r.d, r.q); });
+    eqSeed.forEach(function(r){ addEqRow(2, r.d, r.q); });
+    recalc();
   }
   if(document.readyState !== 'loading'){ init(); }
   else { document.addEventListener('DOMContentLoaded', init); }
