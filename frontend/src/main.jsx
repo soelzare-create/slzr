@@ -14,6 +14,7 @@ import Items from "./pages/Items.jsx";
 import Accounting from "./pages/Accounting.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import Users from "./pages/Users.jsx";
+import Receipts from "./pages/Receipts.jsx";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -29,6 +30,7 @@ function App() {
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/proformas" element={<Protected><Proformas /></Protected>} />
       <Route path="/purchases" element={<Protected><Purchases /></Protected>} />
+      <Route path="/receipts" element={<Protected><Receipts /></Protected>} />
       <Route path="/invoices" element={<Protected><Invoices /></Protected>} />
       <Route path="/parties" element={<Protected><Parties /></Protected>} />
       <Route path="/items" element={<Protected><Items /></Protected>} />

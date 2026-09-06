@@ -9,6 +9,7 @@ const NAV = [
   { to: "/parties", label: "مشتری‌ها", icon: "users", perm: null },
   { to: "/proformas", label: "پیش‌فاکتورها", icon: "proforma", perm: "sales.view" },
   { to: "/purchases", label: "خریدها", icon: "cart", perm: "procurement.view" },
+  { to: "/receipts", label: "ورود به انبار", icon: "doc", perm: "warehouse.view" },
   { to: "/invoices", label: "فاکتورها", icon: "invoice", perm: "sales.view" },
   { to: "/accounting", label: "حسابداری", icon: "chart", perm: "accounting.view" },
   { to: "/items", label: "کالا و خدمات", icon: "doc", perm: null },

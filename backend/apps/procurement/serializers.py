@@ -25,12 +25,13 @@ class PurchaseSerializer(serializers.ModelSerializer):
     total = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
     goods_total = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
     service_total = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
+    received = serializers.SerializerMethodField()
 
     class Meta:
         model = Purchase
         fields = ["id", "number", "supplier", "supplier_name", "owner", "owner_name",
                   "status", "status_display", "date", "notes", "origin_ref",
-                  "total", "goods_total", "service_total", "lines", "created_at"]
+                  "total", "goods_total", "service_total", "received", "lines", "created_at"]
         read_only_fields = ["number", "status"]
         extra_kwargs = {"owner": {"required": False}}
 
@@ -40,6 +41,10 @@ class PurchaseSerializer(serializers.ModelSerializer):
         for line in lines:
             PurchaseLine.objects.create(purchase=purchase, **line)
         return purchase
+
+    def get_received(self, obj) -> bool:
+        # True once the warehouse has recorded a goods-receipt for this purchase.
+        return obj.goods_receipts.exists()
 
     def update(self, instance, validated):
         # A registered purchase has posted its financial effect and may have
