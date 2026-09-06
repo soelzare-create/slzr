@@ -26,14 +26,17 @@ class PurchaseSerializer(serializers.ModelSerializer):
     goods_total = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
     service_total = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
     received = serializers.SerializerMethodField()
+    sale_invoice_number = serializers.CharField(source="sale_invoice.number",
+                                                read_only=True, default=None)
 
     class Meta:
         model = Purchase
         fields = ["id", "number", "supplier", "supplier_name", "owner", "owner_name",
                   "status", "status_display", "date", "notes", "origin_ref",
+                  "sale_invoice", "sale_invoice_number",
                   "total", "goods_total", "service_total", "received", "lines", "created_at"]
         read_only_fields = ["number", "status"]
-        extra_kwargs = {"owner": {"required": False}}
+        extra_kwargs = {"owner": {"required": False}, "sale_invoice": {"required": False}}
 
     def create(self, validated):
         lines = validated.pop("lines", [])

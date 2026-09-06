@@ -7,6 +7,8 @@ from rest_framework.response import Response
 
 from apps.accounts.models import Role, UserRole
 from apps.accounts.permissions import HasPermissionCode, OwnershipQuerysetMixin
+from apps.core.models import Notification
+from apps.core.services import notify
 
 from . import services
 from .models import Invoice, Proforma
@@ -38,36 +40,32 @@ class ProformaViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    # -- state machine actions ---------------------------------------------
-    @action(detail=True, methods=["post"])
-    def confirm(self, request, pk=None):
-        return self._run(services.confirm_proforma, self.get_object())
-
-    @action(detail=True, methods=["post"])
-    def request_purchase(self, request, pk=None):
-        p = self.get_object()
-        return self._run(services.request_purchase, p,
-                         procurement_manager=_procurement_manager())
-
-    @action(detail=True, methods=["post"])
-    def unfulfillable(self, request, pk=None):
-        return self._run(services.mark_unfulfillable, self.get_object())
-
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
         p = self.get_object()
-        manager_approved = bool(request.data.get("manager_approved")) or \
-            request.user.has_perm_code("sales.view_all")
-        return self._run(services.cancel_proforma, p, manager_approved=manager_approved)
+        return self._run(services.cancel_proforma, p, manager_approved=True)
 
     @action(detail=True, methods=["post"])
     def convert(self, request, pk=None):
-        """Convert to a goods invoice — enforces the 5% rule (Section 6)."""
+        """Convert directly to a goods invoice, then ask procurement to buy.
+
+        No confirmation / 5% rule / purchase prerequisite (decoupled flow):
+        issuing the invoice is what triggers the purchase request.
+        """
         p = self.get_object()
         try:
             invoice = services.convert_to_invoice(p, actor=request.user)
-        except (services.InvalidTransition, services.FivePercentViolation) as exc:
+        except services.InvalidTransition as exc:
             raise ValidationError(str(exc))
+        # Ask procurement to buy the goods for this invoice (off the critical path).
+        manager = _procurement_manager()
+        if manager is not None:
+            notify(
+                recipient=manager,
+                kind=Notification.Kind.PURCHASE_REQUEST,
+                message=f"درخواست خرید برای فاکتور {invoice.number} (مشتری: {invoice.customer.name}).",
+                source_ref=f"sales.invoice:{invoice.id}",
+            )
         return Response(InvoiceSerializer(invoice).data)
 
     def _run(self, fn, proforma, **kwargs):

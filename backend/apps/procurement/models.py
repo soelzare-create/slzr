@@ -41,6 +41,12 @@ class Purchase(NumberedModel):
     notes = models.TextField(blank=True)
     # Set when the purchase originates from a sales proforma that needs stock.
     origin_ref = models.CharField(max_length=64, blank=True)
+    # The sales invoice this purchase supplies (new flow: a purchase is made to
+    # fulfil an already-issued invoice, and is linked directly to it).
+    sale_invoice = models.ForeignKey(
+        "sales.Invoice", null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="purchases",
+    )
 
     class Meta:
         ordering = ["-created_at"]

@@ -1,11 +1,17 @@
-"""End-to-end tests for the core sales workflow (Sections 5 & 6)."""
+"""Sales flow — decoupled design.
+
+A proforma converts straight to a goods invoice (no confirmation, no 5% rule,
+no purchase prerequisite). The invoice books income only. Purchasing is a
+separate track: a purchase is linked to the invoice and, when registered, books
+the cost as an expense. One invoice may have several purchases.
+"""
 from __future__ import annotations
 
 from decimal import Decimal
 
 import pytest
 
-from apps.accounting.models import JournalEntry
+from apps.accounting.models import JournalEntry, JournalLine
 from apps.core.models import Item, Party
 from apps.procurement.models import Purchase, PurchaseLine
 from apps.procurement import services as proc
@@ -17,121 +23,71 @@ pytestmark = pytest.mark.django_db
 
 def _setup(seeded, make_user):
     seller = make_user("09120000001", "فروشنده", role_code="sales_employee")
-    buyer = make_user("09120000002", "خریدار بازرگانی", role_code="procurement_manager")
+    buyer = make_user("09120000002", "بازرگان", role_code="procurement_manager")
     customer = Party.objects.create(name="مشتری الف", is_customer=True)
     supplier = Party.objects.create(name="تأمین‌کننده ب", is_supplier=True)
-    item = Item.objects.create(name="لپ‌تاپ", unit="دستگاه")
+    item = Item.objects.create(name="لپ‌تاپ", kind=Item.Kind.GOODS, unit="دستگاه")
     return seller, buyer, customer, supplier, item
 
 
-def _registered_purchase(buyer, supplier, item, unit_price):
-    purchase = Purchase.objects.create(supplier=supplier, owner=buyer)
-    line = PurchaseLine.objects.create(purchase=purchase, item=item,
-                                       quantity=1, unit_price=unit_price)
-    proc.register_purchase(purchase, actor=buyer)
-    return purchase, line
-
-
-def test_full_flow_creates_balanced_journal_entries(seeded, make_user):
-    seller, buyer, customer, supplier, item = _setup(seeded, make_user)
-    purchase, pline = _registered_purchase(buyer, supplier, item, 1_000_000)
-
-    # Purchase registration posts a balanced entry.
-    pe = JournalEntry.objects.get(source_ref=f"procurement.purchase:{purchase.id}")
-    assert pe.is_balanced and pe.total_debit == Decimal("1000000")
-
+def _invoice(seller, customer, item, qty=1, price=1_200_000):
     proforma = Proforma.objects.create(customer=customer, owner=seller)
-    ProformaLine.objects.create(proforma=proforma, item=item, quantity=1,
-                                unit_price=1_200_000, source_purchase_line=pline)
-    sales.confirm_proforma(proforma, actor=seller)
-    invoice = sales.convert_to_invoice(proforma, actor=seller)
+    ProformaLine.objects.create(proforma=proforma, item=item, quantity=qty, unit_price=price)
+    return sales.convert_to_invoice(proforma, actor=seller)
 
-    proforma.refresh_from_db()
-    assert proforma.status == ProformaStatus.INVOICED
+
+def test_convert_is_direct_and_books_income_only(seeded, make_user):
+    seller, buyer, customer, supplier, item = _setup(seeded, make_user)
+    invoice = _invoice(seller, customer, item, qty=1, price=1_200_000)
+
+    invoice.proforma.refresh_from_db()
     assert invoice.type == Invoice.Type.GOODS
+    assert invoice.proforma.status == ProformaStatus.INVOICED
 
     se = JournalEntry.objects.get(source_ref=f"sales.invoice:{invoice.id}")
-    assert se.is_balanced
-    # Sale (1.2m) + COGS relief (1.0m) → total debit 2.2m.
-    assert se.total_debit == Decimal("2200000")
+    assert se.is_balanced and se.total_debit == Decimal("1200000")  # AR / income only
+    # no cost-of-goods or inventory posting at invoice time
+    codes = set(JournalLine.objects.filter(entry=se).values_list("account__code", flat=True))
+    assert codes == {"1200", "4100"}
 
 
-def test_five_percent_rule_blocks_thin_margin(seeded, make_user):
+def test_purchase_registered_books_expense(seeded, make_user):
     seller, buyer, customer, supplier, item = _setup(seeded, make_user)
-    _, pline = _registered_purchase(buyer, supplier, item, 1_000_000)
+    purchase = Purchase.objects.create(supplier=supplier, owner=buyer)
+    PurchaseLine.objects.create(purchase=purchase, item=item, quantity=1, unit_price=1_000_000)
+    proc.register_purchase(purchase, actor=buyer)
 
-    proforma = Proforma.objects.create(customer=customer, owner=seller)
-    # 1.04× purchase < required 1.05× → must be rejected.
-    ProformaLine.objects.create(proforma=proforma, item=item, quantity=1,
-                                unit_price=1_040_000, source_purchase_line=pline)
-    sales.confirm_proforma(proforma, actor=seller)
-    with pytest.raises(sales.FivePercentViolation):
-        sales.convert_to_invoice(proforma, actor=seller)
-    # No invoice, no journal entry created for the rejected conversion.
-    assert not Invoice.objects.filter(proforma=proforma).exists()
+    pe = JournalEntry.objects.get(source_ref=f"procurement.purchase:{purchase.id}")
+    assert pe.is_balanced and pe.total_debit == Decimal("1000000")
+    codes = set(JournalLine.objects.filter(entry=pe).values_list("account__code", flat=True))
+    assert codes == {"5100", "2100"}  # COGS / payable — independent of any invoice
 
 
-def test_five_percent_rule_allows_exactly_105(seeded, make_user):
+def test_invoice_can_link_several_purchases(seeded, make_user):
     seller, buyer, customer, supplier, item = _setup(seeded, make_user)
-    _, pline = _registered_purchase(buyer, supplier, item, 1_000_000)
-    proforma = Proforma.objects.create(customer=customer, owner=seller)
-    ProformaLine.objects.create(proforma=proforma, item=item, quantity=1,
-                                unit_price=1_050_000, source_purchase_line=pline)
-    sales.confirm_proforma(proforma, actor=seller)
-    invoice = sales.convert_to_invoice(proforma, actor=seller)
-    assert invoice.total == Decimal("1050000")
+    invoice = _invoice(seller, customer, item)
+    supplier2 = Party.objects.create(name="تأمین‌کنندهٔ دوم", is_supplier=True)
+
+    for sup in (supplier, supplier2):
+        pur = Purchase.objects.create(supplier=sup, owner=buyer, sale_invoice=invoice)
+        PurchaseLine.objects.create(purchase=pur, item=item, quantity=1, unit_price=500_000)
+        proc.register_purchase(pur, actor=buyer)
+
+    assert invoice.purchases.count() == 2  # one invoice ← many purchases
 
 
-def test_convert_requires_registered_purchase(seeded, make_user):
-    seller, buyer, customer, supplier, item = _setup(seeded, make_user)
-    purchase = Purchase.objects.create(supplier=supplier, owner=buyer)  # not registered
-    pline = PurchaseLine.objects.create(purchase=purchase, item=item,
-                                        quantity=1, unit_price=1_000_000)
-    proforma = Proforma.objects.create(customer=customer, owner=seller)
-    ProformaLine.objects.create(proforma=proforma, item=item, quantity=1,
-                                unit_price=2_000_000, source_purchase_line=pline)
-    sales.confirm_proforma(proforma, actor=seller)
-    with pytest.raises(sales.InvalidTransition):
-        sales.convert_to_invoice(proforma, actor=seller)
-
-
-def test_confirmed_cancel_needs_manager(seeded, make_user):
+def test_proforma_cancel(seeded, make_user):
     seller, *_ = _setup(seeded, make_user)
     customer = Party.objects.create(name="م", is_customer=True)
     proforma = Proforma.objects.create(customer=customer, owner=seller)
-    sales.confirm_proforma(proforma, actor=seller)
-    with pytest.raises(sales.InvalidTransition):
-        sales.cancel_proforma(proforma, actor=seller, manager_approved=False)
     sales.cancel_proforma(proforma, actor=seller, manager_approved=True)
     proforma.refresh_from_db()
     assert proforma.status == ProformaStatus.CANCELLED
 
 
-def test_reservation_expiry_releases(seeded, make_user):
-    from django.utils import timezone
-    from datetime import timedelta
-
-    seller, *_ = _setup(seeded, make_user)
-    customer = Party.objects.create(name="م", is_customer=True)
-    proforma = Proforma.objects.create(customer=customer, owner=seller)
-    sales.confirm_proforma(proforma, actor=seller)
-    # Force the reservation into the past.
-    Proforma.objects.filter(pk=proforma.pk).update(
-        reservation_expires_at=timezone.now() - timedelta(hours=1))
-    released = sales.release_expired_reservations()
-    assert released == 1
-    proforma.refresh_from_db()
-    assert proforma.status == ProformaStatus.DRAFT
-
-
 def test_invoice_reversal_creates_mirror_entry(seeded, make_user):
     seller, buyer, customer, supplier, item = _setup(seeded, make_user)
-    _, pline = _registered_purchase(buyer, supplier, item, 1_000_000)
-    proforma = Proforma.objects.create(customer=customer, owner=seller)
-    ProformaLine.objects.create(proforma=proforma, item=item, quantity=1,
-                                unit_price=1_200_000, source_purchase_line=pline)
-    sales.confirm_proforma(proforma, actor=seller)
-    invoice = sales.convert_to_invoice(proforma, actor=seller)
+    invoice = _invoice(seller, customer, item)
     sales.reverse_invoice(invoice, actor=seller, returned=True)
     origin = JournalEntry.objects.get(source_ref=f"sales.invoice:{invoice.id}",
                                       is_reversal=False)

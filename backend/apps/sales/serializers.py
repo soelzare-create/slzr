@@ -76,12 +76,13 @@ class InvoiceLineSerializer(serializers.ModelSerializer):
                   "line_total", "serials"]
 
     def get_serials(self, obj) -> list[str]:
-        """Serial numbers the warehouse recorded for this line's source purchase."""
-        if not obj.source_purchase_line_id:
-            return []
+        """Serials allocated to this line — recorded by the warehouse on the
+        receipts of the purchases linked to this line's invoice, for this item."""
         from apps.warehouse.models import ReceiptItem
         out: list[str] = []
-        for ri in ReceiptItem.objects.filter(purchase_line_id=obj.source_purchase_line_id):
+        for ri in ReceiptItem.objects.filter(
+            receipt__purchase__sale_invoice_id=obj.invoice_id, item_id=obj.item_id
+        ):
             out.extend(s for s in (ri.serials or []) if s)
         return out
 

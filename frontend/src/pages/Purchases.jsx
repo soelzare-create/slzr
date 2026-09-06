@@ -7,6 +7,7 @@ import { KindSplit } from "./Proformas.jsx";
 export default function Purchases() {
   const { data, loading, error, reload, setError } = useList("/purchases");
   const suppliers = useOptions("/parties?role=supplier");
+  const invoices = useOptions("/invoices?type=GOODS");
   const { items, reload: reloadItems } = useItems();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null); // null = creating a new purchase
@@ -15,16 +16,17 @@ export default function Purchases() {
 
   useEffect(() => {
     const sid = params.get("supplier");
-    if (sid) {
-      setForm((f) => ({ ...f, supplier: sid }));
+    const iid = params.get("invoice");
+    if (sid || iid) {
+      setForm((f) => ({ ...f, ...(sid ? { supplier: sid } : {}), ...(iid ? { sale_invoice: iid } : {}) }));
       setOpen(true);
-      params.delete("supplier");
+      params.delete("supplier"); params.delete("invoice");
       setParams(params, { replace: true });
     }
   }, []); // eslint-disable-line
 
   function blank() {
-    return { supplier: "", notes: "", lines: [emptyLine()] };
+    return { supplier: "", sale_invoice: "", notes: "", lines: [emptyLine()] };
   }
   function emptyLine() {
     return { item: "", description: "", quantity: 1, unit_price: 0 };
@@ -41,6 +43,7 @@ export default function Purchases() {
     setEditId(p.id);
     setForm({
       supplier: String(p.supplier),
+      sale_invoice: p.sale_invoice ? String(p.sale_invoice) : "",
       notes: p.notes || "",
       lines: (p.lines || []).map((l) => ({
         item: String(l.item), description: l.description || "",
@@ -57,6 +60,7 @@ export default function Purchases() {
     try {
       const payload = {
         supplier: Number(form.supplier),
+        sale_invoice: form.sale_invoice ? Number(form.sale_invoice) : null,
         notes: form.notes,
         lines: form.lines.filter((l) => l.item).map((l) => ({
           item: Number(l.item), description: l.description,
@@ -84,12 +88,13 @@ export default function Purchases() {
       <div className="card">
         {loading ? <div className="empty">در حال بارگذاری…</div> : (
           <table>
-            <thead><tr><th>شماره</th><th>تأمین‌کننده</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+            <thead><tr><th>شماره</th><th>تأمین‌کننده</th><th>فاکتور مرتبط</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
             <tbody>
               {data.map((p) => (
                 <tr key={p.id}>
                   <td className="mono">{p.number}</td>
                   <td>{p.supplier_name}</td>
+                  <td className="mono">{p.sale_invoice_number || "—"}</td>
                   <td className="mono">
                     {toman(p.total)}
                     <KindSplit goods={p.goods_total} service={p.service_total} />
@@ -108,7 +113,7 @@ export default function Purchases() {
                   </td>
                 </tr>
               ))}
-              {data.length === 0 && <tr><td colSpan={5} className="empty">هنوز خریدی ثبت نشده.</td></tr>}
+              {data.length === 0 && <tr><td colSpan={6} className="empty">هنوز خریدی ثبت نشده.</td></tr>}
             </tbody>
           </table>
         )}
@@ -123,6 +128,15 @@ export default function Purchases() {
                 <select value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} required>
                   <option value="">— انتخاب —</option>
                   {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div className="field">
+                <label>فاکتور مرتبط (اختیاری)</label>
+                <select value={form.sale_invoice} onChange={(e) => setForm({ ...form, sale_invoice: e.target.value })}>
+                  <option value="">— بدون فاکتور (خرید مستقل) —</option>
+                  {invoices.map((inv) => (
+                    <option key={inv.id} value={inv.id}>{inv.number} — {inv.customer_name}</option>
+                  ))}
                 </select>
               </div>
             </div>

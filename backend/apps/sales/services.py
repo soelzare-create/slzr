@@ -154,30 +154,20 @@ def check_five_percent(lines) -> None:
 # --- Convert to invoice -----------------------------------------------------
 @transaction.atomic
 def convert_to_invoice(proforma: Proforma, *, actor=None) -> Invoice:
-    """READY/CONFIRMED proforma → goods Invoice, enforcing the 5% rule.
+    """Proforma → goods Invoice, directly (decoupled flow).
 
-    Prerequisite (Section 6): each line's purchase must be registered. Posts the
-    sale financial effect (AR ⇑ / sales income ⇑, and COGS ⇑ / inventory ⇓).
+    No confirmation, no reservation, no 5% rule and no purchase prerequisite:
+    the invoice is issued first (AR ⇑ / sales income ⇑), and procurement is asked
+    to buy the goods afterwards, linking each purchase back to this invoice.
+    Cost of goods is recognised on the purchase side when it is registered.
     """
     p = Proforma.objects.select_for_update().get(pk=proforma.pk)
-    if p.status in {ProformaStatus.INVOICED, ProformaStatus.CANCELLED,
-                    ProformaStatus.UNFULFILLABLE}:
+    if p.status in {ProformaStatus.INVOICED, ProformaStatus.CANCELLED}:
         raise InvalidTransition("این پیش‌فاکتور قابل تبدیل به فاکتور نیست.")
 
-    lines = list(p.lines.select_related("source_purchase_line", "item").all())
+    lines = list(p.lines.select_related("item").all())
     if not lines:
         raise InvalidTransition("پیش‌فاکتور بدون قلم قابل فاکتور شدن نیست.")
-
-    # Prerequisite: every source purchase must be registered (Section 6).
-    for line in lines:
-        src = line.source_purchase_line
-        if src is None or src.purchase.status != Purchase.Status.REGISTERED:
-            raise InvalidTransition(
-                f"قلم «{line.item}» به خرید ثبت‌شده وصل نیست؛ ابتدا خرید را ثبت کنید."
-            )
-
-    # 5% rule — non-bypassable, at the moment of final registration.
-    check_five_percent(lines)
 
     invoice = Invoice.objects.create(
         number=_next_invoice_number(),
@@ -187,7 +177,6 @@ def convert_to_invoice(proforma: Proforma, *, actor=None) -> Invoice:
         proforma=p,
         date=date.today(),
     )
-    cost_total = Decimal("0")
     for line in lines:
         InvoiceLine.objects.create(
             invoice=invoice,
@@ -195,12 +184,9 @@ def convert_to_invoice(proforma: Proforma, *, actor=None) -> Invoice:
             description=line.description,
             quantity=line.quantity,
             unit_price=line.unit_price,
-            source_purchase_line=line.source_purchase_line,
         )
-        cost_total += Decimal(line.source_purchase_line.unit_price) * Decimal(line.quantity)
 
-    sale_total = invoice.total
-    _post_sale_entry(invoice, sale_total=sale_total, cost_total=cost_total,
+    _post_sale_entry(invoice, sale_total=invoice.total, cost_total=Decimal("0"),
                      income_code=acc.SALES_INCOME, actor=actor)
 
     p.status = ProformaStatus.INVOICED
