@@ -27,6 +27,12 @@ export default function Receipts() {
   }
   useEffect(() => { if (can("warehouse.view")) reload(); }, []); // eslint-disable-line
 
+  async function removeReceipt(r) {
+    if (!window.confirm(`رسید ${r.number} حذف شود؟ سریال‌های ثبت‌شدهٔ آن نیز حذف می‌شوند.`)) return;
+    try { await api.del(`/receipts/${r.id}`); reload(); }
+    catch (e) { setError(e.message); }
+  }
+
   if (!can("warehouse.view")) {
     return (
       <div>
@@ -80,7 +86,7 @@ export default function Receipts() {
       <div className="card" style={{ marginTop: 20 }}>
         <h3 style={{ marginTop: 0 }}>رسیدهای ثبت‌شده</h3>
         <table>
-          <thead><tr><th>شماره رسید</th><th>خرید</th><th>تأمین‌کننده</th><th>ثبت‌کننده</th><th>سریال‌ها</th></tr></thead>
+          <thead><tr><th>شماره رسید</th><th>خرید</th><th>تأمین‌کننده</th><th>ثبت‌کننده</th><th>سریال‌ها</th><th></th></tr></thead>
           <tbody>
             {history.map((r) => {
               const serialCount = (r.items || []).reduce((s, it) => s + (it.serials || []).length, 0);
@@ -91,10 +97,15 @@ export default function Receipts() {
                   <td>{r.supplier_name}</td>
                   <td>{r.received_by_name}</td>
                   <td>{serialCount > 0 ? `${serialCount} سریال` : "—"}</td>
+                  <td style={{ textAlign: "left" }}>
+                    {can("warehouse.edit") && (
+                      <button className="btn danger sm" onClick={() => removeReceipt(r)}>حذف</button>
+                    )}
+                  </td>
                 </tr>
               );
             })}
-            {history.length === 0 && <tr><td colSpan={5} className="empty">هنوز رسیدی ثبت نشده.</td></tr>}
+            {history.length === 0 && <tr><td colSpan={6} className="empty">هنوز رسیدی ثبت نشده.</td></tr>}
           </tbody>
         </table>
       </div>

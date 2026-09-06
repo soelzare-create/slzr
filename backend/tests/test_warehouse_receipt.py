@@ -123,6 +123,40 @@ def test_serials_report_lists_all(seeded, make_user, api):
     assert row["purchase_number"] == purchase.number
 
 
+def test_warehouse_can_delete_receipt(seeded, make_user, api):
+    purchase, line = _registered_purchase(make_user)
+    wh = make_user("09120000080", "انباردار", role_code="warehouse_employee")
+    _auth(api, wh)
+    created = api.post("/api/receipts", {
+        "purchase": purchase.id,
+        "items": [{"purchase_line": line.id, "quantity": 2, "serials": ["D1", "D2"]}],
+    }, format="json").data
+    rid = created["id"]
+    assert any(x["serial"] == "D1" for x in api.get("/api/receipts/serials").data)
+
+    resp = api.delete(f"/api/receipts/{rid}")
+    assert resp.status_code == 204
+    assert api.get(f"/api/receipts/{rid}").status_code == 404
+    # its serials are gone from the report, and the purchase is no longer received
+    assert not any(x["serial"] == "D1" for x in api.get("/api/receipts/serials").data)
+    purchase.refresh_from_db()
+    assert not purchase.goods_receipts.exists()
+
+
+def test_delete_receipt_requires_warehouse_permission(seeded, make_user, api):
+    purchase, line = _registered_purchase(make_user)
+    wh = make_user("09120000081", "انباردار", role_code="warehouse_employee")
+    _auth(api, wh)
+    created = api.post("/api/receipts", {
+        "purchase": purchase.id,
+        "items": [{"purchase_line": line.id, "quantity": 1, "serials": []}],
+    }, format="json").data
+    # a user without warehouse access cannot delete it
+    seller = make_user("09120000082", "فروشنده", role_code="sales_employee")
+    _auth(api, seller)
+    assert api.delete(f"/api/receipts/{created['id']}").status_code == 403
+
+
 def test_receipt_requires_warehouse_permission(seeded, make_user, api):
     purchase, line = _registered_purchase(make_user)
     seller = make_user("09120000076", "فروشنده", role_code="sales_employee")
