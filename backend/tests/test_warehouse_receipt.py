@@ -82,24 +82,31 @@ def test_receipt_blocked_for_unregistered_purchase(seeded, make_user, api):
     assert resp.status_code == 400
 
 
-def test_invoice_line_shows_serials_from_receipt(seeded, make_user, api):
+def test_invoice_line_shows_serials_from_linked_purchase(seeded, make_user, api):
+    """Serials are allocated to an invoice via the purchase linked to it."""
     from apps.sales.models import Proforma, ProformaLine
     from apps.sales import services as sales
     from apps.warehouse.models import GoodsReceipt, ReceiptItem
 
-    purchase, line = _registered_purchase(make_user)  # item qty 2, cost 500
-    wh = make_user("09120000077", "انباردار", role_code="warehouse_employee")
-    receipt = GoodsReceipt.objects.create(purchase=purchase, received_by=wh)
-    ReceiptItem.objects.create(receipt=receipt, purchase_line=line, item=line.item,
-                               quantity=2, serials=["A1", "A2"])
-
     seller = make_user("09120000078", "فروشنده", role_code="sales_employee")
+    buyer = make_user("09120000077", "بازرگان", role_code="procurement_manager")
     customer = Party.objects.create(name="مشتری", is_customer=True)
+    supplier = Party.objects.create(name="تأمین", is_supplier=True)
+    item = Item.objects.create(name="سوییچ", kind=Item.Kind.GOODS, unit="دستگاه")
+
+    # 1) issue the invoice first (decoupled flow)
     proforma = Proforma.objects.create(customer=customer, owner=seller)
-    ProformaLine.objects.create(proforma=proforma, item=line.item, quantity=1,
-                                unit_price=600, source_purchase_line=line)  # ≥ 500×1.05
-    sales.confirm_proforma(proforma, actor=seller)
+    ProformaLine.objects.create(proforma=proforma, item=item, quantity=2, unit_price=600)
     invoice = sales.convert_to_invoice(proforma, actor=seller)
+
+    # 2) procurement buys for that invoice, warehouse receives with serials
+    purchase = Purchase.objects.create(supplier=supplier, owner=buyer, sale_invoice=invoice)
+    line = PurchaseLine.objects.create(purchase=purchase, item=item, quantity=2, unit_price=500)
+    proc.register_purchase(purchase, actor=buyer)
+    wh = make_user("09120000076", "انباردار", role_code="warehouse_employee")
+    receipt = GoodsReceipt.objects.create(purchase=purchase, received_by=wh)
+    ReceiptItem.objects.create(receipt=receipt, purchase_line=line, item=item,
+                               quantity=2, serials=["A1", "A2"])
 
     _auth(api, seller)
     resp = api.get(f"/api/invoices/{invoice.id}")

@@ -73,7 +73,7 @@ def test_proforma_editable_while_draft(seeded, make_user, api):
     assert int(resp.data["total"]) == 600
 
 
-def test_proforma_not_editable_after_confirm(seeded, make_user, api):
+def test_proforma_not_editable_after_convert(seeded, make_user, api):
     seller = make_user("09120000054", "فروشنده", role_code="sales_employee")
     customer = Party.objects.create(name="مشتری", is_customer=True)
     item = Item.objects.create(name="کالا", kind=Item.Kind.GOODS)
@@ -83,7 +83,9 @@ def test_proforma_not_editable_after_confirm(seeded, make_user, api):
         "lines": [{"item": item.id, "quantity": 1, "unit_price": 100}],
     }, format="json").data
     pid = created["id"]
-    api.post(f"/api/proformas/{pid}/confirm")
+    # convert straight to an invoice (decoupled flow) → proforma is now INVOICED
+    conv = api.post(f"/api/proformas/{pid}/convert")
+    assert conv.status_code == 200, conv.data
     resp = api.patch(f"/api/proformas/{pid}", {
         "lines": [{"item": item.id, "quantity": 9, "unit_price": 999}],
     }, format="json")

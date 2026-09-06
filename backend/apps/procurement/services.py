@@ -26,9 +26,11 @@ def _next_number() -> str:
 
 @transaction.atomic
 def register_purchase(purchase: Purchase, *, actor=None) -> Purchase:
-    """Register a purchase: post its financial effect, mark READY. Atomic.
+    """Register a purchase: post its financial effect. Atomic.
 
-    Financial effect (Section 10 decision): موجودی کالا بدهکار / پرداختنی بستانکار.
+    In the current (decoupled) flow a purchase is its own document, independent
+    of the sales side, so it is expensed directly:
+        بهای تمام‌شده (بدهکار) / پرداختنی به تأمین‌کننده (بستانکار).
     """
     if purchase.status == Purchase.Status.REGISTERED:
         return purchase
@@ -50,7 +52,7 @@ def register_purchase(purchase: Purchase, *, actor=None) -> Purchase:
         source_ref=f"procurement.purchase:{locked.id}",
         actor=actor,
         lines=[
-            Line(acc.INVENTORY, debit=total, description="ورود کالا/خدمت"),
+            Line(acc.COGS, debit=total, description="بهای تمام‌شدهٔ خرید"),
             Line(acc.ACCOUNTS_PAYABLE, credit=total, party=locked.supplier,
                  description="بدهی به تأمین‌کننده"),
         ],

@@ -7,7 +7,6 @@ export default function Proformas() {
   const { data, loading, error, reload, setError } = useList("/proformas");
   const customers = useOptions("/parties?role=customer");
   const { items, reload: reloadItems } = useItems();
-  const [purchaseLines, setPurchaseLines] = useState([]);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null); // null = creating a new proforma
   const [form, setForm] = useState(blank());
@@ -24,21 +23,8 @@ export default function Proformas() {
     }
   }, []); // eslint-disable-line
 
-  // Build a flat list of registered purchase lines to attach sales lines to.
-  useEffect(() => {
-    api.get("/purchases").then((d) => {
-      const opts = [];
-      rows(d).filter((p) => p.status === "REGISTERED").forEach((p) => {
-        (p.lines || []).forEach((l) => {
-          opts.push({ id: l.id, label: `${p.number} · ${l.item_name} · ${toman(l.unit_price)}`, unit_price: l.unit_price });
-        });
-      });
-      setPurchaseLines(opts);
-    }).catch(() => {});
-  }, [open]);
-
   function blank() { return { customer: "", notes: "", lines: [emptyLine()] }; }
-  function emptyLine() { return { item: "", description: "", quantity: 1, unit_price: 0, source_purchase_line: "" }; }
+  function emptyLine() { return { item: "", description: "", quantity: 1, unit_price: 0 }; }
   function setLine(i, patch) {
     setForm({ ...form, lines: form.lines.map((l, idx) => (idx === i ? { ...l, ...patch } : l)) });
   }
@@ -53,7 +39,6 @@ export default function Proformas() {
       lines: (p.lines || []).map((l) => ({
         item: String(l.item), description: l.description || "",
         quantity: l.quantity, unit_price: l.unit_price,
-        source_purchase_line: l.source_purchase_line ? String(l.source_purchase_line) : "",
       })),
     });
     setOpen(true);
@@ -70,7 +55,6 @@ export default function Proformas() {
         lines: form.lines.filter((l) => l.item).map((l) => ({
           item: Number(l.item), description: l.description,
           quantity: Number(l.quantity), unit_price: Number(l.unit_price),
-          source_purchase_line: l.source_purchase_line ? Number(l.source_purchase_line) : null,
         })),
       };
       if (editId) await api.put(`/proformas/${editId}`, payload);
@@ -106,13 +90,10 @@ export default function Proformas() {
                   </td>
                   <td><StatusBadge status={p.status} display={p.status_display} /></td>
                   <td className="flex" style={{ flexWrap: "wrap" }}>
-                    {p.status === "DRAFT" && <button className="btn sm" onClick={() => act(p.id, "confirm")}>تأیید</button>}
                     {p.status === "DRAFT" && <button className="btn sm" onClick={() => startEdit(p)}>ویرایش</button>}
-                    {(p.status === "DRAFT" || p.status === "CONFIRMED") &&
-                      <button className="btn sm" onClick={() => act(p.id, "request_purchase")}>درخواست خرید</button>}
-                    {["CONFIRMED", "READY"].includes(p.status) &&
+                    {p.status === "DRAFT" &&
                       <button className="btn success sm" onClick={() => act(p.id, "convert")}>تبدیل به فاکتور</button>}
-                    {!["INVOICED", "CANCELLED"].includes(p.status) &&
+                    {p.status === "DRAFT" &&
                       <button className="btn danger sm" onClick={() => act(p.id, "cancel")}>ابطال</button>}
                   </td>
                 </tr>
@@ -137,40 +118,25 @@ export default function Proformas() {
             </div>
             <div className="card" style={{ background: "#fafbfc" }}>
               <table className="line-items">
-                <thead><tr><th>کالا/خدمت</th><th>تعداد</th><th>قیمت فروش</th><th>خرید مبدأ</th><th></th></tr></thead>
+                <thead><tr><th>کالا/خدمت</th><th>تعداد</th><th>قیمت فروش</th><th></th></tr></thead>
                 <tbody>
-                  {form.lines.map((l, i) => {
-                    const src = purchaseLines.find((s) => String(s.id) === String(l.source_purchase_line));
-                    const floor = src ? Math.ceil(Number(src.unit_price) * 1.05) : null;
-                    const low = floor && Number(l.unit_price) < floor;
-                    return (
-                      <tr key={i}>
-                        <td style={{ minWidth: 190 }}>
-                          <ItemPicker items={items} value={l.item} reloadItems={reloadItems}
-                            onChange={(id) => setLine(i, { item: id })} />
-                        </td>
-                        <td style={{ width: 70 }}><input type="number" min="0" value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} /></td>
-                        <td style={{ width: 150 }}>
-                          <input type="number" min="0" value={l.unit_price} onChange={(e) => setLine(i, { unit_price: e.target.value })}
-                            style={low ? { borderColor: "#dc2626" } : undefined} />
-                          {floor && <div className="muted" style={{ fontSize: 11 }}>حداقل مجاز: {toman(floor)}</div>}
-                        </td>
-                        <td style={{ minWidth: 180 }}>
-                          <select value={l.source_purchase_line} onChange={(e) => setLine(i, { source_purchase_line: e.target.value })}>
-                            <option value="">— بدون خرید —</option>
-                            {purchaseLines.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-                          </select>
-                        </td>
-                        <td><button type="button" className="btn danger sm" onClick={() => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) })}>✕</button></td>
-                      </tr>
-                    );
-                  })}
+                  {form.lines.map((l, i) => (
+                    <tr key={i}>
+                      <td style={{ minWidth: 190 }}>
+                        <ItemPicker items={items} value={l.item} reloadItems={reloadItems}
+                          onChange={(id) => setLine(i, { item: id })} />
+                      </td>
+                      <td style={{ width: 70 }}><input type="number" min="0" value={l.quantity} onChange={(e) => setLine(i, { quantity: e.target.value })} /></td>
+                      <td style={{ width: 150 }}><input type="number" min="0" value={l.unit_price} onChange={(e) => setLine(i, { unit_price: e.target.value })} /></td>
+                      <td><button type="button" className="btn danger sm" onClick={() => setForm({ ...form, lines: form.lines.filter((_, idx) => idx !== i) })}>✕</button></td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
               <button type="button" className="btn sm" onClick={() => setForm({ ...form, lines: [...form.lines, emptyLine()] })}>+ افزودن ردیف</button>
             </div>
             <p className="muted" style={{ fontSize: 13 }}>
-              قانون ۵٪: قیمت فروش هر قلم کالا باید حداقل ۱٫۰۵ برابر قیمت خرید مبدأ باشد؛ در غیر این‌صورت هنگام «تبدیل به فاکتور» رد می‌شود.
+              با «تبدیل به فاکتور»، فاکتور فروش صادر و درخواست خرید برای بازرگانی ارسال می‌شود.
             </p>
             <button className="btn primary">{editId ? "ذخیرهٔ تغییرات" : "ذخیره پیش‌فاکتور"}</button>
           </form>

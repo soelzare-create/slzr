@@ -57,45 +57,27 @@ def test_reprice_direct_invoice_updates_total_and_ledger(seeded, make_user, api)
 
 # --- reprice a goods invoice: 5% rule still holds, COGS preserved -----------
 
-def _goods_invoice(seller, buyer, customer, supplier, item, cost, price):
-    purchase = Purchase.objects.create(supplier=supplier, owner=buyer)
-    pline = PurchaseLine.objects.create(purchase=purchase, item=item,
-                                        quantity=1, unit_price=cost)
-    proc.register_purchase(purchase, actor=buyer)
+def _goods_invoice(seller, customer, item, price):
     proforma = Proforma.objects.create(customer=customer, owner=seller)
-    ProformaLine.objects.create(proforma=proforma, item=item, quantity=1,
-                                unit_price=price, source_purchase_line=pline)
-    sales.confirm_proforma(proforma, actor=seller)
+    ProformaLine.objects.create(proforma=proforma, item=item, quantity=1, unit_price=price)
     return sales.convert_to_invoice(proforma, actor=seller)
 
 
-def test_reprice_goods_enforces_five_percent_and_keeps_cogs(seeded, make_user, api):
+def test_reprice_goods_updates_total_and_keeps_ledger(seeded, make_user, api):
     seller = make_user("09120000062", "فروشنده", role_code="sales_employee")
-    buyer = make_user("09120000063", "بازرگان", role_code="procurement_manager")
     customer = Party.objects.create(name="مشتری", is_customer=True)
-    supplier = Party.objects.create(name="تأمین", is_supplier=True)
     item = Item.objects.create(name="لپ‌تاپ", kind=Item.Kind.GOODS, unit="دستگاه")
-    inv = _goods_invoice(seller, buyer, customer, supplier, item,
-                         cost=1_000_000, price=1_200_000)
+    inv = _goods_invoice(seller, customer, item, price=1_200_000)
     line = inv.lines.first()
     _auth(api, seller)
 
-    # below the 1.05× floor → rejected, amount unchanged
-    bad = api.post(f"/api/invoices/{inv.id}/reprice", {
-        "lines": [{"id": line.id, "quantity": 1, "unit_price": 1_040_000}],
-    }, format="json")
-    assert bad.status_code == 400
-    inv.refresh_from_db()
-    assert inv.total == Decimal("1200000")
-
-    # valid new price → total updates, COGS (1.0m) preserved in the fresh entry
-    ok = api.post(f"/api/invoices/{inv.id}/reprice", {
+    # a goods invoice books income only (no 5% rule / COGS in the decoupled flow)
+    resp = api.post(f"/api/invoices/{inv.id}/reprice", {
         "lines": [{"id": line.id, "quantity": 1, "unit_price": 1_300_000}],
     }, format="json")
-    assert ok.status_code == 200, ok.data
-    assert int(ok.data["total"]) == 1_300_000
-    # active entry = sale 1.3m + COGS relief 1.0m → total debit 2.3m
-    assert _active_entry(inv).total_debit == Decimal("2300000")
+    assert resp.status_code == 200, resp.data
+    assert int(resp.data["total"]) == 1_300_000
+    assert _active_entry(inv).total_debit == Decimal("1300000")
 
     # a later cancel still reverses the live entry (reprice didn't orphan it)
     sales.reverse_invoice(inv, actor=seller)
