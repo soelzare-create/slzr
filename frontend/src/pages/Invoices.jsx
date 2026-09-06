@@ -182,7 +182,7 @@ function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
   const [lines, setLines] = useState(
     (invoice.lines || []).map((l) => ({
       id: l.id, item_name: l.item_name, item_kind_display: l.item_kind_display,
-      quantity: l.quantity, unit_price: l.unit_price,
+      quantity: l.quantity, unit_price: l.unit_price, serials: l.serials || [],
     }))
   );
   const [error, setError] = useState(null);
@@ -232,7 +232,7 @@ function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
             <label className="field" style={{ marginBottom: 6 }}>مبلغ و اقلام</label>
             <div className="card" style={{ background: "#fafbfc", marginBottom: 14 }}>
               <table className="line-items">
-                <thead><tr><th>کالا/خدمت</th><th>دسته</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead>
+                <thead><tr><th>کالا/خدمت</th><th>دسته</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th><th>سریال‌ها</th></tr></thead>
                 <tbody>
                   {lines.map((l, i) => (
                     <tr key={l.id}>
@@ -243,6 +243,11 @@ function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
                       <td style={{ width: 150 }}><input type="number" min="0" value={l.unit_price}
                         onChange={(e) => setLine(i, { unit_price: e.target.value })} /></td>
                       <td className="mono">{toman(Number(l.quantity || 0) * Number(l.unit_price || 0))}</td>
+                      <td style={{ fontSize: 11.5 }}>
+                        {(l.serials || []).length
+                          ? (l.serials || []).map((s) => <span key={s} className="badge blue" style={{ fontSize: 10, marginInlineEnd: 3 }} dir="ltr">{s}</span>)
+                          : <span className="muted">—</span>}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

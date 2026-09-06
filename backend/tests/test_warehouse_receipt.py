@@ -82,6 +82,47 @@ def test_receipt_blocked_for_unregistered_purchase(seeded, make_user, api):
     assert resp.status_code == 400
 
 
+def test_invoice_line_shows_serials_from_receipt(seeded, make_user, api):
+    from apps.sales.models import Proforma, ProformaLine
+    from apps.sales import services as sales
+    from apps.warehouse.models import GoodsReceipt, ReceiptItem
+
+    purchase, line = _registered_purchase(make_user)  # item qty 2, cost 500
+    wh = make_user("09120000077", "انباردار", role_code="warehouse_employee")
+    receipt = GoodsReceipt.objects.create(purchase=purchase, received_by=wh)
+    ReceiptItem.objects.create(receipt=receipt, purchase_line=line, item=line.item,
+                               quantity=2, serials=["A1", "A2"])
+
+    seller = make_user("09120000078", "فروشنده", role_code="sales_employee")
+    customer = Party.objects.create(name="مشتری", is_customer=True)
+    proforma = Proforma.objects.create(customer=customer, owner=seller)
+    ProformaLine.objects.create(proforma=proforma, item=line.item, quantity=1,
+                                unit_price=600, source_purchase_line=line)  # ≥ 500×1.05
+    sales.confirm_proforma(proforma, actor=seller)
+    invoice = sales.convert_to_invoice(proforma, actor=seller)
+
+    _auth(api, seller)
+    resp = api.get(f"/api/invoices/{invoice.id}")
+    assert resp.status_code == 200, resp.data
+    assert resp.data["lines"][0]["serials"] == ["A1", "A2"]
+
+
+def test_serials_report_lists_all(seeded, make_user, api):
+    purchase, line = _registered_purchase(make_user)
+    wh = make_user("09120000079", "انباردار", role_code="warehouse_employee")
+    _auth(api, wh)
+    api.post("/api/receipts", {
+        "purchase": purchase.id,
+        "items": [{"purchase_line": line.id, "quantity": 2, "serials": ["Z1", "Z2"]}],
+    }, format="json")
+    r = api.get("/api/receipts/serials")
+    assert r.status_code == 200, r.data
+    found = {row["serial"] for row in r.data}
+    assert {"Z1", "Z2"} <= found
+    row = next(x for x in r.data if x["serial"] == "Z1")
+    assert row["purchase_number"] == purchase.number
+
+
 def test_receipt_requires_warehouse_permission(seeded, make_user, api):
     purchase, line = _registered_purchase(make_user)
     seller = make_user("09120000076", "فروشنده", role_code="sales_employee")

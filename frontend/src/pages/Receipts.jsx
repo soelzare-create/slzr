@@ -9,6 +9,8 @@ export default function Receipts() {
   const { can } = useAuth();
   const [receivable, setReceivable] = useState([]);
   const [history, setHistory] = useState([]);
+  const [serials, setSerials] = useState([]);
+  const [serialQuery, setSerialQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [receiving, setReceiving] = useState(null); // a purchase object to receive
@@ -18,7 +20,8 @@ export default function Receipts() {
     Promise.all([
       api.get("/receipts/receivable").then(rows).catch(() => []),
       api.get("/receipts").then(rows).catch(() => []),
-    ]).then(([rv, hist]) => { setReceivable(rv); setHistory(hist); })
+      api.get("/receipts/serials").then(rows).catch(() => []),
+    ]).then(([rv, hist, ser]) => { setReceivable(rv); setHistory(hist); setSerials(ser); })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }
@@ -92,6 +95,32 @@ export default function Receipts() {
               );
             })}
             {history.length === 0 && <tr><td colSpan={5} className="empty">هنوز رسیدی ثبت نشده.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="card" style={{ marginTop: 20 }}>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <h3 style={{ margin: 0 }}>موجودی سریال‌ها</h3>
+          <input placeholder="جستجوی سریال…" value={serialQuery}
+            onChange={(e) => setSerialQuery(e.target.value)} style={{ width: 220 }} />
+        </div>
+        <table style={{ marginTop: 10 }}>
+          <thead><tr><th>سریال</th><th>کالا</th><th>خرید</th><th>تأمین‌کننده</th><th>رسید</th></tr></thead>
+          <tbody>
+            {serials
+              .filter((s) => !serialQuery ||
+                s.serial.toLowerCase().includes(serialQuery.trim().toLowerCase()))
+              .map((s, i) => (
+                <tr key={`${s.serial}-${i}`}>
+                  <td dir="ltr" style={{ textAlign: "right", fontWeight: 600 }}>{s.serial}</td>
+                  <td>{s.item_name}</td>
+                  <td className="mono">{s.purchase_number}</td>
+                  <td>{s.supplier_name}</td>
+                  <td className="mono">{s.receipt_number}</td>
+                </tr>
+              ))}
+            {serials.length === 0 && <tr><td colSpan={5} className="empty">هنوز سریالی ثبت نشده.</td></tr>}
           </tbody>
         </table>
       </div>
