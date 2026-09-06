@@ -306,6 +306,36 @@
   .closing .logo-lg .slg{margin-top:10px;font-size:15px;color:rgba(255,255,255,.75);letter-spacing:.5px}
   .closing .logo-lg .slg em{color:var(--lime);font-style:normal}
 
+  /* ---------- Price analysis (interactive) ---------- */
+  .pa-tools{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:6px 0 14px;flex-wrap:wrap}
+  .pa-add{font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:none;border-radius:100px;
+    padding:10px 18px;background:var(--lime);color:var(--navy);display:inline-flex;align-items:center;gap:8px}
+  .pa-add:active{transform:translateY(1px)}
+  .pa-hint{font-size:12px;color:var(--muted)}
+  .pa-table{width:100%;border-collapse:collapse;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .pa-table th{background:var(--navy);color:#fff;font-size:12.5px;font-weight:700;padding:12px;text-align:right}
+  .pa-table td{padding:8px 12px;border-top:1px solid var(--line);font-size:13px;vertical-align:middle}
+  .pa-table tbody tr:nth-child(even) td{background:var(--gray)}
+  .pa-table input{font-family:inherit;font-size:13px;width:100%;border:1px solid var(--line);
+    border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink);text-align:right}
+  .pa-table input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(8,43,89,.1)}
+  .pa-table input.num{text-align:center}
+  .pa-line{font-weight:700;color:var(--navy);white-space:nowrap}
+  .pa-del{border:none;background:rgba(220,38,38,.1);color:#dc2626;width:30px;height:30px;border-radius:8px;
+    cursor:pointer;font-size:18px;font-weight:900;line-height:1}
+  .pa-col-row{width:42px;text-align:center;color:var(--muted);font-weight:700}
+  .pa-col-qty{width:90px}
+  .pa-col-price{width:180px}
+  .pa-col-line{width:160px}
+  .pa-col-act{width:50px;text-align:center}
+  .pa-total{margin-top:18px;display:flex;justify-content:flex-start}
+  .pa-total .box{background:linear-gradient(150deg,var(--navy),var(--navy-2));color:#fff;border-radius:14px;
+    padding:16px 26px;display:flex;align-items:baseline;gap:20px;min-width:360px;justify-content:space-between}
+  .pa-total .lbl{font-size:14px;color:rgba(255,255,255,.85);font-weight:600}
+  .pa-total .val{font-size:26px;font-weight:900;color:var(--lime)}
+  .pa-total .val small{font-size:13px;color:#fff;font-weight:600;margin-inline-start:6px}
+  .pa-note{font-size:11.5px;color:var(--muted);margin-top:14px}
+
   .toc{margin-top:6px}
   .toc .row{
     display:flex;align-items:center;gap:16px;padding:14px 4px;border-bottom:1px solid var(--line);
@@ -333,6 +363,8 @@
   @media print{
     body{background:#fff}
     .toolbar{display:none}
+    .pa-add,.pa-del,.pa-col-act,.pa-hint,.pa-note{display:none !important}
+    .pa-table input{border:none;padding:2px 0;background:transparent !important}
     .page{width:auto;min-height:auto;margin:0;box-shadow:none;page-break-after:always;break-after:page}
     .page:last-child{page-break-after:auto}
   }
@@ -788,6 +820,113 @@
     <div>۱۰ / ۱۰</div>
   </div>
 </section>
+
+<!-- ============ 11 · PRICE ANALYSIS (interactive appendix) ============ -->
+<section class="page">
+  <div class="runhead">
+    <div class="brand"><span class="dot"></span> DaranX <b>·</b> اهواز تک</div>
+    <div>پیوست — آنالیز قیمت</div>
+  </div>
+  <div class="page-body">
+    <div class="eyebrow"><span class="rule"></span> پیوست · برآورد سرمایه‌گذاری</div>
+    <h2 class="section-title">آنالیز قیمت <span class="accent">تجهیزات</span></h2>
+    <p class="lead">این جدول برای برآورد هزینه تجهیزات پروژه است. می‌توانید آیتم اضافه یا حذف کنید، تعداد و قیمت واحد را وارد کنید؛ قیمت هر ردیف و جمع کل به‌صورت خودکار محاسبه می‌شود.</p>
+
+    <div class="pa-tools">
+      <button class="pa-add" type="button" onclick="paAddRow()">＋ افزودن آیتم</button>
+      <span class="pa-hint">قیمت‌ها بر حسب تومان · محاسبه خودکار جمع</span>
+    </div>
+
+    <table class="pa-table" id="paTable">
+      <thead>
+        <tr>
+          <th class="pa-col-row">#</th>
+          <th>شرح تجهیز / آیتم</th>
+          <th class="pa-col-qty">تعداد</th>
+          <th class="pa-col-price">قیمت واحد (تومان)</th>
+          <th class="pa-col-line">قیمت کل (تومان)</th>
+          <th class="pa-col-act"></th>
+        </tr>
+      </thead>
+      <tbody id="paBody"></tbody>
+    </table>
+
+    <div class="pa-total">
+      <div class="box">
+        <span class="lbl">جمع کل برآورد</span>
+        <span class="val" id="paGrand">۰ <small>تومان</small></span>
+      </div>
+    </div>
+
+    <p class="pa-note">* این برآورد جنبه اولیه دارد و پس از بازدید فنی هر سایت نهایی می‌شود. مقادیر وارد‌شده هنگام چاپ/تبدیل به PDF نیز حفظ می‌شوند.</p>
+  </div>
+  <div class="runfoot">
+    <div><span class="tag">DaranX</span> · پیشنهاد زیرساخت اهواز تک</div>
+    <div>پیوست</div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var seed = [
+    {desc:'سرور HPE DL360 Gen10 (طبق مشخصات پیشنهادی)', qty:1},
+    {desc:'روتر مرکزی MikroTik RB1100 (مرکز اصلی)', qty:1},
+    {desc:'روتر شعبه MikroTik hEX (به ازای هر شعبه)', qty:1},
+    {desc:'UPS تجهیزات حیاتی و سرور', qty:1},
+    {desc:'تجهیزات شبکه، سوئیچ و کابل‌کشی استاندارد', qty:1}
+  ];
+
+  function fmt(n){ if(!isFinite(n)) n = 0; return Math.round(n).toLocaleString('fa-IR'); }
+  function parseNum(v){
+    if(v==null) return 0;
+    var map = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9','٬':'','،':'',',':''};
+    var s = String(v).replace(/[۰-۹٬،,]/g, function(c){ return map[c] !== undefined ? map[c] : c; });
+    s = s.replace(/[^0-9.]/g,'');
+    var num = parseFloat(s);
+    return isNaN(num) ? 0 : num;
+  }
+  function recalc(){
+    var rows = document.querySelectorAll('#paBody tr'), grand = 0, i = 1;
+    rows.forEach(function(tr){
+      tr.querySelector('.pa-col-row').textContent = i.toLocaleString('fa-IR'); i++;
+      var qty = parseNum(tr.querySelector('.pa-qty').value);
+      var price = parseNum(tr.querySelector('.pa-price').value);
+      var line = qty * price;
+      tr.querySelector('.pa-line').textContent = fmt(line);
+      grand += line;
+    });
+    document.getElementById('paGrand').innerHTML = fmt(grand) + ' <small>تومان</small>';
+  }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+  window.paAddRow = function(desc, qty){
+    var tb = document.getElementById('paBody');
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="pa-col-row"></td>' +
+      '<td><input type="text" class="pa-desc" placeholder="نام تجهیز..." value="'+ (desc ? esc(desc) : '') +'"></td>' +
+      '<td><input type="text" inputmode="numeric" class="pa-qty num" value="'+ (qty != null ? qty : 1) +'"></td>' +
+      '<td><input type="text" inputmode="numeric" class="pa-price" placeholder="۰"></td>' +
+      '<td class="pa-line">۰</td>' +
+      '<td class="pa-col-act"><button type="button" class="pa-del" title="حذف" onclick="paDelRow(this)">×</button></td>';
+    tb.appendChild(tr);
+    tr.querySelectorAll('input').forEach(function(inp){ inp.addEventListener('input', recalc); });
+    recalc();
+  };
+  window.paDelRow = function(btn){
+    var tr = btn.closest('tr');
+    tr.parentNode.removeChild(tr);
+    recalc();
+  };
+
+  function init(){
+    seed.forEach(function(r){ window.paAddRow(r.desc, r.qty); });
+    if(!document.querySelectorAll('#paBody tr').length) window.paAddRow();
+  }
+  if(document.readyState !== 'loading'){ init(); }
+  else { document.addEventListener('DOMContentLoaded', init); }
+})();
+</script>
 
 </body>
 </html>
