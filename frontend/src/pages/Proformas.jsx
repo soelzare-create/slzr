@@ -68,6 +68,10 @@ export default function Proformas() {
     catch (err) { setError(err.message); }
   }
 
+  function openPrint(pid) {
+    window.open(`${location.origin}${location.pathname}#/print/proforma/${pid}`, "_blank");
+  }
+
   return (
     <div>
       <div className="toolbar">
@@ -90,6 +94,7 @@ export default function Proformas() {
                   </td>
                   <td><StatusBadge status={p.status} display={p.status_display} /></td>
                   <td className="flex" style={{ flexWrap: "wrap" }}>
+                    <button className="btn sm" onClick={() => openPrint(p.id)}>چاپ</button>
                     {p.status === "DRAFT" && <button className="btn sm" onClick={() => startEdit(p)}>ویرایش</button>}
                     {p.status === "DRAFT" &&
                       <button className="btn success sm" onClick={() => act(p.id, "convert")}>تبدیل به فاکتور</button>}

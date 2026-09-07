@@ -15,12 +15,21 @@ import Accounting from "./pages/Accounting.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import Users from "./pages/Users.jsx";
 import Receipts from "./pages/Receipts.jsx";
+import DocumentPrint from "./print/DocumentPrint.jsx";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="empty">در حال بارگذاری…</div>;
   if (!user) return <Navigate to="/login" replace />;
   return <Layout>{children}</Layout>;
+}
+
+// Auth-protected but without the app chrome — used for printable documents.
+function ProtectedBare({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="empty">در حال بارگذاری…</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
 }
 
 function App() {
@@ -37,6 +46,7 @@ function App() {
       <Route path="/accounting" element={<Protected><Accounting /></Protected>} />
       <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
       <Route path="/users" element={<Protected><Users /></Protected>} />
+      <Route path="/print/:kind/:id" element={<ProtectedBare><DocumentPrint /></ProtectedBare>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
