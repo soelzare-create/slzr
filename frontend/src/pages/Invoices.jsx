@@ -53,6 +53,10 @@ export default function Invoices() {
     } catch (err) { setError(err.message); }
   }
 
+  function openPrint(k, docId) {
+    window.open(`${location.origin}${location.pathname}#/print/${k}/${docId}`, "_blank");
+  }
+
   async function reverse(id, returned) {
     try { await api.post(`/invoices/${id}/reverse`, { returned }); reload(); }
     catch (err) { setError(err.message); }
@@ -83,6 +87,10 @@ export default function Invoices() {
                   </td>
                   <td><StatusBadge status={inv.status} display={inv.status_display} kind="invoice" /></td>
                   <td className="flex">
+                    <button className="btn sm" onClick={() => openPrint("invoice", inv.id)}>چاپ</button>
+                    {inv.type === "GOODS" && (
+                      <button className="btn sm" onClick={() => openPrint("delivery", inv.id)}>حواله تحویل</button>
+                    )}
                     {can("sales.edit") && (
                       <button className="btn sm" onClick={() => setEditingMeta(inv)}>ویرایش</button>
                     )}
