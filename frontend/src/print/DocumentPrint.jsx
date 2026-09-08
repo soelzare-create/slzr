@@ -2,25 +2,17 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api, toman, jalali } from "../api";
 
-// Company letterhead constants (DaranX brand).
-const CO = {
-  name: "Daran X",
-  sub: "شرکت فناوری اطلاعات داران",
-  addr1: "تهران، میدان فاطمی، نبش خ چهل‌ستون،",
-  addr2: "ساختمان چهل‌ستون، پلاک ۲ طبقه ۲ واحد ۲۰۲",
-  phones: ["۰۲۱ ۸۸ ۹۶ ۴۱ ۱۶", "۰۲۱ ۸۸ ۹۶ ۶۹ ۰۴"],
-  mobile: "۰۹۳۵ ۹۳۷ ۰۹ ۱۰",
-};
-
 const TITLES = { invoice: "فاکتور فروش", proforma: "پیش‌فاکتور", delivery: "حواله تحویل کالا" };
 
 export default function DocumentPrint() {
   const { kind, id } = useParams(); // kind: invoice | proforma | delivery
   const [doc, setDoc] = useState(null);
   const [party, setParty] = useState(null);
+  const [co, setCo] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    api.get("/company").then(setCo).catch(() => setCo({}));
     const path = kind === "proforma" ? `/proformas/${id}` : `/invoices/${id}`;
     api.get(path)
       .then((d) => {
@@ -31,7 +23,7 @@ export default function DocumentPrint() {
   }, [kind, id]);
 
   if (error) return <div style={{ padding: 40 }} className="error">{error}</div>;
-  if (!doc) return <div style={{ padding: 40 }}>در حال بارگذاری…</div>;
+  if (!doc || !co) return <div style={{ padding: 40 }}>در حال بارگذاری…</div>;
 
   const isDelivery = kind === "delivery";
   const isProforma = kind === "proforma";
@@ -65,16 +57,16 @@ export default function DocumentPrint() {
           <div className="brand">
             <Logo />
             <div>
-              <div className="brand-name">{CO.name}</div>
-              <div className="brand-sub">{CO.sub}</div>
+              <div className="brand-name">{co.name || "Daran X"}</div>
+              <div className="brand-sub">{co.brand_sub}</div>
             </div>
           </div>
           <h1 className="doc-title">{TITLES[kind]}</h1>
           <div className="contact">
-            <div>{CO.addr1}</div>
-            <div>{CO.addr2}</div>
-            <div className="phones">{CO.phones.join("  ")}</div>
-            <div className="phones">{CO.mobile}</div>
+            {co.address && <div>{co.address}</div>}
+            {(co.phone1 || co.phone2) && <div className="phones">{[co.phone1, co.phone2].filter(Boolean).join("  ")}</div>}
+            {co.mobile && <div className="phones">{co.mobile}</div>}
+            {co.email && <div className="phones">{co.email}</div>}
           </div>
         </header>
 
@@ -91,6 +83,7 @@ export default function DocumentPrint() {
             <Field label="شماره تماس" value={party?.phone} />
             <Field label="آدرس" value={party?.address} wide={isDelivery} />
             {!isDelivery && <Field label="کد اقتصادی / شناسه ملی" value={party?.national_id} />}
+            {!isDelivery && <Field label="شماره ثبت" value={party?.registration_no} />}
             {!isDelivery && <Field label="پست الکترونیک" value={party?.email} />}
           </div>
         </div>
@@ -146,8 +139,12 @@ export default function DocumentPrint() {
             </div>
             <div className="bank">
               <b>اطلاعات حساب شرکت</b>
-              <div>بانک ملت – شعبه فاطمی</div>
-              <div>شماره حساب: ……………… شماره شبا: ……………… کد شعبه: …………</div>
+              <div>{[co.bank_name, co.bank_branch].filter(Boolean).join(" – ") || "………………"}</div>
+              <div>
+                شماره حساب: {co.bank_account || "………………"}
+                {"   "}شماره شبا: <span dir="ltr">{co.bank_iban || "………………"}</span>
+                {"   "}کد شعبه: {co.bank_branch_code || "…………"}
+              </div>
             </div>
           </>
         )}

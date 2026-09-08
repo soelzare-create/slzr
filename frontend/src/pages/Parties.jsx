@@ -126,7 +126,7 @@ function PartyModal({ party, onClose, onSaved }) {
   const [form, setForm] = useState({
     name: party.name || "", phone: party.phone || "", address: party.address || "",
     is_customer: party.is_customer ?? true, is_supplier: party.is_supplier ?? false,
-    national_id: party.national_id || "",
+    national_id: party.national_id || "", registration_no: party.registration_no || "",
   });
   const [error, setError] = useState(null);
 
@@ -150,6 +150,7 @@ function PartyModal({ party, onClose, onSaved }) {
         <div className="row">
           <div className="field"><label>تلفن</label><input dir="ltr" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
           <div className="field"><label>کد ملی/اقتصادی</label><input value={form.national_id} onChange={(e) => setForm({ ...form, national_id: e.target.value })} /></div>
+          <div className="field"><label>شماره ثبت</label><input value={form.registration_no} onChange={(e) => setForm({ ...form, registration_no: e.target.value })} /></div>
         </div>
         <div className="field"><label>آدرس</label><textarea rows={2} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
         <div className="row" style={{ marginBottom: 18 }}>

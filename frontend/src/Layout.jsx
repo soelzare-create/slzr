@@ -15,6 +15,7 @@ const NAV = [
   { to: "/items", label: "کالا و خدمات", icon: "doc", perm: null },
   { to: "/notifications", label: "اعلان‌ها", icon: "bell", perm: null },
   { to: "/users", label: "حساب‌های کاربری", icon: "users", perm: null, adminOnly: true },
+  { to: "/company", label: "تنظیمات شرکت", icon: "doc", perm: null, adminOnly: true },
 ];
 
 const ROLE_LABEL = {

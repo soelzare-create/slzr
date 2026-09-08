@@ -3,13 +3,37 @@ from __future__ import annotations
 from decimal import Decimal
 
 from django.db.models import DecimalField, ExpressionWrapper, F, Sum
-from rest_framework import viewsets
+from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Item, Notification, Party
-from .serializers import ItemSerializer, NotificationSerializer, PartySerializer
+from .models import CompanyProfile, Item, Notification, Party
+from .serializers import (
+    CompanyProfileSerializer, ItemSerializer, NotificationSerializer, PartySerializer,
+)
+
+
+class CompanyProfileView(views.APIView):
+    """The single company profile (letterhead + bank details).
+
+    Any authenticated user may read it (documents need it); only a system admin
+    may edit it.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(CompanyProfileSerializer(CompanyProfile.get_solo()).data)
+
+    def patch(self, request):
+        if not request.user.is_system_admin:
+            return Response({"detail": "فقط ادمین سیستم می‌تواند تنظیمات شرکت را تغییر دهد."},
+                            status=status.HTTP_403_FORBIDDEN)
+        ser = CompanyProfileSerializer(CompanyProfile.get_solo(), data=request.data, partial=True)
+        ser.is_valid(raise_exception=True)
+        ser.save()
+        return Response(ser.data)
 
 
 class PartyViewSet(viewsets.ModelViewSet):

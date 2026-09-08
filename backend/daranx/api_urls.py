@@ -12,7 +12,9 @@ from apps.accounting.api import (
 from apps.accounts.api import (
     RoleViewSet, SystemViewSet, UserViewSet, login_view, me_view,
 )
-from apps.core.api import ItemViewSet, NotificationViewSet, PartyViewSet
+from apps.core.api import (
+    CompanyProfileView, ItemViewSet, NotificationViewSet, PartyViewSet,
+)
 from apps.management.api import DashboardView
 from apps.procurement.api import PurchaseViewSet
 from apps.sales.api import InvoiceViewSet, ProformaViewSet
@@ -47,6 +49,7 @@ urlpatterns = [
     path("reports/balance-sheet", BalanceSheetView.as_view()),
     path("reports/party-balances", PartyBalancesView.as_view()),
     path("dashboard", DashboardView.as_view()),
+    path("company", CompanyProfileView.as_view()),
     # Routers
     path("", include(router.urls)),
 ]

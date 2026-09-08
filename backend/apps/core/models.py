@@ -67,7 +67,8 @@ class Party(TimeStampedModel):
     is_customer = models.BooleanField(default=True)
     is_supplier = models.BooleanField(default=False)
 
-    national_id = models.CharField(max_length=20, blank=True)
+    national_id = models.CharField(max_length=20, blank=True)     # کد اقتصادی / شناسه ملی
+    registration_no = models.CharField(max_length=40, blank=True)  # شماره ثبت
     phone = models.CharField(max_length=32, blank=True)
     email = models.EmailField(blank=True)
     address = models.TextField(blank=True)
@@ -80,6 +81,39 @@ class Party(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+
+class CompanyProfile(TimeStampedModel):
+    """Single-row company profile — the letterhead/branding and bank details
+    printed on documents. Kept as one row (pk=1); edited by the system admin."""
+
+    name = models.CharField(max_length=120, default="Daran X")
+    brand_sub = models.CharField(max_length=160, default="شرکت فناوری اطلاعات داران")
+    address = models.TextField(blank=True)
+    phone1 = models.CharField(max_length=40, blank=True)
+    phone2 = models.CharField(max_length=40, blank=True)
+    mobile = models.CharField(max_length=40, blank=True)
+    email = models.CharField(max_length=120, blank=True)
+    website = models.CharField(max_length=120, blank=True)
+    economic_code = models.CharField(max_length=40, blank=True)   # کد اقتصادی شرکت
+    registration_no = models.CharField(max_length=40, blank=True)  # شماره ثبت شرکت
+    bank_name = models.CharField(max_length=80, blank=True)
+    bank_branch = models.CharField(max_length=80, blank=True)
+    bank_account = models.CharField(max_length=40, blank=True)
+    bank_iban = models.CharField(max_length=40, blank=True)        # شماره شبا
+    bank_branch_code = models.CharField(max_length=20, blank=True)
+
+    class Meta:
+        verbose_name = "پروفایل شرکت"
+        verbose_name_plural = "پروفایل شرکت"
+
+    def __str__(self) -> str:
+        return self.name
+
+    @classmethod
+    def get_solo(cls) -> "CompanyProfile":
+        obj = cls.objects.first()
+        return obj or cls.objects.create()
 
 
 class Item(TimeStampedModel):
