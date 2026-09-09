@@ -61,7 +61,23 @@ class Command(BaseCommand):
         self._seed_roles(systems, perms)
         self._seed_admin()
         self._seed_accounts()
+        self._seed_company()
         self.stdout.write(self.style.SUCCESS("✓ داده اولیه با موفقیت ساخته شد."))
+
+    def _seed_company(self) -> None:
+        from apps.core.models import CompanyProfile
+        if CompanyProfile.objects.exists():
+            return
+        CompanyProfile.objects.create(
+            name="Daran X",
+            brand_sub="شرکت فناوری اطلاعات داران",
+            address="تهران، میدان فاطمی، نبش خ چهل‌ستون، ساختمان چهل‌ستون، پلاک ۲ طبقه ۲ واحد ۲۰۲",
+            phone1="۰۲۱ ۸۸ ۹۶ ۴۱ ۱۶",
+            phone2="۰۲۱ ۸۸ ۹۶ ۶۹ ۰۴",
+            mobile="۰۹۳۵ ۹۳۷ ۰۹ ۱۰",
+            bank_name="بانک ملت",
+            bank_branch="شعبه فاطمی",
+        )
 
     # -- matrix -------------------------------------------------------------
     def _seed_systems(self) -> dict[str, System]:
