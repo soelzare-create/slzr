@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, rows, toman } from "../api";
 import { useAuth } from "../auth.jsx";
 import { Avatar, Icon, Menu, Modal } from "../ui.jsx";
@@ -16,7 +16,8 @@ export default function Parties() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState("all");
+  const [searchParams] = useSearchParams();
+  const [filter, setFilter] = useState(searchParams.get("filter") || "all");
   const [editing, setEditing] = useState(null); // party object or {} for new
 
   function reload() {
