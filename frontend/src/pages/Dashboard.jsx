@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, toman } from "../api";
 import { useAuth } from "../auth.jsx";
 import { Avatar, Icon } from "../ui.jsx";
@@ -26,9 +27,20 @@ export default function Dashboard() {
     : <FinancialDashboard data={data} />;
 }
 
-function Kpi({ icon, iconBg, iconColor, label, value, trend, variant }) {
+function Kpi({ icon, iconBg, iconColor, label, value, trend, variant, to }) {
+  const navigate = useNavigate();
+  const clickable = !!to;
+  const go = () => { if (to) navigate(to); };
   return (
-    <div className={`kpi ${variant || ""}`}>
+    <div
+      className={`kpi ${variant || ""}`}
+      onClick={clickable ? go : undefined}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } } : undefined}
+      title={clickable ? "مشاهدهٔ جزئیات" : undefined}
+      style={clickable ? { cursor: "pointer" } : undefined}
+    >
       <div className="flex" style={{ justifyContent: "space-between" }}>
         <div className="ico" style={{ background: iconBg }}><Icon name={icon} size={19} color={iconColor} /></div>
         {trend && <span className="badge" style={{ background: variant ? "#ffffff22" : "#e5f6ee", color: variant ? "#fff" : "#10a86b" }}>{trend}</span>}
@@ -45,10 +57,10 @@ function SalesDashboard({ data, user }) {
       <h1 className="page-title">سلام {(user?.full_name || "").split(" ")[0]}</h1>
       <div className="page-sub" style={{ marginBottom: 18 }}>خلاصهٔ فروش و مطالبات شما</div>
       <div className="kpis" style={{ marginBottom: 16 }}>
-        <Kpi variant="brand" icon="trend" iconBg="#ffffff22" iconColor="#fff" label="فروش من" value={toman(data.my_sales)} />
-        <Kpi icon="coins" iconBg="#fbe8e6" iconColor="#e0483d" label="طلب وصول‌نشده" value={toman(data.uncollected)} />
-        <Kpi icon="proforma" iconBg="#fdeee0" iconColor="#e0912f" label="پیش‌فاکتورهای باز" value={data.open_proformas} />
-        <Kpi icon="target" iconBg="#e5f6ee" iconColor="#10a86b" label="نرخ تبدیل به فاکتور" value={`${data.conversion_rate}٪`} />
+        <Kpi variant="brand" icon="trend" iconBg="#ffffff22" iconColor="#fff" label="فروش من" value={toman(data.my_sales)} to="/invoices" />
+        <Kpi icon="coins" iconBg="#fbe8e6" iconColor="#e0483d" label="طلب وصول‌نشده" value={toman(data.uncollected)} to="/parties?filter=debtor" />
+        <Kpi icon="proforma" iconBg="#fdeee0" iconColor="#e0912f" label="پیش‌فاکتورهای باز" value={data.open_proformas} to="/proformas" />
+        <Kpi icon="target" iconBg="#e5f6ee" iconColor="#10a86b" label="نرخ تبدیل به فاکتور" value={`${data.conversion_rate}٪`} to="/invoices" />
       </div>
 
       <div className="card">
@@ -79,10 +91,10 @@ function FinancialDashboard({ data }) {
       <h1 className="page-title">داشبورد {data.role === "management" ? "مدیریت" : "حسابداری"}</h1>
       <div className="page-sub" style={{ marginBottom: 18 }}>نمای یکپارچهٔ مالی همهٔ بخش‌ها</div>
       <div className="kpis" style={{ marginBottom: 16 }}>
-        <Kpi icon="coins" iconBg="#e9f0ff" iconColor="#2f6bff" label="درآمد کل" value={toman(data.income)} />
-        <Kpi icon="receive" iconBg="#e9f0ff" iconColor="#2f6bff" label="مطالبات (دریافتنی)" value={toman(data.receivable)} />
-        <Kpi icon="pay" iconBg="#fdeee0" iconColor="#e0912f" label="بدهی (پرداختنی)" value={toman(data.payable)} />
-        <Kpi variant="dark" icon="proforma" iconBg="#ffffff1f" iconColor="#8fd7b4" label="پیش‌فاکتورهای باز" value={data.counts.open_proformas} />
+        <Kpi icon="coins" iconBg="#e9f0ff" iconColor="#2f6bff" label="درآمد کل" value={toman(data.income)} to="/accounting" />
+        <Kpi icon="receive" iconBg="#e9f0ff" iconColor="#2f6bff" label="مطالبات (دریافتنی)" value={toman(data.receivable)} to="/accounting" />
+        <Kpi icon="pay" iconBg="#fdeee0" iconColor="#e0912f" label="بدهی (پرداختنی)" value={toman(data.payable)} to="/accounting" />
+        <Kpi variant="dark" icon="proforma" iconBg="#ffffff1f" iconColor="#8fd7b4" label="پیش‌فاکتورهای باز" value={data.counts.open_proformas} to="/proformas" />
       </div>
 
       <div className="row" style={{ alignItems: "stretch" }}>
