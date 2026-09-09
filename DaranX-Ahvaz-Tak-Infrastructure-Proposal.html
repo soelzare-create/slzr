@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DaranX | Ahvaz Tak Infrastructure Proposal</title>
+<meta name="description" content="Enterprise Network, Security & Infrastructure Architecture Proposal">
+<meta name="author" content="DaranX">
+<style>
+/* ============================================================
+   DaranX Proposal — Minimal Design System (v2)
+   Self-contained. No external dependencies, no external fonts.
+   ============================================================ */
+:root{
+  --navy:#082B59;
+  --navy-soft:#0e335f;
+  --lime:#B4E000;
+  --lime-tint:#f4fbdd;
+  --white:#FFFFFF;
+  --gray:#F2F4F5;
+  --ink:#17202A;
+  --muted:#69747f;
+  --muted-2:#94a0ac;
+  --line:#e7eaed;
+  --line-2:#eef1f3;
+
+  --radius:16px;
+  --radius-sm:10px;
+  --maxw:960px;
+  --font:"Segoe UI",Tahoma,"Iranian Sans",Arial,system-ui,sans-serif;
+  --mono:"Consolas","SF Mono","Courier New",monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;background:var(--gray);color:var(--ink);
+  font-family:var(--font);font-size:15px;line-height:1.9;text-align:right;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%}
+p{margin:0 0 14px;color:var(--ink)}
+a{color:var(--navy);text-decoration:none}
+.en{font-family:var(--mono);direction:ltr;unicode-bidi:isolate;font-size:.92em}
+
+/* ---------- Sheets ---------- */
+.sheet{
+  background:var(--white);max-width:var(--maxw);margin:26px auto;
+  padding:72px 76px;border:1px solid var(--line);border-radius:20px;position:relative;
+}
+.sheet + .sheet{margin-top:26px}
+
+/* ---------- Section header (minimal) ---------- */
+.sec-head{margin:0 0 40px}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+  letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.kicker::before{content:"";width:20px;height:2px;background:var(--lime);display:inline-block}
+.sec-index{font-family:var(--mono);color:var(--muted-2);font-weight:700;font-size:13px;margin-inline-start:auto}
+.sec-top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+h1,h2,h3,h4{color:var(--navy);font-weight:800;line-height:1.3;margin:0;letter-spacing:-.2px}
+.sec-head h1{font-size:34px;margin:0 0 8px}
+.sec-head .sub{color:var(--muted);font-size:13px;font-weight:600;font-family:var(--mono);direction:ltr}
+h2{font-size:21px;margin:44px 0 14px}
+h3{font-size:15.5px;margin:22px 0 8px;color:var(--navy)}
+.lead{font-size:18px;line-height:1.85;color:var(--ink);font-weight:500;letter-spacing:-.1px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.hr{height:1px;background:var(--line);border:0;margin:34px 0}
+
+/* ---------- Cover ---------- */
+.cover{background:var(--navy);color:#fff;border:none;min-height:1080px;
+  display:flex;flex-direction:column;padding:76px 76px 60px;overflow:hidden;position:relative}
+.cover::after{content:"";position:absolute;top:-140px;left:-120px;width:420px;height:420px;
+  border-radius:50%;background:radial-gradient(circle,rgba(180,224,0,.16),transparent 68%)}
+.cover *{position:relative;z-index:1}
+.cbrand{display:flex;align-items:center;gap:14px}
+.cbrand .logo{width:48px;height:48px;border-radius:14px;background:var(--lime);color:var(--navy);
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:24px;font-family:var(--mono)}
+.cbrand .n{font-size:24px;font-weight:900;letter-spacing:.5px}
+.cbrand .n b{color:var(--lime)}
+.cbrand .tg{font-size:12px;color:#9db0c6;margin-top:2px}
+.cover-mid{margin:auto 0}
+.cover .type{font-size:12px;letter-spacing:4px;color:var(--lime);font-weight:800;text-transform:uppercase}
+.cover h1{color:#fff;font-size:50px;line-height:1.18;margin:20px 0 14px;letter-spacing:-.5px;max-width:15ch}
+.cover h1 b{color:var(--lime);font-weight:800}
+.cover .client{font-size:20px;color:#cdd9e8;font-weight:600}
+.cover .intro{max-width:60ch;color:#a9bace;font-size:15.5px;line-height:2;margin-top:26px}
+.cmeta{display:flex;flex-wrap:wrap;gap:34px;margin-top:44px}
+.cmeta .k{font-size:11px;letter-spacing:1.5px;color:#7f93ab;text-transform:uppercase;font-weight:700}
+.cmeta .v{font-size:15px;color:#fff;font-weight:700;margin-top:4px}
+.cfoot{display:flex;justify-content:space-between;align-items:flex-end;
+  border-top:1px solid rgba(255,255,255,.14);padding-top:20px;margin-top:40px;color:#8ea1b8;font-size:12px}
+.cfoot .en{color:#cdd9e8}
+
+/* ---------- TOC ---------- */
+.toc{list-style:none;margin:0;padding:0}
+.toc li{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line-2)}
+.toc li:last-child{border-bottom:0}
+.toc .n{font-family:var(--mono);font-weight:700;color:var(--muted-2);min-width:30px;font-size:13px}
+.toc .txt{font-weight:600;color:var(--ink)}
+.toc .txt small{color:var(--muted);font-weight:500;font-family:var(--mono);direction:ltr;font-size:11px;margin-inline-start:8px}
+.toc .dots{flex:1;border-bottom:1px dotted var(--line);transform:translateY(-3px)}
+.toc .pg{font-family:var(--mono);color:var(--muted-2);font-size:12px}
+
+/* ---------- Grids & cards ---------- */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.card{border:1px solid var(--line);border-radius:var(--radius);padding:22px 22px 20px;
+  background:var(--white);transition:border-color .2s,transform .2s}
+.card:hover{border-color:var(--lime)}
+.card h3{margin:0 0 6px}
+.card p{margin:0;font-size:13px;color:var(--muted);line-height:1.8}
+.card .idx{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--lime);
+  background:var(--navy);width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.card .dot{width:8px;height:8px;border-radius:2px;background:var(--lime);display:inline-block;margin-bottom:12px}
+.card.plain{background:var(--gray);border-color:transparent}
+
+/* KPI minimal */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden;margin:8px 0}
+.kpi{padding:22px 24px;border-inline-start:1px solid var(--line-2)}
+.kpi:first-child{border-inline-start:0}
+.kpi .v{font-size:32px;font-weight:800;color:var(--navy);line-height:1;font-family:var(--mono);letter-spacing:-1px}
+.kpi .v::after{content:"";display:block;width:26px;height:3px;background:var(--lime);border-radius:2px;margin-top:10px}
+.kpi .l{font-size:12.5px;color:var(--muted);margin-top:12px;font-weight:600;line-height:1.6}
+
+/* pillars */
+.pillars{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0}
+.pill{border:1px solid var(--line);border-radius:40px;padding:8px 16px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink)}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--lime);display:inline-block}
+.pill .en{color:var(--navy);font-weight:700}
+
+/* callout / note */
+.callout{border-inline-start:3px solid var(--lime);background:var(--lime-tint);
+  border-radius:var(--radius-sm);padding:18px 22px;margin:22px 0;color:var(--navy);font-weight:600;font-size:16px;line-height:1.85}
+.note{border:1px dashed var(--line);border-radius:var(--radius-sm);padding:14px 18px;
+  font-size:13px;color:var(--muted);margin:16px 0;background:var(--gray)}
+.note b{color:var(--navy)}
+.tbq{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--muted);
+  border:1px solid var(--line);border-radius:20px;padding:2px 10px;direction:ltr}
+
+/* feature list */
+.flist{list-style:none;margin:12px 0;padding:0}
+.flist li{position:relative;padding:7px 24px 7px 0;font-size:14.5px;color:var(--ink)}
+.flist li::before{content:"";position:absolute;right:2px;top:15px;width:6px;height:6px;border-radius:50%;background:var(--lime)}
+.flist.check li::before{content:"→";background:none;color:var(--navy);font-weight:800;top:6px;right:0;width:auto;height:auto;font-family:var(--mono)}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+thead th{background:var(--gray);color:var(--navy);text-align:right;padding:13px 16px;font-weight:700;font-size:12.5px;border-bottom:1px solid var(--line)}
+tbody td{padding:12px 16px;border-bottom:1px solid var(--line-2);color:var(--ink);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+.spec td:first-child{font-weight:700;color:var(--navy);width:36%}
+.cmp td:first-child{font-weight:700;color:var(--navy);width:26%}
+.cmp .cur{color:var(--muted)}
+.cmp .pro{color:var(--navy);font-weight:600}
+.cmp thead th:last-child{color:var(--navy)}
+.cmp thead th:last-child::after{content:" ●";color:var(--lime)}
+
+/* ---------- Architecture diagram (light/minimal) ---------- */
+.arch{border:1px solid var(--line);border-radius:var(--radius);padding:34px;margin:18px 0;background:var(--white)}
+.arch-cap{text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--muted-2);text-transform:uppercase;margin-bottom:26px}
+.node{border:1px solid var(--line);border-radius:12px;padding:14px 20px;text-align:center;background:var(--white)}
+.node .en{color:var(--navy);font-weight:700;font-size:13.5px}
+.node .s{display:block;color:var(--muted);font-size:11px;margin-top:3px;direction:rtl;font-family:var(--font)}
+.node.head{background:var(--navy);border-color:var(--navy);max-width:320px;margin:0 auto}
+.node.head .en{color:#fff}.node.head .s{color:#9db0c6}
+.node.core{max-width:300px;margin:0 auto;border-color:var(--lime)}
+.conn{width:2px;height:26px;background:var(--line);margin:0 auto}
+.conn.lime{background:linear-gradient(var(--lime),var(--line))}
+.stores{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:2px}
+.store{border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+.store .h{font-family:var(--mono);font-weight:700;color:var(--navy);font-size:12px;letter-spacing:.5px}
+.store .hex{font-size:11px;color:var(--muted);margin:8px 0 10px;padding:5px;background:var(--gray);border-radius:6px}
+.store .leaf{display:block;font-size:11px;color:var(--muted);padding:4px 0;border-top:1px solid var(--line-2)}
+.store .leaf b{color:var(--navy);font-weight:700}
+.store.more{display:flex;align-items:center;justify-content:center;border-style:dashed;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:22px}
+.legend span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;border:1px solid var(--line)}
+
+/* store template */
+.tmpl{border:1px solid var(--line);border-radius:var(--radius);padding:26px;margin:18px 0;
+  display:flex;flex-direction:column;align-items:center;gap:0}
+.tmpl .box{border:1px solid var(--line);border-radius:10px;padding:11px 22px;font-weight:700;
+  color:var(--navy);min-width:220px;text-align:center;background:var(--white)}
+.tmpl .box.dark{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tmpl .ar{color:var(--muted-2);font-size:16px;line-height:1.8;font-family:var(--mono)}
+.vlans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;width:100%;max-width:640px}
+.vlan{border:1px solid var(--line);border-inline-start:3px solid var(--lime);border-radius:8px;
+  padding:9px 13px;font-size:12.5px;font-weight:700;color:var(--navy)}
+.vlan small{display:block;color:var(--muted);font-weight:500;font-size:11px;margin-top:2px}
+
+/* timeline */
+.tl{margin:20px 0}
+.tl-item{display:grid;grid-template-columns:auto 1fr;gap:0 20px}
+.tl-mk{display:flex;flex-direction:column;align-items:center}
+.tl-dot{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);color:var(--navy);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--mono);font-size:13px;background:var(--white)}
+.tl-item:hover .tl-dot{border-color:var(--lime);background:var(--lime-tint)}
+.tl-ln{width:1px;flex:1;background:var(--line);margin:4px 0}
+.tl-bd{padding:0 0 22px}
+.tl-bd .ph{font-family:var(--mono);font-size:11px;color:var(--muted-2);font-weight:700}
+.tl-bd h3{margin:3px 0 4px}
+.tl-bd p{margin:0;font-size:13px;color:var(--muted)}
+.tl-item:last-child .tl-ln{display:none}
+
+/* formula */
+.formula{background:var(--navy);color:#dce7f4;border-radius:var(--radius);padding:20px 24px;
+  font-family:var(--mono);direction:ltr;text-align:left;font-size:13px;line-height:1.95;margin:16px 0;overflow-x:auto}
+.formula .hl{color:var(--lime);font-weight:700}
+.formula .cm{color:#7f96b3}
+
+/* conclusion */
+.conc{background:var(--navy);color:#fff;border-radius:20px;padding:48px 52px;margin:8px 0}
+.conc h2{color:#fff;margin-top:0}
+.conc p{color:#c3d0e0}
+.conc .final{font-size:19px;font-weight:700;color:#fff;line-height:1.9;
+  border-top:1px solid rgba(255,255,255,.16);padding-top:24px;margin-top:24px}
+.conc .final b{color:var(--lime)}
+.conc .pillars .pill{border-color:rgba(255,255,255,.2)}
+.conc .pillars .pill .en{color:#fff}
+
+/* ---------- Glossary term links & section ---------- */
+a.term{color:inherit;border-bottom:1px dotted var(--lime);cursor:pointer;
+  text-decoration:none;transition:background .15s}
+a.term:hover{background:var(--lime-tint)}
+.glossary .gnote{color:var(--muted);font-size:13px;margin-bottom:20px}
+.gsearch{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 16px;font:inherit;
+  font-size:14px;margin-bottom:20px;color:var(--ink);background:var(--gray)}
+.gsearch:focus{outline:none;border-color:var(--lime);background:#fff}
+.glist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 26px}
+.gitem{padding:14px 12px;border-bottom:1px solid var(--line-2);border-radius:8px;scroll-margin-top:24px;transition:background .3s}
+.gitem:target{background:var(--lime-tint)}
+.gitem .gt{font-family:var(--mono);font-weight:700;color:var(--navy);direction:ltr;font-size:14px}
+.gitem .gf{display:block;color:var(--ink);font-size:13.5px;margin-top:3px}
+.gitem .ge{display:block;color:var(--muted-2);font-size:11.5px;font-family:var(--mono);direction:ltr;margin-top:2px}
+.backtop{display:inline-block;margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--mono);direction:ltr}
+
+/* running foot */
+.pagefoot{display:none}
+
+/* ---------- responsive ---------- */
+@media(max-width:880px){
+  .sheet{padding:40px 26px;margin:14px;border-radius:16px}
+  .cover{padding:44px 28px}
+  .cover h1{font-size:34px}
+  .sec-head h1{font-size:26px}
+  .g2,.g3,.g4,.two-col{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi{border-inline-start:0;border-top:1px solid var(--line-2)}
+  .kpi:first-child,.kpi:nth-child(2){border-top:0}
+  .stores{grid-template-columns:1fr 1fr}
+  .vlans{grid-template-columns:1fr 1fr}
+  .glist{grid-template-columns:1fr}
+  .lead{font-size:16px}
+}
+@media(max-width:520px){
+  .kpis,.stores,.vlans{grid-template-columns:1fr}
+  .cover h1{font-size:28px}
+}
+
+/* ---------- print A4 ---------- */
+@page{size:A4;margin:15mm 13mm 17mm}
+@media print{
+  html{scroll-behavior:auto}
+  body{background:#fff;font-size:10.5pt;line-height:1.6}
+  .sheet{border:0;border-radius:0;margin:0;max-width:100%;padding:0 3mm;
+    page-break-after:always;break-after:page}
+  .sheet:last-child{page-break-after:auto}
+  .cover{min-height:auto;height:268mm}
+  a.term{border-bottom:0;color:inherit}
+  .gsearch,.no-print{display:none!important}
+  .glist{grid-template-columns:1fr 1fr}
+  .card,.arch,.tmpl,table,.callout,.conc,.tl-item,.kpis{break-inside:avoid}
+  h1,h2,h3{break-after:avoid}
+  .cover,.conc,.node.head,.kpi .v::after,.formula,.card .idx{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pagefoot{display:block;position:fixed;bottom:7mm;left:0;right:0;padding:0 3mm;
+    font-size:8pt;color:var(--muted);font-family:var(--mono)}
+  .pagefoot .l{float:right}.pagefoot .r{float:left}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<section class="sheet cover">
+  <div class="cbrand">
+    <div class="logo">D</div>
+    <div><div class="n">Daran<b>X</b></div><div class="tg">Infrastructure · Network · Security</div></div>
+  </div>
+  <div class="cover-mid">
+    <div class="type">Infrastructure &amp; Security Proposal</div>
+    <h1>طراحی زیرساخت شبکه و <b>امنیت اطلاعات</b></h1>
+    <div class="client">هایپرمارکت‌های زنجیره‌ای اهواز تک</div>
+    <p class="intro">این سند رویکرد DaranX را برای طراحی یک زیرساخت پایدار، امن، قابل توسعه و آینده‌نگر تشریح می‌کند؛ زیرساختی که پیش از هر خریدِ تجهیزات، «طراحی» می‌شود.</p>
+    <div class="cmeta">
+      <div><div class="k">Prepared For</div><div class="v">Ahvaz Tak</div></div>
+      <div><div class="k">Prepared By</div><div class="v">DaranX</div></div>
+      <div><div class="k">Revision</div><div class="v">1.1 — Draft</div></div>
+      <div><div class="k">Classification</div><div class="v">Confidential</div></div>
+    </div>
+  </div>
+  <div class="cfoot">
+    <div>سندی محرمانه — مخصوص مدیریت اهواز تک</div>
+    <div class="en">everything in its right place</div>
+  </div>
+</section>
+
+<!-- ===== TOC ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Contents</span></div>
+    <h1>فهرست مطالب</h1><div class="sub">Table of Contents</div></div>
+  <ol class="toc">
+    <li><span class="n">01</span><span class="txt">خلاصه مدیریتی <small>Executive Summary</small></span><span class="dots"></span><span class="pg">03</span></li>
+    <li><span class="n">02</span><span class="txt">وضعیت فعلی و مسئله اصلی <small>Current Situation</small></span><span class="dots"></span><span class="pg">04</span></li>
+    <li><span class="n">03</span><span class="txt">چرا طراحی، قبل از خرید؟ <small>Why Architecture</small></span><span class="dots"></span><span class="pg">05</span></li>
+    <li><span class="n">04</span><span class="txt">زیرساخت آینده‌نگر <small>Future-Ready</small></span><span class="dots"></span><span class="pg">06</span></li>
+    <li><span class="n">05</span><span class="txt">معماری پیشنهادی شبکه <small>Network Architecture</small></span><span class="dots"></span><span class="pg">07</span></li>
+    <li><span class="n">06</span><span class="txt">معماری امنیت <small>Security Architecture</small></span><span class="dots"></span><span class="pg">08</span></li>
+    <li><span class="n">07</span><span class="txt">زیرساخت سرور <small>Server Infrastructure</small></span><span class="dots"></span><span class="pg">10</span></li>
+    <li><span class="n">08</span><span class="txt">برق و UPS <small>Power Protection</small></span><span class="dots"></span><span class="pg">12</span></li>
+    <li><span class="n">09</span><span class="txt">دوربین مداربسته <small>CCTV</small></span><span class="dots"></span><span class="pg">13</span></li>
+    <li><span class="n">10</span><span class="txt">استانداردسازی شعب <small>Branch Standardization</small></span><span class="dots"></span><span class="pg">14</span></li>
+    <li><span class="n">11</span><span class="txt">مانیتورینگ <small>Monitoring</small></span><span class="dots"></span><span class="pg">15</span></li>
+    <li><span class="n">12</span><span class="txt">پشتیبان‌گیری و بازیابی <small>Backup &amp; DR</small></span><span class="dots"></span><span class="pg">16</span></li>
+    <li><span class="n">13</span><span class="txt">نقشه راه اجرا <small>Roadmap</small></span><span class="dots"></span><span class="pg">17</span></li>
+    <li><span class="n">14</span><span class="txt">برداشت اطلاعات <small>Site Survey</small></span><span class="dots"></span><span class="pg">18</span></li>
+    <li><span class="n">15</span><span class="txt">خروجی‌های پروژه <small>Deliverables</small></span><span class="dots"></span><span class="pg">19</span></li>
+    <li><span class="n">16</span><span class="txt">پیشنهاد تجاری <small>Commercial</small></span><span class="dots"></span><span class="pg">20</span></li>
+    <li><span class="n">17</span><span class="txt">چرا DaranX؟ <small>Why DaranX</small></span><span class="dots"></span><span class="pg">21</span></li>
+    <li><span class="n">18</span><span class="txt">جمع‌بندی مدیریتی <small>Conclusion</small></span><span class="dots"></span><span class="pg">22</span></li>
+    <li><span class="n">—</span><span class="txt">واژه‌نامه <small>Glossary</small></span><span class="dots"></span><span class="pg">23</span></li>
+  </ol>
+  <div class="pagefoot"><span class="l">DaranX · Ahvaz Tak Proposal</span><span class="r">Confidential</span></div>
+</section>
+
+<!-- ===== 01 EXEC ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Overview</span><span class="sec-index">01 / 18</span></div>
+    <h1>خلاصه مدیریتی</h1><div class="sub">Executive Summary</div></div>
+
+  <p class="lead">اهواز تک یک کسب‌وکار زنجیره‌ای است و زیرساخت فناوری اطلاعات آن مستقیماً با فروش، حسابداری، مدیریت موجودی و امنیت داده‌ها گره خورده است. به همین دلیل، شبکه نباید صرفاً مجموعه‌ای از کابل‌ها و تجهیزات دیده شود؛ شبکه یک <b>زیرساخت کسب‌وکار</b> است.</p>
+
+  <p>هدف این پروپوزال، ارائه‌ی یک فهرست خرید نیست. هدف، نمایش رویکرد DaranX برای طراحی زیرساختی است که ابتدا نیاز کسب‌وکار را می‌فهمد، سپس معماری مناسب را طراحی می‌کند و در نهایت تجهیزاتی را انتخاب می‌کند که در خدمت آن معماری باشند.</p>
+
+  <div class="pillars">
+    <span class="pill"><i></i><span class="en">Reliable</span> پایدار</span>
+    <span class="pill"><i></i><span class="en">Secure</span> امن</span>
+    <span class="pill"><i></i><span class="en">Scalable</span> قابل توسعه</span>
+    <span class="pill"><i></i><span class="en">Manageable</span> قابل مدیریت</span>
+    <span class="pill"><i></i><span class="en">Future-Ready</span> آینده‌نگر</span>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">1</div><div class="l">دفتر مرکزی + شعب زنجیره‌ای</div></div>
+    <div class="kpi"><div class="v">5–10</div><div class="l">سیستم POS در هر فروشگاه</div></div>
+    <div class="kpi"><div class="v">30–50</div><div class="l">دوربین CCTV در هر فروشگاه</div></div>
+    <div class="kpi"><div class="v">6+</div><div class="l">لایه‌ی طراحی هماهنگ</div></div>
+  </div>
+
+  <h2>آنچه ارائه می‌شود</h2>
+  <div class="grid g2">
+    <ul class="flist check"><li>تحلیل وضعیت فعلی و ریشه‌ی مسائل</li><li>معماری شبکه با تفکیک منطقی ترافیک (VLAN)</li><li>رویکرد امنیتی مبتنی بر طراحی</li><li>معماری سرور و مقایسه‌ی مدیریتی</li></ul>
+    <ul class="flist check"><li>طرح حفاظت برق و UPS</li><li>طراحی شبکه‌ی مجزای CCTV و محاسبه‌ی Storage</li><li>استانداردسازی شعب به‌صورت Template</li><li>نقشه راه اجرا، Monitoring و Backup</li></ul>
+  </div>
+
+  <div class="callout">سرمایه‌گذاری روی طراحی صحیح زیرساخت، هزینه نیست؛ تضمینی برای پایداری، امنیت و کاهش هزینه‌های آینده است.</div>
+  <div class="pagefoot"><span class="l">01 · Executive Summary</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 02 CURRENT ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Assessment</span><span class="sec-index">02 / 18</span></div>
+    <h1>وضعیت فعلی و مسئله اصلی</h1><div class="sub">Current Situation</div></div>
+
+  <p class="lead">بر اساس بررسی اولیه، زیرساخت فعلی فروشگاه‌ها از نظر طراحی، پایداری، امنیت، توسعه‌پذیری و مدیریت متمرکز، نیازمند بازطراحی و بهینه‌سازی است.</p>
+
+  <h2>ساختار فعلی مجموعه</h2>
+  <div class="grid g3">
+    <div class="card"><span class="dot"></span><h3>دفتر مرکزی</h3><p>سرور و حسابداری مرکزی. روتر: <span class="en">MikroTik RB1100</span>. سرور: <span class="en">HPE ProLiant DL380 Gen9</span>.</p></div>
+    <div class="card"><span class="dot"></span><h3>هر فروشگاه</h3><p>حدود ۵ تا ۱۰ POS، سیستم‌های انبار، مدیریت و حسابداری. مرز شبکه: <span class="en">MikroTik hEX</span> با IP استاتیک به مرکز.</p></div>
+    <div class="card"><span class="dot"></span><h3>دوربین‌ها</h3><p>حدود ۳۰ تا ۵۰ دوربین <span class="en">Hikvision</span> با NVR در هر فروشگاه.</p></div>
+  </div>
+
+  <h2>مسئله‌ی اصلی چیست؟</h2>
+  <p>مهم است درست درک شود که مسئله‌ی اصلی صرفاً «قدیمی بودن تجهیزات» نیست. بخش عمده‌ای از چالش‌های زیرساختی در کسب‌وکارهای در حال رشد، ریشه در <b>نبود یک معماری منسجم و از پیش طراحی‌شده</b> دارد.</p>
+
+  <div class="grid g2">
+    <div class="card plain"><h3>ریشه‌های محتمل — طراحی</h3>
+      <ul class="flist"><li>طراحی غیراصولی و رشد بدون معماری مشخص</li><li>نبود استاندارد یکپارچه بین شعب</li><li>تفکیک نامناسب ترافیک‌ها</li><li>نبود پیش‌بینی ظرفیت آینده</li><li>وابستگی زیاد به یک نقطه یا تجهیز</li><li>ضعف در مستندسازی</li></ul></div>
+    <div class="card plain"><h3>ریشه‌های محتمل — امنیت و پایداری</h3>
+      <ul class="flist"><li>نبود استاندارد مناسب امنیت</li><li>نبود Monitoring و مدیریت متمرکز</li><li>آسیب‌پذیری در برابر قطعی برق</li><li>نبود UPS مناسب برای تجهیزات حیاتی</li><li>عدم هماهنگی شبکه، سرور، دوربین و برق</li></ul></div>
+  </div>
+
+  <div class="note"><b>توجه:</b> موارد فوق فرضیه‌های اولیه‌اند و بر پایه‌ی بررسی مقدماتی مطرح شده‌اند. تعیین دقیق هر یک، <b>نیازمند ارزیابی در مرحله‌ی Site Survey</b> است؛ در این سند از ادعای قطعی درباره‌ی مواردِ بررسی‌نشده خودداری شده است.</div>
+  <div class="callout">مسئله، «کهنه بودن قطعات» نیست؛ نبودِ معماری‌ای است که این قطعات را به یک زیرساخت منسجم تبدیل کند.</div>
+  <div class="pagefoot"><span class="l">02 · Current Situation</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 03 WHY ARCH ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Philosophy</span><span class="sec-index">03 / 18</span></div>
+    <h1>چرا طراحی، قبل از خرید تجهیزات؟</h1><div class="sub">Design Before Procurement</div></div>
+
+  <p class="lead">DaranX صرفاً یک فروشنده‌ی تجهیزات نیست. خرید تجهیزات، آخرین گامِ یک فرایند درست است، نه اولین گام آن. تجهیزِ خوب در جای اشتباه، همچنان یک مسئله است.</p>
+  <p>ما خدمات مختلف را کنار هم نمی‌گذاریم؛ آن‌ها را <b>با هم طراحی می‌کنیم</b>. شبکه، سرور، امنیت، دوربین و برق بخش‌هایی از یک سیستم واحدند. مسیر ما همیشه از یک منطق مشخص عبور می‌کند:</p>
+
+  <div class="tl">
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">1</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">STEP 01</div><h3>شناخت نیاز کسب‌وکار</h3><p>ابتدا درک می‌کنیم فروش، حسابداری و عملیات چگونه به شبکه وابسته‌اند.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">2</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">STEP 02</div><h3>بررسی وضعیت موجود</h3><p>زیرساخت، تجهیزات، کابل‌کشی و مسیرهای ارتباطی به‌صورت میدانی بررسی می‌شوند.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">3</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">STEP 03</div><h3>طراحی معماری</h3><p>معماری شبکه، تفکیک ترافیک، آدرس‌دهی و سیاست‌های امنیتی طراحی می‌شود.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">4</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">STEP 04</div><h3>پیش‌بینی ظرفیت آینده</h3><p>معماری، رشد شعب، کاربران و دوربین‌ها را بدون بازطراحی کامل می‌پذیرد.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">5</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">STEP 05</div><h3>لحاظ امنیت در معماری</h3><p>امنیت از ابتدا در دل طراحی قرار می‌گیرد، نه به‌عنوان وصله‌ی پایانی.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">6</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">STEP 06</div><h3>انتخاب تجهیزات بر اساس طراحی</h3><p>تجهیزات متناسب با نیاز واقعی انتخاب می‌شوند، نه بر اساس سود بیشتر.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">7</div></div><div class="tl-bd"><div class="ph">STEP 07</div><h3>اجرا و مستندسازی</h3><p>پیاده‌سازی دقیق و تحویل مستندات کامل، تا زیرساخت قابل نگهداری بماند.</p></div></div>
+  </div>
+
+  <div class="callout">«همه چیز سر جای درستش.» — این تنها یک شعار نیست؛ روش کار ماست.</div>
+  <div class="pagefoot"><span class="l">03 · Why Architecture</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 04 FUTURE ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Vision</span><span class="sec-index">04 / 18</span></div>
+    <h1>زیرساخت برای سال‌های آینده طراحی می‌شود</h1><div class="sub">Future-Ready Infrastructure</div></div>
+
+  <p class="lead">یک زیرساخت خوب تنها مسئله‌ی امروز را حل نمی‌کند؛ برای رشد فردا آماده است. هدف DaranX طراحی زیرساختی است که همگام با کسب‌وکار اهواز تک رشد کند.</p>
+
+  <div class="grid g2">
+    <div class="card"><span class="dot"></span><h3>توسعه‌پذیری شعب و کاربران</h3><p>با افزایش شعب و کاربران، معماری بدون بازطراحی از پایه قابل گسترش باشد.</p></div>
+    <div class="card"><span class="dot"></span><h3>رشد دوربین‌ها</h3><p>افزایش دوربین‌ها در شبکه‌ی تفکیک‌شده، بدون اختلال در سایر بخش‌ها.</p></div>
+    <div class="card"><span class="dot"></span><h3>ارتقای سرور و Storage</h3><p>ظرفیت پردازش و ذخیره‌سازی قابل ارتقا باشد.</p></div>
+    <div class="card"><span class="dot"></span><h3>توسعه‌ی سرویس‌ها</h3><p>افزودن سرویس‌های نرم‌افزاری جدید بدون بازطراحی کامل شبکه.</p></div>
+    <div class="card"><span class="dot"></span><h3>رشد امنیت</h3><p>لایه‌های امنیتی همگام با رشد مجموعه تقویت شوند.</p></div>
+    <div class="card"><span class="dot"></span><h3>حفاظت از سرمایه‌گذاری</h3><p>جلوگیری از هزینه‌های ناشی از طراحی ضعیف در آینده.</p></div>
+  </div>
+
+  <div class="callout">هزینه‌ی طراحی صحیح، یک سرمایه‌گذاری است؛ اما هزینه‌ی اصلاح یک زیرساخت اشتباه در آینده می‌تواند چند برابر باشد.</div>
+  <div class="pagefoot"><span class="l">04 · Future-Ready</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 05 NETWORK ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Architecture</span><span class="sec-index">05 / 18</span></div>
+    <h1>معماری پیشنهادی شبکه</h1><div class="sub">Proposed Network Architecture</div></div>
+
+  <p class="lead">معماری پیشنهادی بر پایه‌ی یک ساختار متمرکز و ستاره‌ای طراحی می‌شود: دفتر مرکزی به‌عنوان هسته، و هر فروشگاه به‌عنوان یک سایت استاندارد که از طریق <span class="en">MikroTik hEX</span> به مرکز متصل است.</p>
+
+  <div class="arch">
+    <div class="arch-cap">Logical Network Topology</div>
+    <div class="node head"><span class="en">HEAD OFFICE</span><span class="s">دفتر مرکزی — MikroTik RB1100</span></div>
+    <div class="conn lime"></div>
+    <div class="node core"><span class="en">Central Server Infrastructure</span><span class="s">زیرساخت سرور مرکزی + حسابداری</span></div>
+    <div class="conn lime"></div>
+    <div class="stores">
+      <div class="store"><div class="h">STORE 01</div><div class="hex">MikroTik hEX</div><span class="leaf"><b>POS</b></span><span class="leaf"><b>Management</b></span><span class="leaf"><b>Warehouse</b></span><span class="leaf"><b>CCTV / NVR</b></span></div>
+      <div class="store"><div class="h">STORE 02</div><div class="hex">MikroTik hEX</div><span class="leaf"><b>POS</b></span><span class="leaf"><b>Management</b></span><span class="leaf"><b>Warehouse</b></span><span class="leaf"><b>CCTV / NVR</b></span></div>
+      <div class="store"><div class="h">STORE 03</div><div class="hex">MikroTik hEX</div><span class="leaf"><b>POS</b></span><span class="leaf"><b>Management</b></span><span class="leaf"><b>Warehouse</b></span><span class="leaf"><b>CCTV / NVR</b></span></div>
+      <div class="store more"><div><div class="h">STORE N</div><div class="hex">MikroTik hEX</div><span class="leaf" style="border:0">الگوی یکسان برای شعب آینده</span></div></div>
+    </div>
+    <div class="legend"><span><i style="background:var(--lime);border-color:var(--lime)"></i> مسیر اصلی (Uplink)</span><span><i style="border-color:var(--lime)"></i> هسته‌ی مرکزی</span><span><i></i> سایت فروشگاه</span></div>
+  </div>
+
+  <h2>تفکیک منطقی ترافیک — چرا مهم است؟</h2>
+  <p>شبکه به بخش‌های مستقل تقسیم می‌شود تا دسترسی‌ها کنترل‌شده باشند و اگر در یک بخش مشکلی رخ دهد، دامنه‌ی اثر آن محدود بماند و کل مجموعه را درگیر نکند.</p>
+
+  <div class="grid g3">
+    <div class="card plain"><h3>POS Network</h3><p>حساس‌ترین ترافیک عملیاتی، جدا و محافظت‌شده.</p></div>
+    <div class="card plain"><h3>Management Network</h3><p>سیستم‌های مدیریت و حسابداری با دسترسی کنترل‌شده.</p></div>
+    <div class="card plain"><h3>Server Network</h3><p>ارتباط با زیرساخت سرور مرکزی.</p></div>
+    <div class="card plain"><h3>CCTV Network</h3><p>شبکه‌ی دوربین‌ها، مجزا از شبکه‌ی کاربران.</p></div>
+    <div class="card plain"><h3>Guest Network</h3><p>در صورت نیاز؛ کاملاً ایزوله.</p></div>
+    <div class="card plain"><h3>Network Management</h3><p>مدیریت امن تجهیزات در شبکه‌ی مستقل.</p></div>
+  </div>
+
+  <div class="grid g2">
+    <ul class="flist"><li>پیاده‌سازی VLAN برای تفکیک منطقی</li><li>طرح آدرس‌دهی استاندارد (IP Plan)</li><li>مسیریابی استاندارد (Routing)</li></ul>
+    <ul class="flist"><li>سیاست‌های Firewall Policy</li><li>دسترسی کنترل‌شده بین VLANها</li><li>معماری قابل‌توسعه برای شعب جدید</li></ul>
+  </div>
+
+  <div class="note"><b>Subject to Site Survey:</b> ساختار نهایی VLANها، IP Plan و سیاست‌های Routing و Firewall پس از برداشت اطلاعات و بررسی WAN نهایی می‌شوند.</div>
+  <div class="pagefoot"><span class="l">05 · Network Architecture</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 06 SECURITY ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Security</span><span class="sec-index">06 / 18</span></div>
+    <h1>امنیت، بخشی از طراحی است؛ نه یک تجهیز اضافی</h1><div class="sub">Security Architecture</div></div>
+
+  <p class="lead">اطلاعات فروشگاه‌های زنجیره‌ای — داده‌های مالی، حسابداری، فروش و موجودی — برای مجموعه حیاتی‌اند. حفاظت از آن‌ها نمی‌تواند به یک دستگاه واحد واگذار شود؛ امنیت باید در تار و پود معماری تنیده شود.</p>
+  <div class="callout">امنیت واقعی زمانی ایجاد می‌شود که از مرحله‌ی طراحی، در معماری شبکه وجود داشته باشد.</div>
+
+  <h2>رویکرد امنیتی</h2>
+  <div class="grid g3">
+    <div class="card"><span class="dot"></span><h3>Network Segmentation</h3><p>تفکیک شبکه با VLAN برای محدودسازی دامنه‌ی اثر هر رخداد.</p></div>
+    <div class="card"><span class="dot"></span><h3>Firewall Policies</h3><p>محدودسازی ارتباط بین شبکه‌ها و کنترل ترافیک عبوری.</p></div>
+    <div class="card"><span class="dot"></span><h3>Access Control</h3><p>کنترل دسترسی و کاهش سطح دسترسی غیرضروری.</p></div>
+    <div class="card"><span class="dot"></span><h3>Secure Management</h3><p>مدیریت امن تجهیزات و دسترسی مدیران.</p></div>
+    <div class="card"><span class="dot"></span><h3>Monitoring &amp; Logging</h3><p>پایش و ثبت رویدادها برای شناسایی زودهنگام.</p></div>
+    <div class="card"><span class="dot"></span><h3>Backup</h3><p>آخرین خط دفاعی در برابر از دست رفتن داده.</p></div>
+  </div>
+
+  <div class="grid g2">
+    <ul class="flist check"><li>تفکیک شبکه‌ی CCTV از شبکه‌ی کاربران و POS</li><li>محدودسازی ارتباط بین شبکه‌ها</li><li>کنترل دسترسی به سرورها</li><li>کنترل دسترسی به تجهیزات شبکه</li></ul>
+    <ul class="flist check"><li>مدیریت دسترسی مدیران با کمترین سطح لازم</li><li>مدیریت امن تجهیزات (Secure Management)</li><li>ثبت و نگهداری رویدادها (Logging)</li><li>کاهش سطح دسترسی غیرضروری</li></ul>
+  </div>
+
+  <div class="note">معماری نهایی Firewall و جزئیات سیاست‌های دسترسی، پس از بررسی WAN و سرویس‌های موجود در مرحله‌ی طراحی تفصیلی تعیین می‌شوند.</div>
+
+  <h2 style="margin-top:48px">اطلاعات شما، بخشی از سرمایه‌ی شماست</h2>
+  <p>DaranX خود را صرفاً یک تأمین‌کننده‌ی تجهیزات نمی‌داند. زیرساختی که برای شما طراحی می‌کنیم، نگهبان اطلاعاتی است که ارزشی به اندازه‌ی دارایی دارد.</p>
+  <div class="grid g4">
+    <div class="card plain"><h3>محرمانگی</h3><p>حفاظت از داده‌های مالی و عملیاتی در برابر دسترسی غیرمجاز.</p></div>
+    <div class="card plain"><h3>پایداری سرویس</h3><p>حفظ تداوم سرویس‌ها و جلوگیری از وقفه‌های پرهزینه.</p></div>
+    <div class="card plain"><h3>بازیابی‌پذیری</h3><p>لایه‌های Backup برای اطمینان از بازیابی داده‌ها.</p></div>
+    <div class="card plain"><h3>همکاری بلندمدت</h3><p>هدف، تبدیل شدن به تیم فناوری شماست، نه فروش یک‌باره.</p></div>
+  </div>
+  <div class="pagefoot"><span class="l">06 · Security Architecture</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 07 SERVER ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Compute</span><span class="sec-index">07 / 18</span></div>
+    <h1>زیرساخت سرور</h1><div class="sub">Server Infrastructure</div></div>
+
+  <h2>سرور فعلی — <span class="en">HPE ProLiant DL380 Gen9</span></h2>
+  <p>سرور فعلی ممکن است هنوز توان اجرای برخی سرویس‌ها را داشته باشد. اما باید میان «توان پردازشی فعلی» و «مناسب بودن برای یک زیرساخت جدید با افق چندساله» تفاوت قائل شد.</p>
+  <p>این سرور صرفاً «یک نسل قدیمی‌تر» نیست؛ محصول یک پلتفرم سخت‌افزاری مربوط به سال‌های گذشته است و حدود یک دهه از عمر آن می‌گذرد. بنابراین در یک طراحی آینده‌نگر، <b>پیشنهاد معماری</b> DaranX استفاده از یک سرور جدیدتر و کاملاً نو است.</p>
+  <div class="note">این یک پیشنهاد معماری است، نه الزام قطعی. تصمیم نهایی باید بر اساس Workload واقعی سرور و سرویس‌ها تأیید شود.</div>
+
+  <h2>سرور پیشنهادی — <span class="en">HPE ProLiant DL360 Gen10</span></h2>
+  <table class="spec">
+    <thead><tr><th>Component</th><th>Specification</th></tr></thead>
+    <tbody>
+      <tr><td>Chassis</td><td class="en">HPE ProLiant DL360 Gen10</td></tr>
+      <tr><td>CPU</td><td class="en">Intel Xeon Gold 6240</td></tr>
+      <tr><td>RAM</td><td class="en">8 × 32GB DDR4-2933 ECC Registered</td></tr>
+      <tr><td>Total RAM</td><td class="en">256GB</td></tr>
+      <tr><td>Smart Array</td><td class="en">HPE Smart Array P440ar</td></tr>
+      <tr><td>SSD</td><td class="en">2 × HPE 480GB SATA 6G Mixed Use</td></tr>
+      <tr><td>HDD</td><td class="en">4 × 1.2TB SAS 12G 10K</td></tr>
+      <tr><td>Network Controller</td><td class="en">HPE 560SFP+ 10Gb 2-Port</td></tr>
+      <tr><td>Power Supply</td><td class="en">HPE 800W Platinum</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">هدف طراحی، ایجاد یک بستر سخت‌افزاری مناسب برای رشد چندساله و امکان ارتقا در آینده است.</div>
+  <div class="pagefoot"><span class="l">07 · Server Infrastructure</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 07b COMPARISON ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Decision Support</span><span class="sec-index">07 / 18</span></div>
+    <h1>مقایسه‌ی مدیریتی سرور</h1><div class="sub">Current vs. Proposed</div></div>
+
+  <p class="lead">این جدول برای پشتیبانی از تصمیم‌گیری معماری تهیه شده و دو گزینه را از منظر آینده‌نگری و قابلیت توسعه مقایسه می‌کند.</p>
+  <table class="cmp">
+    <thead><tr><th>معیار</th><th>Current — <span class="en">DL380 Gen9</span></th><th>Proposed — <span class="en">DL360 Gen10</span></th></tr></thead>
+    <tbody>
+      <tr><td>نسل پلتفرم</td><td class="cur">نسل پیشین (Gen9)</td><td class="pro">نسل جدیدتر (Gen10)</td></tr>
+      <tr><td>وضعیت عمر</td><td class="cur">حدود یک دهه در سرویس</td><td class="pro">کاملاً نو</td></tr>
+      <tr><td>ظرفیت RAM</td><td class="cur">وابسته به پیکربندی فعلی</td><td class="pro">256GB با فضای ارتقا</td></tr>
+      <tr><td>قابلیت توسعه</td><td class="cur">محدود به نسل پلتفرم</td><td class="pro">فضای مناسب برای رشد چندساله</td></tr>
+      <tr><td>شبکه</td><td class="cur">وابسته به کارت موجود</td><td class="pro">10Gb SFP+ دو پورت</td></tr>
+      <tr><td>Storage</td><td class="cur">پیکربندی فعلی</td><td class="pro">ترکیب SSD + SAS با RAID</td></tr>
+      <tr><td>قابلیت اطمینان</td><td class="cur">متناسب با عمر تجهیز</td><td class="pro">اجزای نو، منبع Platinum</td></tr>
+      <tr><td>مناسب طراحی جدید</td><td class="cur">قابل بازنگری</td><td class="pro">هم‌راستا با معماری آینده‌نگر</td></tr>
+      <tr><td>افق سرمایه‌گذاری</td><td class="cur">کوتاه‌مدت</td><td class="pro">چندساله</td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>توجه:</b> این جدول صرفاً برای تصمیم‌گیری معماری است. نتیجه‌ی نهایی باید بر اساس Workload واقعی سرور تأیید شود.</div>
+  <div class="pagefoot"><span class="l">07 · Server Comparison</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 08 UPS ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Power</span><span class="sec-index">08 / 18</span></div>
+    <h1>بدون برق پایدار، شبکه‌ی پایدار معنا ندارد</h1><div class="sub">UPS &amp; Power Protection</div></div>
+
+  <p class="lead">پایدارترین معماری شبکه نیز اگر منبع تغذیه‌ی مطمئنی نداشته باشد آسیب‌پذیر است. تمام تجهیزات حیاتی باید تحت پوشش UPS مناسب قرار گیرند.</p>
+
+  <h2>تجهیزاتی که باید بررسی شوند</h2>
+  <div class="grid g4">
+    <div class="card plain"><h3>Server</h3><p>سرورهای مرکزی و سرویس‌های حیاتی.</p></div>
+    <div class="card plain"><h3>Core Switch</h3><p>سوئیچ‌های هسته و توزیع.</p></div>
+    <div class="card plain"><h3>Network Switch</h3><p>سوئیچ‌های فروشگاه.</p></div>
+    <div class="card plain"><h3>MikroTik حیاتی</h3><p>روتر مرکزی و hEXهای کلیدی.</p></div>
+    <div class="card plain"><h3>تجهیزات WAN</h3><p>تجهیزات ارتباطی و اینترنت.</p></div>
+    <div class="card plain"><h3>Storage</h3><p>تجهیزات ذخیره‌سازی.</p></div>
+    <div class="card plain"><h3>NVR حیاتی</h3><p>در صورت نیاز.</p></div>
+    <div class="card plain"><h3>سایر تجهیزات کلیدی</h3><p>بر اساس Site Survey.</p></div>
+  </div>
+
+  <h2>چرا UPS فقط برای جلوگیری از خاموشی نیست؟</h2>
+  <div class="grid g2">
+    <ul class="flist check"><li>جلوگیری از آسیب ناشی از نوسانات برق</li><li>کاهش Downtime و توقف کسب‌وکار</li><li>جلوگیری از خاموشی ناگهانی تجهیزات</li></ul>
+    <ul class="flist check"><li>حفظ سلامت و طول عمر تجهیزات</li><li>حفظ پایداری و تداوم سرویس‌ها</li><li>فرصت خاموش‌سازی امن در قطعی طولانی</li></ul>
+  </div>
+  <div class="note">در صورت نبود UPS مناسب، خرید و نصب آن باید بخشی از پروژه باشد. پیشنهاد می‌شود برای هر سایت <b>Load Calculation</b> انجام و ظرفیت UPS بر اساس مصرف واقعی انتخاب شود.</div>
+  <div class="pagefoot"><span class="l">08 · UPS &amp; Power</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 09 CCTV ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Surveillance</span><span class="sec-index">09 / 18</span></div>
+    <h1>زیرساخت دوربین مداربسته</h1><div class="sub">CCTV Infrastructure</div></div>
+
+  <p class="lead">با وجود حدود ۳۰ تا ۵۰ دوربین <span class="en">Hikvision</span> در هر فروشگاه، شبکه‌ی CCTV باید از شبکه‌ی کاربران و POS به‌صورت منطقی تفکیک شود. این تفکیک هم امنیت را بالا می‌برد و هم از تأثیر ترافیک سنگین ویدیو بر عملیات جلوگیری می‌کند.</p>
+
+  <h2>محورهای طراحی</h2>
+  <div class="grid g4">
+    <div class="card plain"><h3>ظرفیت شبکه</h3><p>توان تحمل ترافیک هم‌زمان.</p></div>
+    <div class="card plain"><h3>Bandwidth</h3><p>محاسبه بر اساس تعداد و نوع دوربین.</p></div>
+    <div class="card plain"><h3>PoE</h3><p>تأمین برق دوربین از سوئیچ.</p></div>
+    <div class="card plain"><h3>Uplink</h3><p>ظرفیت لینک به NVR و هسته.</p></div>
+    <div class="card plain"><h3>VLAN</h3><p>تفکیک شبکه‌ی دوربین.</p></div>
+    <div class="card plain"><h3>NVR</h3><p>ظرفیت و پیکربندی ضبط.</p></div>
+    <div class="card plain"><h3>Storage &amp; Retention</h3><p>ظرفیت و مدت نگهداری.</p></div>
+    <div class="card plain"><h3>سلامت کابل‌کشی</h3><p>بررسی کابل و Patch Panel.</p></div>
+    <div class="card plain"><h3>Backup</h3><p>راهکار پشتیبان داده‌ی حیاتی.</p></div>
+    <div class="card plain"><h3>دسترسی مدیریتی</h3><p>کنترل‌شده و ثبت‌شده.</p></div>
+    <div class="card plain"><h3>امنیت NVR</h3><p>محدودسازی دسترسی به NVR.</p></div>
+    <div class="card plain"><h3>تفکیک از کاربران</h3><p>ایزوله‌سازی ترافیک ویدیو.</p></div>
+  </div>
+
+  <h2>محاسبه‌ی ذخیره‌سازی — <span class="en">Storage Sizing</span></h2>
+  <p>ارائه‌ی عدد قطعی بدون دانستن پارامترهای واقعی دقیق نخواهد بود. به‌جای عدد، مبنای محاسبه ارائه می‌شود؛ ظرفیت نهایی پس از تعیین Resolution، FPS، Codec و مدت نگهداری محاسبه می‌گردد:</p>
+  <div class="formula">
+    <span class="cm"># Per-camera bitrate depends on Resolution, FPS &amp; Codec (e.g. H.265)</span><br>
+    <span class="hl">Storage (GB)</span> = ( Bitrate<span class="cm">[Mbps]</span> / 8 ) × 3600 × 24 × RetentionDays × Cameras / 1000<br><br>
+    <span class="cm"># values are placeholders, confirmed at design stage</span><br>
+    <span class="hl">Total</span> = Σ ( per-camera storage ) + <span class="cm">redundancy margin</span>
+  </div>
+  <div class="note"><b>Subject to Site Survey:</b> عدد نهایی Storage و مدت Retention پس از تعیین رزولوشن، نرخ فریم، کدک و سیاست نگهداری، در طراحی تفصیلی محاسبه می‌شود.</div>
+  <div class="pagefoot"><span class="l">09 · CCTV Infrastructure</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 10 BRANCH ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Standardization</span><span class="sec-index">10 / 18</span></div>
+    <h1>یک معماری، برای تمام شعب</h1><div class="sub">Branch Standardization</div></div>
+
+  <p class="lead">هدف این است که تمام فروشگاه‌ها تا حد امکان از یک استاندارد معماری واحد پیروی کنند. استانداردسازی یعنی راه‌اندازی سریع‌تر شعب جدید، عیب‌یابی ساده‌تر و مدیریت یکپارچه‌تر.</p>
+
+  <div class="tmpl">
+    <div class="box dark">Internet / WAN</div><div class="ar">↓</div>
+    <div class="box">MikroTik hEX</div><div class="ar">↓</div>
+    <div class="box dark">Managed Switch</div><div class="ar">↓</div>
+    <div class="vlans">
+      <div class="vlan">POS VLAN<small>صندوق‌ها</small></div>
+      <div class="vlan">Management VLAN<small>مدیریت و حسابداری</small></div>
+      <div class="vlan">CCTV VLAN<small>دوربین‌ها</small></div>
+      <div class="vlan">Server VLAN<small>سرویس‌های محلی</small></div>
+      <div class="vlan">Guest VLAN<small>در صورت نیاز</small></div>
+      <div class="vlan">Network Mgmt VLAN<small>مدیریت تجهیزات</small></div>
+    </div>
+  </div>
+
+  <div class="grid g3">
+    <div class="card"><span class="dot"></span><h3>قابلیت Template شدن</h3><p>معماری فروشگاه به یک الگوی استاندارد و تکرارپذیر تبدیل می‌شود.</p></div>
+    <div class="card"><span class="dot"></span><h3>راه‌اندازی سریع</h3><p>شعبه‌ی جدید با همان استاندارد و کمترین تغییر پیاده می‌شود.</p></div>
+    <div class="card"><span class="dot"></span><h3>مدیریت یکپارچه</h3><p>یکسان بودن ساختار، عیب‌یابی و پشتیبانی را ساده‌تر می‌کند.</p></div>
+  </div>
+  <div class="callout">وقتی همه‌ی شعب یک زبان مشترک داشته باشند، رشد مجموعه سریع‌تر، ارزان‌تر و مطمئن‌تر می‌شود.</div>
+  <div class="pagefoot"><span class="l">10 · Branch Standardization</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 11 MONITORING ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Operations</span><span class="sec-index">11 / 18</span></div>
+    <h1>مانیتورینگ و مدیریت متمرکز</h1><div class="sub">Centralized Monitoring</div></div>
+
+  <p class="lead">هدف Monitoring ساده است: نشانه‌های مشکل، پیش از آنکه خرابی باعث توقف کسب‌وکار شود، شناسایی شوند.</p>
+  <div class="grid g4">
+    <div class="card plain"><h3>Router &amp; Switch</h3><p>وضعیت تجهیزات شبکه.</p></div>
+    <div class="card plain"><h3>Server</h3><p>سلامت سرورها.</p></div>
+    <div class="card plain"><h3>Link Status</h3><p>وضعیت لینک‌ها.</p></div>
+    <div class="card plain"><h3>CPU / RAM</h3><p>بار پردازشی و حافظه.</p></div>
+    <div class="card plain"><h3>Storage</h3><p>ظرفیت و سلامت.</p></div>
+    <div class="card plain"><h3>Bandwidth</h3><p>مصرف پهنای باند.</p></div>
+    <div class="card plain"><h3>Packet Loss</h3><p>کیفیت ارتباط.</p></div>
+    <div class="card plain"><h3>Availability</h3><p>در دسترس بودن سرویس‌ها.</p></div>
+    <div class="card plain"><h3>UPS</h3><p>وضعیت باتری و برق.</p></div>
+    <div class="card plain"><h3>NVR</h3><p>در صورت امکان، سلامت ضبط.</p></div>
+  </div>
+  <div class="callout">مانیتورینگ خوب، خرابی را به یک هشدار قابل مدیریت تبدیل می‌کند، نه یک بحران غیرمنتظره.</div>
+  <div class="pagefoot"><span class="l">11 · Monitoring</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 12 BACKUP ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Resilience</span><span class="sec-index">12 / 18</span></div>
+    <h1>پشتیبان‌گیری و بازیابی از فاجعه</h1><div class="sub">Backup &amp; Disaster Recovery</div></div>
+
+  <p class="lead">Backup نباید صرفاً به معنای «داشتن یک کپی» باشد. یک استراتژی واقعی تضمین می‌کند که در لحظه‌ی نیاز، داده‌ها به‌درستی و به‌موقع بازیابی می‌شوند.</p>
+  <div class="grid g3">
+    <div class="card"><div class="idx">1</div><h3>Backup Strategy</h3><p>چه چیزی، چگونه و کجا پشتیبان‌گیری شود.</p></div>
+    <div class="card"><div class="idx">2</div><h3>Backup Schedule</h3><p>زمان‌بندی منظم متناسب با اهمیت داده.</p></div>
+    <div class="card"><div class="idx">3</div><h3>Retention</h3><p>سیاست مدت نگهداری نسخه‌ها.</p></div>
+    <div class="card"><div class="idx">4</div><h3>Backup Verification</h3><p>اطمینان از سالم بودن نسخه‌ها.</p></div>
+    <div class="card"><div class="idx">5</div><h3>Off-site Backup</h3><p>نسخه‌ی خارج از سایت برای حوادث فیزیکی.</p></div>
+    <div class="card"><div class="idx">6</div><h3>Restore Test</h3><p>آزمون واقعی بازیابی؛ پشتیبانِ تست‌نشده قابل اعتماد نیست.</p></div>
+  </div>
+  <p>در صورت نیاز، DaranX طراحی یک <b>استراتژی Backup چندلایه</b> را پیشنهاد می‌کند که در آن لایه‌های محلی و Off-site هماهنگ عمل می‌کنند و یک Disaster Recovery Plan مدون، مسیر بازگشت سریع کسب‌وکار را مشخص می‌سازد.</p>
+  <div class="callout">پشتیبانی که Restore Test نشده باشد، صرفاً یک فرض است؛ نه یک تضمین.</div>
+  <div class="pagefoot"><span class="l">12 · Backup &amp; DR</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 13 ROADMAP ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Execution</span><span class="sec-index">13 / 18</span></div>
+    <h1>نقشه‌ی راه اجرا</h1><div class="sub">Implementation Roadmap</div></div>
+
+  <p class="lead">پروژه در یک مسیر مرحله‌ای و شفاف اجرا می‌شود؛ از شناخت تا پشتیبانی. هیچ اجرایی بدون طراحی و برداشت اطلاعات آغاز نمی‌شود.</p>
+  <div class="tl">
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">01</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">PHASE 01</div><h3>Site Survey &amp; Assessment</h3><p>برداشت اطلاعات میدانی و ارزیابی وضعیت موجود.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">02</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">PHASE 02</div><h3>Network Architecture Design</h3><p>طراحی معماری، VLAN، IP Plan و Routing.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">03</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">PHASE 03</div><h3>Security Design</h3><p>طراحی سیاست‌های امنیتی، Firewall و کنترل دسترسی.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">04</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">PHASE 04</div><h3>Hardware &amp; UPS Sizing</h3><p>تعیین ظرفیت سرور، تجهیزات و UPS بر اساس بار واقعی.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">05</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">PHASE 05</div><h3>Implementation</h3><p>پیاده‌سازی زیرساخت مطابق طراحی مصوب.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">06</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">PHASE 06</div><h3>Configuration &amp; Migration</h3><p>پیکربندی تجهیزات و انتقال کنترل‌شده‌ی سرویس‌ها.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">07</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">PHASE 07</div><h3>Testing</h3><p>آزمون عملکرد، پایداری و امنیت پیش از تحویل.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">08</div><div class="tl-ln"></div></div><div class="tl-bd"><div class="ph">PHASE 08</div><h3>Documentation</h3><p>تهیه‌ی مستندات کامل و As-Built.</p></div></div>
+    <div class="tl-item"><div class="tl-mk"><div class="tl-dot">09</div></div><div class="tl-bd"><div class="ph">PHASE 09</div><h3>Monitoring &amp; Support</h3><p>راه‌اندازی Monitoring و آغاز پشتیبانی مستمر.</p></div></div>
+  </div>
+  <div class="pagefoot"><span class="l">13 · Roadmap</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 14 SITE SURVEY ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Discovery</span><span class="sec-index">14 / 18</span></div>
+    <h1>برداشت اطلاعات</h1><div class="sub">Site Survey</div></div>
+
+  <p class="lead">پیش از اجرای نهایی، برداشت دقیق اطلاعات میدانی انجام می‌شود. این مرحله پایه‌ی تصمیم‌های فنی صحیح است و از حدس‌زدن در طراحی جلوگیری می‌کند.</p>
+  <div class="grid g4">
+    <div class="card plain"><h3>کابل‌کشی</h3><p>وضعیت و کیفیت کابل‌ها.</p></div>
+    <div class="card plain"><h3>Rack &amp; Patch Panel</h3><p>سازمان‌دهی تجهیزات.</p></div>
+    <div class="card plain"><h3>Switch &amp; Uplink</h3><p>ظرفیت و پیکربندی.</p></div>
+    <div class="card plain"><h3>برق و UPS</h3><p>وضعیت تغذیه و حفاظت.</p></div>
+    <div class="card plain"><h3>سرورها</h3><p>وضعیت و منابع فعلی.</p></div>
+    <div class="card plain"><h3>NVR</h3><p>ضبط‌کننده‌ها و ظرفیت.</p></div>
+    <div class="card plain"><h3>IP Addressing</h3><p>طرح آدرس‌دهی موجود.</p></div>
+    <div class="card plain"><h3>VLAN</h3><p>تفکیک فعلی ترافیک.</p></div>
+    <div class="card plain"><h3>Internet / WAN</h3><p>سرویس و ظرفیت لینک.</p></div>
+    <div class="card plain"><h3>MikroTik</h3><p>وضعیت روتر و hEXها.</p></div>
+    <div class="card plain"><h3>محل تجهیزات</h3><p>چیدمان فیزیکی.</p></div>
+    <div class="card plain"><h3>تهویه و محیط</h3><p>دما، رطوبت و ایمنی.</p></div>
+  </div>
+  <div class="callout">طراحی درست، از داده‌ی درست شروع می‌شود. Site Survey همان جایی است که فرضیه‌ها به واقعیت تبدیل می‌شوند.</div>
+  <div class="pagefoot"><span class="l">14 · Site Survey</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 15 DELIVERABLES ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Outputs</span><span class="sec-index">15 / 18</span></div>
+    <h1>خروجی‌های پروژه</h1><div class="sub">Deliverables</div></div>
+
+  <p class="lead">یک پروژه‌ی حرفه‌ای با مستندات کاملی تحویل می‌شود که زیرساخت را قابل نگهداری، توسعه و انتقال می‌سازد.</p>
+  <div class="grid g3">
+    <div class="card plain"><h3>Network Architecture Diagram</h3><p>نقشه‌ی کامل معماری شبکه.</p></div>
+    <div class="card plain"><h3>IP Address Plan</h3><p>طرح آدرس‌دهی.</p></div>
+    <div class="card plain"><h3>VLAN Plan</h3><p>طرح تفکیک منطقی.</p></div>
+    <div class="card plain"><h3>Network Configuration</h3><p>پیکربندی تجهیزات.</p></div>
+    <div class="card plain"><h3>Firewall Policy</h3><p>سیاست‌های امنیتی مستند.</p></div>
+    <div class="card plain"><h3>Equipment List</h3><p>فهرست کامل تجهیزات.</p></div>
+    <div class="card plain"><h3>Server Configuration</h3><p>پیکربندی سرور.</p></div>
+    <div class="card plain"><h3>UPS Sizing</h3><p>محاسبه‌ی ظرفیت برق.</p></div>
+    <div class="card plain"><h3>CCTV Network Design</h3><p>طراحی شبکه‌ی دوربین.</p></div>
+    <div class="card plain"><h3>Backup Strategy</h3><p>استراتژی پشتیبان‌گیری.</p></div>
+    <div class="card plain"><h3>Monitoring</h3><p>طرح مانیتورینگ.</p></div>
+    <div class="card plain"><h3>As-Built Documentation</h3><p>مستندات نهایی مطابق اجرا.</p></div>
+  </div>
+  <div class="pagefoot"><span class="l">15 · Deliverables</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 16 COMMERCIAL ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Commercial</span><span class="sec-index">16 / 18</span></div>
+    <h1>پیشنهاد تجاری</h1><div class="sub">Commercial Proposal</div></div>
+
+  <p class="lead">ساختار تجاری پروژه در جدول زیر ارائه شده است. مقادیر و قیمت‌ها پس از نهایی شدن طراحی و برداشت اطلاعات تعیین می‌شوند و فعلاً <span class="tbq">To Be Quoted</span> درج شده‌اند.</p>
+  <table>
+    <thead><tr><th>Category</th><th>Description</th><th>Qty</th><th>Unit</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Server</td><td>سرور پیشنهادی DL360 Gen10</td><td class="en">TBD</td><td class="en">Unit</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>Network Equipment</td><td>تجهیزات شبکه‌ی مرکز و شعب</td><td class="en">TBD</td><td class="en">Set</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>Switch</td><td>سوئیچ‌های مدیریت‌پذیر</td><td class="en">TBD</td><td class="en">Unit</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>UPS</td><td>بر اساس Load Calculation</td><td class="en">TBD</td><td class="en">Unit</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>Rack</td><td>رک و متعلقات</td><td class="en">TBD</td><td class="en">Unit</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>Cabling</td><td>کابل‌کشی ساخت‌یافته</td><td class="en">TBD</td><td class="en">Lot</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>SFP</td><td>ماژول‌های نوری / 10Gb</td><td class="en">TBD</td><td class="en">Unit</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>Storage</td><td>ظرفیت بر اساس نیاز</td><td class="en">TBD</td><td class="en">Set</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>Installation</td><td>نصب و راه‌اندازی</td><td class="en">TBD</td><td class="en">Service</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>Configuration</td><td>پیکربندی تجهیزات و سرویس‌ها</td><td class="en">TBD</td><td class="en">Service</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>Documentation</td><td>مستندسازی و As-Built</td><td class="en">TBD</td><td class="en">Service</td><td><span class="tbq">To Be Quoted</span></td></tr>
+      <tr><td>Support</td><td>پشتیبانی و نگهداری</td><td class="en">TBD</td><td class="en">Service</td><td><span class="tbq">To Be Quoted</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">ارقام نهایی (Qty و قیمت) پس از Site Survey و طراحی تفصیلی ارائه می‌شود. این جدول یک چارچوب تجاری است، نه فهرست فروش نهایی.</div>
+  <div class="pagefoot"><span class="l">16 · Commercial</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 17 WHY DARANX ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Value</span><span class="sec-index">17 / 18</span></div>
+    <h1>چرا DaranX؟</h1><div class="sub">The DaranX Value Proposition</div></div>
+
+  <p class="lead">آنچه DaranX را متمایز می‌کند، ترتیب کار ماست: ابتدا مسئله‌ی کسب‌وکار، سپس معماری، و در انتها تجهیزات. ما در کنار مشتری می‌ایستیم، نه روبه‌روی او.</p>
+  <div class="grid g3">
+    <div class="card"><span class="dot"></span><h3>طراحی قبل از فروش</h3><p>ابتدا طراحی، سپس انتخاب تجهیز متناسب با آن.</p></div>
+    <div class="card"><span class="dot"></span><h3>نگاه بلندمدت</h3><p>تصمیم‌ها با افق چندساله گرفته می‌شوند.</p></div>
+    <div class="card"><span class="dot"></span><h3>امنیت در معماری</h3><p>امنیت از ابتدا در طراحی لحاظ می‌شود.</p></div>
+    <div class="card"><span class="dot"></span><h3>استانداردسازی</h3><p>یک الگوی یکسان برای همه‌ی شعب.</p></div>
+    <div class="card"><span class="dot"></span><h3>مستندسازی</h3><p>زیرساخت قابل نگهداری و انتقال.</p></div>
+    <div class="card"><span class="dot"></span><h3>مسئولیت‌پذیری</h3><p>احساس مسئولیت واقعی در قبال زیرساخت مشتری.</p></div>
+    <div class="card"><span class="dot"></span><h3>پشتیبانی مستمر</h3><p>همراهی پس از اجرا، نه رهاکردن پروژه.</p></div>
+    <div class="card"><span class="dot"></span><h3>حفظ منافع مشتری</h3><p>انتخاب تجهیز بر اساس نیاز واقعی، نه سود بیشتر.</p></div>
+    <div class="card"><span class="dot"></span><h3>انتخاب درست تجهیز</h3><p>تجهیز مناسب مشتری، حتی اگر پرحاشیه‌ترین گزینه نباشد.</p></div>
+  </div>
+  <div class="callout">کالایی که مناسب مشتری است را ارائه می‌دهیم، نه چیزی که صرفاً به نفع ماست.</div>
+  <div class="callout">هدف ما یک بار فروش تجهیزات نیست؛ هدف، تبدیل شدن به تیم فناوری مشتری است.</div>
+  <div class="pagefoot"><span class="l">17 · Why DaranX</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== 18 CONCLUSION ===== -->
+<section class="sheet">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Summary</span><span class="sec-index">18 / 18</span></div>
+    <h1>جمع‌بندی مدیریتی</h1><div class="sub">Executive Conclusion</div></div>
+
+  <div class="conc">
+    <h2>شبکه، یک زیرساخت کسب‌وکار است</h2>
+    <p>اهواز تک یک کسب‌وکار زنجیره‌ای است و زیرساخت فناوری اطلاعات آن مستقیماً با فروش، حسابداری، موجودی، مدیریت و امنیت مجموعه در ارتباط است. شبکه نباید صرفاً مجموعه‌ای از کابل‌ها و تجهیزات دیده شود؛ باید یک زیرساخت کسب‌وکار باشد که پابه‌پای رشد مجموعه حرکت می‌کند.</p>
+    <p>پیشنهاد DaranX، آغاز از طراحی است: شناخت نیاز، بررسی وضعیت موجود، طراحی معماری، پیش‌بینی ظرفیت آینده و لحاظ امنیت — و تنها پس از آن، انتخاب تجهیزاتی که در خدمت این معماری باشند.</p>
+    <div class="pillars">
+      <span class="pill"><i></i><span class="en">Reliable</span></span>
+      <span class="pill"><i></i><span class="en">Secure</span></span>
+      <span class="pill"><i></i><span class="en">Scalable</span></span>
+      <span class="pill"><i></i><span class="en">Manageable</span></span>
+      <span class="pill"><i></i><span class="en">Future-Ready</span></span>
+    </div>
+    <div class="final">سرمایه‌گذاری روی طراحی صحیح زیرساخت، هزینه نیست؛ <b>تضمینی برای پایداری و کاهش هزینه‌های آینده</b> است. DaranX آماده است تا از نخستین گام — یعنی <b>Site Survey</b> — در کنار اهواز تک باشد.</div>
+  </div>
+  <div class="pagefoot"><span class="l">18 · Conclusion</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<!-- ===== GLOSSARY (auto-populated) ===== -->
+<section class="sheet glossary" id="glossary">
+  <div class="sec-head"><div class="sec-top"><span class="kicker">Reference</span></div>
+    <h1>واژه‌نامه</h1><div class="sub">Glossary — اصطلاحات و مخفف‌های فنی</div></div>
+  <p class="gnote">روی هر واژه‌ی انگلیسی در متن کلیک کنید تا معنی آن در همین بخش هایلایت شود. برای جست‌وجو از کادر زیر استفاده کنید.</p>
+  <input class="gsearch no-print" id="gsearch" type="text" placeholder="جست‌وجو در واژه‌نامه…" aria-label="جست‌وجو">
+  <ul class="glist" id="glist"></ul>
+  <div class="pagefoot"><span class="l">Glossary</span><span class="r">DaranX · Confidential</span></div>
+</section>
+
+<script>
+/* ============================================================
+   Glossary engine: term dictionary → auto-link + auto-build list
+   ============================================================ */
+(function(){
+  "use strict";
+  // key: term as it appears in text | {en: full English, fa: Persian meaning}
+  var G = {
+    "POS":{en:"Point of Sale",fa:"سیستم صندوق فروش فروشگاه."},
+    "CCTV":{en:"Closed-Circuit Television",fa:"سامانه‌ی دوربین مداربسته."},
+    "NVR":{en:"Network Video Recorder",fa:"ضبط‌کننده‌ی تصویر تحت شبکه برای دوربین‌ها."},
+    "VLAN":{en:"Virtual LAN",fa:"شبکه‌ی محلی مجازی؛ ابزار تفکیک منطقی ترافیک روی یک بستر فیزیکی."},
+    "LAN":{en:"Local Area Network",fa:"شبکه‌ی محلی داخل یک ساختمان یا سایت."},
+    "WAN":{en:"Wide Area Network",fa:"شبکه‌ی گسترده؛ اتصال بیرونی/بین سایت‌ها یا اینترنت."},
+    "IP":{en:"Internet Protocol",fa:"نشانی منطقی هر دستگاه در شبکه."},
+    "IP Plan":{en:"IP Address Plan",fa:"طرح استاندارد آدرس‌دهی شبکه."},
+    "IP Addressing":{en:"IP Addressing",fa:"نحوه‌ی اختصاص نشانی‌های شبکه به تجهیزات."},
+    "Routing":{en:"Routing",fa:"مسیریابی؛ تعیین مسیر عبور داده بین شبکه‌ها."},
+    "Firewall":{en:"Firewall",fa:"دیواره‌ی آتش؛ کنترل و فیلتر ترافیک شبکه."},
+    "Firewall Policy":{en:"Firewall Policy",fa:"مجموعه قوانین دیواره‌ی آتش برای مجاز/مسدودکردن ترافیک."},
+    "Firewall Policies":{en:"Firewall Policies",fa:"سیاست‌های دیواره‌ی آتش."},
+    "Network Segmentation":{en:"Network Segmentation",fa:"تقسیم شبکه به بخش‌های مستقل برای امنیت و کنترل بهتر."},
+    "Secure Management":{en:"Secure Management",fa:"مدیریت امن تجهیزات شبکه از طریق مسیرهای کنترل‌شده."},
+    "Access Control":{en:"Access Control",fa:"کنترل اینکه چه کسی به چه منابعی دسترسی دارد."},
+    "Logging":{en:"Logging",fa:"ثبت رویدادها برای بازبینی و امنیت."},
+    "PoE":{en:"Power over Ethernet",fa:"تأمین برق دستگاه (مثل دوربین) از طریق کابل شبکه."},
+    "Uplink":{en:"Uplink",fa:"لینک بالادست؛ اتصال یک تجهیز به تجهیز مرکزی‌تر."},
+    "Bandwidth":{en:"Bandwidth",fa:"پهنای باند؛ ظرفیت انتقال داده‌ی یک لینک."},
+    "Packet Loss":{en:"Packet Loss",fa:"از دست رفتن بسته‌های داده؛ نشانه‌ی افت کیفیت شبکه."},
+    "Availability":{en:"Availability",fa:"در دسترس‌پذیری؛ درصد زمانی که سرویس فعال است."},
+    "Downtime":{en:"Downtime",fa:"زمان از کاراُفتادگی سرویس یا تجهیز."},
+    "Storage":{en:"Storage",fa:"ذخیره‌سازی داده."},
+    "Storage Sizing":{en:"Storage Sizing",fa:"محاسبه‌ی ظرفیت ذخیره‌سازی موردنیاز."},
+    "Retention":{en:"Retention",fa:"مدت نگهداری داده‌ها (مثلاً تصاویر دوربین)."},
+    "Resolution":{en:"Resolution",fa:"وضوح تصویر؛ در محاسبه‌ی حجم ویدیو مؤثر است."},
+    "FPS":{en:"Frames Per Second",fa:"نرخ فریم بر ثانیه‌ی ویدیو."},
+    "Codec":{en:"Codec",fa:"روش فشرده‌سازی ویدیو (مثل H.265)."},
+    "UPS":{en:"Uninterruptible Power Supply",fa:"منبع تغذیه‌ی بی‌وقفه؛ برق پشتیبان و پایدار."},
+    "Load Calculation":{en:"Load Calculation",fa:"محاسبه‌ی بار مصرفی برای انتخاب ظرفیت درست UPS."},
+    "Server":{en:"Server",fa:"سرور؛ رایانه‌ی ارائه‌دهنده‌ی سرویس‌های مرکزی."},
+    "CPU":{en:"Central Processing Unit",fa:"پردازنده."},
+    "RAM":{en:"Random Access Memory",fa:"حافظه‌ی موقت سیستم."},
+    "Xeon":{en:"Intel Xeon",fa:"خانواده‌ی پردازنده‌های سروری Intel."},
+    "DDR4":{en:"DDR4",fa:"نسل حافظه‌ی رم."},
+    "ECC":{en:"Error-Correcting Code",fa:"حافظه با قابلیت تصحیح خطا؛ مناسب سرور."},
+    "Registered":{en:"Registered (RDIMM)",fa:"نوع ماژول حافظه‌ی پایدار سروری."},
+    "SSD":{en:"Solid State Drive",fa:"حافظه‌ی حالت‌جامد؛ سریع و بدون قطعه‌ی متحرک."},
+    "HDD":{en:"Hard Disk Drive",fa:"دیسک سخت مغناطیسی؛ ظرفیت بالا."},
+    "SAS":{en:"Serial Attached SCSI",fa:"رابط دیسک سروریِ پرسرعت و پایدار."},
+    "SATA":{en:"SATA",fa:"رابط رایج اتصال دیسک."},
+    "RAID":{en:"Redundant Array of Independent Disks",fa:"آرایه‌ی افزونه‌ی دیسک برای اطمینان و کارایی."},
+    "Smart Array":{en:"HPE Smart Array",fa:"کنترلر آرایه‌ی دیسک محصول HPE."},
+    "SFP+":{en:"SFP+",fa:"ماژول شبکه‌ی نوری/مسی برای اتصالات ۱۰ گیگابیت."},
+    "SFP":{en:"Small Form-factor Pluggable",fa:"ماژول قابل‌تعویض پورت شبکه (نوری/مسی)."},
+    "10Gb":{en:"10 Gigabit",fa:"سرعت ۱۰ گیگابیت بر ثانیه."},
+    "Platinum":{en:"80 PLUS Platinum",fa:"رده‌ی راندمان بالای منبع تغذیه."},
+    "Chassis":{en:"Chassis",fa:"بدنه/شاسی سرور."},
+    "Workload":{en:"Workload",fa:"بار کاری واقعی سرور و سرویس‌ها."},
+    "Gen9":{en:"Generation 9",fa:"نسل نهم پلتفرم سخت‌افزاری HPE."},
+    "Gen10":{en:"Generation 10",fa:"نسل دهم پلتفرم سخت‌افزاری HPE."},
+    "Managed Switch":{en:"Managed Switch",fa:"سوئیچ مدیریت‌پذیر با پشتیبانی VLAN و کنترل."},
+    "Core Switch":{en:"Core Switch",fa:"سوئیچ هسته‌ی شبکه."},
+    "Monitoring":{en:"Monitoring",fa:"پایش مستمر سلامت و کارایی زیرساخت."},
+    "Backup":{en:"Backup",fa:"پشتیبان‌گیری از داده‌ها."},
+    "Backup Strategy":{en:"Backup Strategy",fa:"راهبرد پشتیبان‌گیری: چه، چگونه و کجا."},
+    "Backup Schedule":{en:"Backup Schedule",fa:"زمان‌بندی اجرای پشتیبان‌گیری."},
+    "Backup Verification":{en:"Backup Verification",fa:"راستی‌آزمایی سالم‌بودن نسخه‌های پشتیبان."},
+    "Restore Test":{en:"Restore Test",fa:"آزمون واقعی بازیابی از نسخه‌ی پشتیبان."},
+    "Off-site Backup":{en:"Off-site Backup",fa:"نگهداری نسخه‌ی پشتیبان در محلی خارج از سایت."},
+    "Disaster Recovery":{en:"Disaster Recovery",fa:"بازیابی سرویس‌ها پس از یک رخداد بزرگ."},
+    "Disaster Recovery Plan":{en:"Disaster Recovery Plan",fa:"برنامه‌ی مدون بازیابی از فاجعه."},
+    "Site Survey":{en:"Site Survey",fa:"برداشت و ارزیابی اطلاعات میدانی پیش از طراحی نهایی."},
+    "Deliverables":{en:"Deliverables",fa:"خروجی‌ها و تحویل‌دادنی‌های پروژه."},
+    "As-Built":{en:"As-Built Documentation",fa:"مستندات نهایی مطابق آنچه واقعاً اجرا شده."},
+    "Template":{en:"Template",fa:"الگوی استاندارد و قابل تکرار."},
+    "To Be Quoted":{en:"To Be Quoted",fa:"قیمت‌گذاری متعاقباً و پس از طراحی نهایی."},
+    "Guest Network":{en:"Guest Network",fa:"شبکه‌ی مهمان؛ ایزوله از شبکه‌های عملیاتی."},
+    "Patch Panel":{en:"Patch Panel",fa:"پنل سازمان‌دهی و اتصال کابل‌های شبکه."},
+    "Rack":{en:"Rack",fa:"رک؛ قفسه‌ی استاندارد نگهداری تجهیزات."},
+    "Cabling":{en:"Cabling",fa:"کابل‌کشی ساخت‌یافته‌ی شبکه."},
+    "Link Status":{en:"Link Status",fa:"وضعیت اتصال لینک‌های شبکه."},
+    "Reliable":{en:"Reliable",fa:"پایدار و قابل اتکا."},
+    "Secure":{en:"Secure",fa:"امن."},
+    "Scalable":{en:"Scalable",fa:"قابل توسعه با رشد نیاز."},
+    "Manageable":{en:"Manageable",fa:"قابل مدیریت."},
+    "Future-Ready":{en:"Future-Ready",fa:"آماده برای نیازهای آینده."},
+    "MikroTik":{en:"MikroTik",fa:"برند تجهیزات شبکه (روتر/سوئیچ)."},
+    "hEX":{en:"MikroTik hEX",fa:"روتر کوچک MikroTik؛ مناسب مرز شبکه‌ی هر شعبه."},
+    "RB1100":{en:"MikroTik RB1100",fa:"روتر قدرتمند MikroTik؛ در نقش روتر مرکزی."},
+    "Hikvision":{en:"Hikvision",fa:"برند دوربین‌های مداربسته و NVR."},
+    "HPE ProLiant":{en:"HPE ProLiant",fa:"خانواده‌ی سرورهای شرکت HPE."}
+  };
+
+  function slug(k){return "g-"+k.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");}
+
+  // 1) Build glossary list (sorted A→Z by key)
+  var list = document.getElementById("glist");
+  var keys = Object.keys(G).sort(function(a,b){return a.toLowerCase()<b.toLowerCase()?-1:1;});
+  keys.forEach(function(k){
+    var li = document.createElement("li");
+    li.className = "gitem";
+    li.id = slug(k);
+    li.innerHTML = '<span class="gt">'+k+'</span>'+
+      (G[k].en && G[k].en!==k ? '<span class="ge">'+G[k].en+'</span>' : '')+
+      '<span class="gf">'+G[k].fa+'</span>'+
+      '<a class="backtop no-print" href="#glossary">↑ بالای واژه‌نامه</a>';
+    list.appendChild(li);
+  });
+
+  // 2) Auto-link occurrences in the document (skip glossary, scripts, existing links)
+  var pattern = keys.slice().sort(function(a,b){return b.length-a.length;})
+    .map(function(k){return k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}).join("|");
+  var re = new RegExp("(?:"+pattern+")","g");
+  var latin = /[A-Za-z0-9]/;
+
+  function eligible(node){
+    var p = node.parentNode;
+    while(p && p.nodeType===1){
+      var t = p.tagName;
+      if(t==="A"||t==="SCRIPT"||t==="STYLE"||t==="INPUT") return false;
+      if(p.id==="glossary"||p.classList && p.classList.contains("glossary")) return false;
+      p = p.parentNode;
+    }
+    return true;
+  }
+
+  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+  var targets = [];
+  while(walker.nextNode()){
+    var n = walker.currentNode;
+    if(!n.nodeValue.trim()) continue;
+    if(!eligible(n)) continue;
+    if(re.test(n.nodeValue)){ re.lastIndex=0; targets.push(n); }
+  }
+
+  targets.forEach(function(n){
+    var text = n.nodeValue, out = document.createDocumentFragment();
+    var last = 0, m;
+    re.lastIndex = 0;
+    while((m = re.exec(text))){
+      var s = m.index, e = re.lastIndex, term = m[0];
+      var before = text.charAt(s-1), after = text.charAt(e);
+      // enforce word boundaries so terms aren't matched inside larger words
+      if(latin.test(before) || latin.test(after)){ continue; }
+      if(s>last) out.appendChild(document.createTextNode(text.slice(last,s)));
+      var a = document.createElement("a");
+      a.className = "term";
+      a.href = "#"+slug(term);
+      a.title = (G[term].en!==term? G[term].en+" — ":"")+G[term].fa;
+      a.textContent = term;
+      out.appendChild(a);
+      last = e;
+    }
+    if(last<text.length) out.appendChild(document.createTextNode(text.slice(last)));
+    if(last>0) n.parentNode.replaceChild(out, n);
+  });
+
+  // 3) Glossary live search filter
+  var box = document.getElementById("gsearch");
+  if(box){
+    box.addEventListener("input", function(){
+      var q = this.value.trim().toLowerCase();
+      Array.prototype.forEach.call(list.children, function(li){
+        li.style.display = (!q || li.textContent.toLowerCase().indexOf(q)>-1) ? "" : "none";
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
