@@ -1,0 +1,14 @@
+# Keep the build context small and free of secrets / local state.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+*.db
+*.sqlite3
+staticfiles/
+.pytest_cache/
+.git/
+.gitignore
+tests/

@@ -53,6 +53,9 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    # Serve collected static files (Django admin, DRF browsable API) in
+    # production without a separate web server. Harmless in development.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -126,7 +129,19 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+# collectstatic target (served by WhiteNoise in production).
+STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# In production, hash + compress static assets (manifest storage). Kept off in
+# development so `runserver` needs no `collectstatic` first.
+if not DEBUG:
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        },
+    }
 
 # --- DRF + JWT --------------------------------------------------------------
 REST_FRAMEWORK = {
@@ -166,3 +181,25 @@ SOFT_RESERVATION_HOURS = int(os.getenv("SOFT_RESERVATION_HOURS", "48"))
 FIRST_ADMIN_PHONE = os.getenv("FIRST_ADMIN_PHONE", "09120000000")
 FIRST_ADMIN_PASSWORD = os.getenv("FIRST_ADMIN_PASSWORD", "admin1234")
 FIRST_ADMIN_NAME = os.getenv("FIRST_ADMIN_NAME", "مدیر سیستم")
+
+# --- Production security -----------------------------------------------------
+# CSRF trust for the admin/session flows when served behind a domain over HTTPS.
+# Comma-separated, each entry WITH scheme, e.g. "https://api.daranx.com".
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
+]
+
+if not DEBUG:
+    # Trust the reverse proxy's X-Forwarded-Proto so Django knows requests are
+    # HTTPS when TLS terminates at the proxy (nginx, Caddy, a PaaS router).
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # Secure cookies by default in production (toggleable for HTTP-only setups).
+    SESSION_COOKIE_SECURE = _env_bool("SESSION_COOKIE_SECURE", True)
+    CSRF_COOKIE_SECURE = _env_bool("CSRF_COOKIE_SECURE", True)
+    # Optional HTTPS redirect + HSTS — enable once TLS is confirmed working, so a
+    # misconfigured proxy can't lock you out of a fresh deploy.
+    SECURE_SSL_REDIRECT = _env_bool("SECURE_SSL_REDIRECT", False)
+    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
+    SECURE_HSTS_PRELOAD = _env_bool("SECURE_HSTS_PRELOAD", False)
+    SECURE_CONTENT_TYPE_NOSNIFF = True
