@@ -289,11 +289,11 @@ def reprice_invoice(invoice: Invoice, *, lines_data: list[dict], actor=None) -> 
         line.save(update_fields=["quantity", "unit_price", "updated_at"])
 
     # 5% rule + cost basis apply only to goods lines linked to a source purchase.
-    priced = [l for l in lines if l.source_purchase_line is not None]
+    priced = [line for line in lines if line.source_purchase_line is not None]
     if priced:
         check_five_percent(priced)
     cost_total = sum(
-        (Decimal(l.source_purchase_line.unit_price) * Decimal(l.quantity) for l in priced),
+        (Decimal(line.source_purchase_line.unit_price) * Decimal(line.quantity) for line in priced),
         Decimal("0"),
     )
 
