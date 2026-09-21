@@ -72,6 +72,18 @@ python manage.py makemigrations --check --dry-run   # همگام‌بودن ما
 pytest -q --cov=apps            # تست‌ها + پوشش
 ```
 
+### pre-commit (اختیاری ولی توصیه‌شده)
+
+تا لینت پیش از هر کامیت محلی اجرا شود و مشکلات قبل از CI گرفته شوند:
+
+```bash
+pip install pre-commit        # در requirements-dev.txt هم هست
+pre-commit install            # یک‌بار؛ سپس روی هر `git commit` اجرا می‌شود
+pre-commit run --all-files    # اجرای دستی روی کل مخزن
+```
+
+پیکربندی در `.pre-commit-config.yaml` (ruff + چند بررسی پایه).
+
 ### CI
 
 هر push و هر Pull Request به‌صورت خودکار در GitHub Actions اجرا می‌شود
