@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from apps.core.models import Item, Party
-from apps.procurement.models import Purchase, PurchaseLine
 from apps.procurement import services as proc
+from apps.procurement.models import Purchase, PurchaseLine
 
 pytestmark = pytest.mark.django_db
 
@@ -84,8 +84,8 @@ def test_receipt_blocked_for_unregistered_purchase(seeded, make_user, api):
 
 def test_invoice_line_shows_serials_from_linked_purchase(seeded, make_user, api):
     """Serials are allocated to an invoice via the purchase linked to it."""
-    from apps.sales.models import Proforma, ProformaLine
     from apps.sales import services as sales
+    from apps.sales.models import Proforma, ProformaLine
     from apps.warehouse.models import GoodsReceipt, ReceiptItem
 
     seller = make_user("09120000078", "فروشنده", role_code="sales_employee")

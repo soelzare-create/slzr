@@ -111,7 +111,7 @@ class CompanyProfile(TimeStampedModel):
         return self.name
 
     @classmethod
-    def get_solo(cls) -> "CompanyProfile":
+    def get_solo(cls) -> CompanyProfile:
         obj = cls.objects.first()
         return obj or cls.objects.create()
 

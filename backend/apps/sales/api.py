@@ -56,7 +56,7 @@ class ProformaViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
         try:
             invoice = services.convert_to_invoice(p, actor=request.user)
         except services.InvalidTransition as exc:
-            raise ValidationError(str(exc))
+            raise ValidationError(str(exc)) from exc
         # Ask procurement to buy the goods for this invoice (off the critical path).
         manager = _procurement_manager()
         if manager is not None:
@@ -72,7 +72,7 @@ class ProformaViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
         try:
             proforma = fn(proforma, actor=self.request.user, **kwargs)
         except (services.InvalidTransition, services.FivePercentViolation) as exc:
-            raise ValidationError(str(exc))
+            raise ValidationError(str(exc)) from exc
         return Response(ProformaSerializer(proforma).data)
 
 
@@ -125,5 +125,5 @@ class InvoiceViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
             invoice = services.reprice_invoice(
                 self.get_object(), lines_data=lines, actor=request.user)
         except (services.InvalidTransition, services.FivePercentViolation) as exc:
-            raise ValidationError(str(exc))
+            raise ValidationError(str(exc)) from exc
         return Response(InvoiceSerializer(invoice).data)

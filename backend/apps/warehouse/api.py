@@ -9,7 +9,8 @@ from apps.procurement.models import Purchase
 
 from .models import GoodsReceipt, ReceiptItem
 from .serializers import (
-    GoodsReceiptSerializer, ReceivablePurchaseSerializer,
+    GoodsReceiptSerializer,
+    ReceivablePurchaseSerializer,
 )
 
 

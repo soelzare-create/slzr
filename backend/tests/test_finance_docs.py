@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from apps.accounting.models import Account, Expense, JournalEntry, Payment
 from apps.accounting import services as acc
+from apps.accounting.models import Account, Expense, JournalEntry, Payment
 from apps.core.models import Party
 
 pytestmark = pytest.mark.django_db

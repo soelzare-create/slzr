@@ -10,7 +10,10 @@ from rest_framework.response import Response
 
 from .models import CompanyProfile, Item, Notification, Party
 from .serializers import (
-    CompanyProfileSerializer, ItemSerializer, NotificationSerializer, PartySerializer,
+    CompanyProfileSerializer,
+    ItemSerializer,
+    NotificationSerializer,
+    PartySerializer,
 )
 
 

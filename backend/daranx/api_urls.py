@@ -6,14 +6,26 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from apps.accounting.api import (
-    AccountViewSet, BalanceSheetView, ExpenseViewSet, JournalEntryViewSet, LedgerView,
-    PartyBalancesView, PaymentViewSet,
+    AccountViewSet,
+    BalanceSheetView,
+    ExpenseViewSet,
+    JournalEntryViewSet,
+    LedgerView,
+    PartyBalancesView,
+    PaymentViewSet,
 )
 from apps.accounts.api import (
-    RoleViewSet, SystemViewSet, UserViewSet, login_view, me_view,
+    RoleViewSet,
+    SystemViewSet,
+    UserViewSet,
+    login_view,
+    me_view,
 )
 from apps.core.api import (
-    CompanyProfileView, ItemViewSet, NotificationViewSet, PartyViewSet,
+    CompanyProfileView,
+    ItemViewSet,
+    NotificationViewSet,
+    PartyViewSet,
 )
 from apps.management.api import DashboardView
 from apps.procurement.api import PurchaseViewSet

@@ -40,8 +40,21 @@ python manage.py runserver          # http://localhost:8000
 ```
 
 - ورود اولیه: شماره `09120000000` / رمز `admin1234` — **بعد از اولین ورود عوض کنید**.
-- سوییچ به PostgreSQL: فقط مقدار `DATABASE_URL` را در `.env` تنظیم کنید (بدون تغییر کد):
-  `DATABASE_URL=postgresql+psycopg://daranx:secret@localhost:5432/daranx`
+
+### دیتابیس توسعه: PostgreSQL (توصیه‌شده)
+
+SQLite برای شروعِ بدون‌دردسر خوب است، اما **قفل ردیف ندارد**؛ یعنی
+`select_for_update()` (رقابت FCFS رزرو ۴۸ ساعته در `apps/sales`) روی آن بی‌اثر
+است و قابل تست نیست. برای همین توسعه و تست را روی همان موتوری انجام دهید که در
+تولید اجرا می‌شود:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d          # PostgreSQL روی localhost:5432
+export DATABASE_URL=postgresql+psycopg://daranx:daranx@localhost:5432/daranx
+cd backend && python manage.py migrate && python manage.py seed
+```
+
+سوییچ کد لازم نیست؛ فقط `DATABASE_URL` را در `.env` بگذارید.
 
 ### job رزرو نرم ۴۸ ساعته
 
@@ -49,13 +62,21 @@ python manage.py runserver          # http://localhost:8000
 python manage.py release_reservations   # cron/Celery beat هر ۱۵ دقیقه
 ```
 
-### تست‌ها
+### تست و لینت
 
 ```bash
 cd backend
 pip install -r requirements-dev.txt
-pytest -q
+ruff check .                    # لینت (پیکربندی در backend/ruff.toml)
+python manage.py makemigrations --check --dry-run   # همگام‌بودن مایگریشن‌ها
+pytest -q --cov=apps            # تست‌ها + پوشش
 ```
+
+### CI
+
+هر push و هر Pull Request به‌صورت خودکار در GitHub Actions اجرا می‌شود
+(`.github/workflows/ci.yml`): لینت با ruff، بررسی همگامیِ مایگریشن‌ها، و
+اجرای کل تست‌ها **روی PostgreSQL** (همان موتور تولید).
 
 ## راه‌اندازی فرانت‌اند
 

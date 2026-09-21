@@ -12,7 +12,11 @@ from django.db import transaction
 
 from apps.accounting.models import Account
 from apps.accounts.models import (
-    Permission, Role, RolePermission, System, User, UserRole,
+    Permission,
+    Role,
+    RolePermission,
+    System,
+    User,
 )
 
 # Departments (Section 3). Management is a department too but has full access.

@@ -14,7 +14,11 @@ from rest_framework.response import Response
 
 from apps.accounting.models import JournalLine
 from apps.accounting.services import (
-    ACCOUNTS_RECEIVABLE, ACCOUNTS_PAYABLE, SALES_INCOME, SERVICE_INCOME, SUPPORT_INCOME,
+    ACCOUNTS_PAYABLE,
+    ACCOUNTS_RECEIVABLE,
+    SALES_INCOME,
+    SERVICE_INCOME,
+    SUPPORT_INCOME,
 )
 from apps.procurement.models import Purchase
 from apps.sales.models import Invoice, Proforma, ProformaStatus

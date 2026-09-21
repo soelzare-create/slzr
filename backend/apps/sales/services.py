@@ -17,9 +17,8 @@ from apps.accounting import services as acc
 from apps.accounting.services import Line
 from apps.core.models import Notification
 from apps.core.services import log_action, notify
-from apps.procurement.models import Purchase
 
-from .models import Invoice, InvoiceLine, Proforma, ProformaLine, ProformaStatus
+from .models import Invoice, InvoiceLine, Proforma, ProformaStatus
 
 
 class FivePercentViolation(Exception):

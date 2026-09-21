@@ -1,0 +1,35 @@
+# Development database — PostgreSQL parity with production.
+#
+# Why: SQLite does NOT implement row locking, so `select_for_update()` (used for
+# the 48h soft-reservation FCFS race in apps/sales) is a silent no-op there and
+# the concurrency guarantees can't be exercised. Develop and test on the same
+# engine you deploy on.
+#
+#   1) docker compose -f docker-compose.dev.yml up -d
+#   2) export DATABASE_URL=postgresql+psycopg://daranx:daranx@localhost:5432/daranx
+#   3) cd backend && python manage.py migrate && python manage.py seed
+#   4) pytest -q
+#
+# Stop with:   docker compose -f docker-compose.dev.yml down
+# Wipe data:   docker compose -f docker-compose.dev.yml down -v
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: daranx
+      POSTGRES_USER: daranx
+      POSTGRES_PASSWORD: daranx
+    ports:
+      - "5432:5432"
+    volumes:
+      - dev_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U daranx -d daranx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  dev_db_data:

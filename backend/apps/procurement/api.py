@@ -37,7 +37,7 @@ class PurchaseViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
         try:
             purchase = services.register_purchase(purchase, actor=request.user)
         except ValueError as exc:
-            raise ValidationError(str(exc))
+            raise ValidationError(str(exc)) from exc
         # Best-effort: advance a linked proforma to READY (off the critical path).
         self._notify_origin(purchase)
         return Response(PurchaseSerializer(purchase).data)
@@ -57,8 +57,8 @@ class PurchaseViewSet(OwnershipQuerysetMixin, viewsets.ModelViewSet):
         if not purchase.origin_ref.startswith("sales.proforma:"):
             return
         try:
-            from apps.sales.models import Proforma, ProformaStatus
             from apps.sales import services as sales_services
+            from apps.sales.models import Proforma, ProformaStatus
 
             pid = int(purchase.origin_ref.split(":", 1)[1])
             proforma = Proforma.objects.filter(pk=pid).first()
