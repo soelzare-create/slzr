@@ -20,9 +20,6 @@ select = ["E", "W", "F", "I", "UP", "B", "C4", "DJ"]
 ignore = [
     "E501",   # line length — enforced softly; don't block on long strings/URLs
     "B008",   # function call in default arg — common/intentional in DRF/Django
-    "E741",   # ambiguous var name (`l` for a ledger/invoice line) — a deliberate
-              # follow-up rename; kept out of the CI-enabling change to avoid
-              # churn in the accounting logic.
 ]
 
 [lint.per-file-ignores]

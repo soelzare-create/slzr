@@ -72,11 +72,11 @@ class JournalEntry(TimeStampedModel):
 
     @property
     def total_debit(self) -> Decimal:
-        return sum((l.debit for l in self.lines.all()), Decimal("0"))
+        return sum((line.debit for line in self.lines.all()), Decimal("0"))
 
     @property
     def total_credit(self) -> Decimal:
-        return sum((l.credit for l in self.lines.all()), Decimal("0"))
+        return sum((line.credit for line in self.lines.all()), Decimal("0"))
 
     @property
     def is_balanced(self) -> bool:

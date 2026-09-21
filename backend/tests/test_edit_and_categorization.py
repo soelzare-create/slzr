@@ -36,7 +36,7 @@ def test_proforma_splits_goods_and_service_totals(seeded, make_user, api):
     assert int(resp.data["total"]) == 2500
     assert int(resp.data["goods_total"]) == 2000
     assert int(resp.data["service_total"]) == 500
-    kinds = {l["item_kind"] for l in resp.data["lines"]}
+    kinds = {line["item_kind"] for line in resp.data["lines"]}
     assert kinds == {"GOODS", "SERVICE"}
 
 
