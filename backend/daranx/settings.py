@@ -87,7 +87,7 @@ WSGI_APPLICATION = "daranx.wsgi.application"
 # --- Database ---------------------------------------------------------------
 # DATABASE_URL like: postgresql+psycopg://user:pass@host:5432/dbname
 def _database_from_url(url: str) -> dict:
-    from urllib.parse import urlparse, unquote
+    from urllib.parse import unquote, urlparse
 
     parsed = urlparse(url)
     if parsed.scheme.startswith("sqlite"):

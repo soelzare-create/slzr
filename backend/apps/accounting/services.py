@@ -18,7 +18,6 @@ from apps.core.services import log_action
 
 from .models import Account, JournalEntry, JournalLine
 
-
 # --- Well-known chart-of-accounts codes (seeded in management.seed) ---------
 CASH = "1100"                # صندوق/بانک
 ACCOUNTS_RECEIVABLE = "1200"  # حساب‌های دریافتنی (مشتری بدهکار)

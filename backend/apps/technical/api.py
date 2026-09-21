@@ -9,9 +9,9 @@ from rest_framework import serializers, views
 from rest_framework.response import Response
 
 from apps.accounts.permissions import HasPermissionCode
+from apps.sales import services as sales_services
 from apps.sales.models import Invoice
 from apps.sales.serializers import InvoiceSerializer
-from apps.sales import services as sales_services
 
 
 class _LineIn(serializers.Serializer):
