@@ -23,3 +23,9 @@ dist/
 Thumbs.db
 .idea/
 .vscode/
+
+# Simple PHP invoicing app (invoice-app/): runtime data stays on the server
+invoice-app/data/*
+!invoice-app/data/.htaccess
+!invoice-app/data/index.html
+invoice-app/app/config.php

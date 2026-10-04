@@ -1,0 +1,173 @@
+/* The A4 sheet — taken from the DaranX quotation template. */
+
+.sheet-page .nav{position:static}
+.sheet-page .flashes{max-width:calc(210mm + 2 * var(--gutter))}
+
+/* ---------- action bar (not printed) ---------- */
+.docbar{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--ground) 90%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.docbar .in{max-width:calc(210mm + 2 * var(--gutter));margin-inline:auto;padding:.6rem var(--gutter);display:flex;flex-wrap:wrap;
+  align-items:center;gap:.55rem .7rem}
+.docbar form{margin:0}
+.docbar .spacer{flex:1 1 0}
+.more{position:relative}
+.more>summary{list-style:none;padding-inline:.9rem;font-size:1.1rem;line-height:1.4}
+.more>summary::-webkit-details-marker{display:none}
+.more .menu{position:absolute;inset-inline-end:0;top:calc(100% + .4rem);min-width:200px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow-lift);padding:.35rem;z-index:70;
+  display:flex;flex-direction:column}
+.more .menu a,.more .menu button{display:block;width:100%;text-align:start;border:0;background:transparent;color:var(--ink);
+  font-weight:700;font-size:.9rem;padding:.5rem .8rem;border-radius:8px;cursor:pointer;text-decoration:none}
+.more .menu a:hover,.more .menu button:hover{background:var(--surface-2)}
+.more .menu .danger{color:var(--danger)}
+
+/* ---------- stage ---------- */
+.stage{padding:1.25rem var(--gutter) 3rem;display:flex;justify-content:center;min-width:0}
+.stage-in{width:210mm;max-width:100%;min-width:0}
+.banners{display:grid;gap:.5rem;margin-bottom:1rem}
+.banner{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:.55rem 1rem;
+  font-weight:700;color:var(--ink-soft);font-size:.92rem}
+
+/* The sheet is paper: it always keeps the light palette, in both themes and on print. */
+.sheet{
+  --navy:#153A62; --navy-deep:#0E2749; --steel:#3E7BB6; --steel-soft:#6FA3D2;
+  --surface:#FFFFFF; --surface-2:#EAF0F7; --ink:#12233A; --ink-soft:#43566E; --ink-faint:#5E6E86;
+  --line:#DCE4EE; --line-strong:#C2D0E0; --on-navy:#EAF1F8; --on-navy-soft:#AEC4DB;
+  --grad:linear-gradient(120deg,#153A62 0%,#2E6098 55%,#3E7BB6 100%);
+  --pad:clamp(1rem,5vw,12mm);
+  color-scheme:light;
+}
+.sheet{width:210mm;max-width:100%;min-height:297mm;background:#fff;border-radius:var(--r-md);
+  box-shadow:var(--shadow-lift);overflow:hidden;display:flex;flex-direction:column;color:var(--ink-soft);
+  font-size:.95rem;min-width:0;line-height:1.8}
+
+.hd{background:radial-gradient(120% 150% at 85% 0,var(--steel),var(--navy) 62%);color:#fff;
+  padding:9mm var(--pad);display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.hd .co{display:flex;align-items:center;gap:1rem}
+.hd .co img{height:44px;width:auto;filter:brightness(0) invert(1)}
+.hd .co b{display:block;font-size:1.05rem;font-weight:900;color:#fff;line-height:1.5}
+.hd .co small{display:block;color:var(--on-navy-soft);font-size:.78rem;font-weight:600}
+.hd .dt{text-align:start}
+.hd .dt .en{display:block;font-size:.78rem;font-weight:700;letter-spacing:.22em;color:var(--on-navy-soft);direction:ltr;text-align:start}
+.hd .dt h1{font-size:clamp(1.7rem,4vw,2.2rem);font-weight:900;color:#fff;margin-top:.1rem}
+
+.info{display:grid;grid-template-columns:1.3fr 1fr;gap:5mm;padding:7mm var(--pad) 0}
+.box{border:1px solid var(--line);border-radius:var(--r-md);padding:4mm 5mm;background:var(--surface)}
+.box h3{display:flex;align-items:center;gap:.5rem;font-size:.82rem;font-weight:800;color:var(--steel);
+  letter-spacing:.06em;margin-bottom:.55rem}
+.box h3::before{content:"";width:22px;height:2px;background:var(--steel-soft);border-radius:2px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.3rem .8rem;align-items:baseline;margin:0;font-size:.92rem}
+.kv dt{color:var(--ink-faint);font-weight:600;white-space:nowrap}
+.kv dd{margin:0;color:var(--ink);font-weight:700;min-height:1.7em;min-width:0;overflow-wrap:anywhere}
+.ltr{direction:ltr;text-align:right}
+
+/* editable surfaces */
+.sheet [contenteditable]{outline:none;border-radius:6px}
+.sheet [contenteditable]:empty::before{content:attr(data-ph);color:var(--ink-faint);opacity:.65;font-weight:500}
+.ce-in{width:100%;font:inherit;font-weight:700;color:var(--ink);background:transparent;border:0;outline:none;
+  border-radius:6px;padding:0 .1rem;min-width:0}
+.ce-in::placeholder{color:var(--ink-faint);opacity:.65;font-weight:500}
+@media screen{
+  .sheet [contenteditable="true"]:hover,.items input:hover,.ce-in:hover{background:color-mix(in srgb,var(--steel) 8%,transparent)}
+  .sheet [contenteditable="true"]:focus,.items input:focus,.tot input:focus,.ce-in:focus{
+    background:color-mix(in srgb,var(--steel) 10%,transparent);box-shadow:0 0 0 2px var(--steel-soft)}
+}
+
+/* items table */
+.tbl-wrap{padding:6mm var(--pad) 0}
+.items{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;
+  font-size:.92rem}
+.items thead th{background:var(--navy);color:#fff;font-weight:800;font-size:.85rem;padding:.65rem .7rem;text-align:center;white-space:nowrap}
+.items thead th.l{text-align:start}
+.items td{padding:.35rem .6rem;border-bottom:1px solid var(--line);vertical-align:middle;color:var(--ink)}
+.items tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--surface-2) 45%,#fff)}
+.items tbody tr:last-child td{border-bottom:0}
+.items .c{text-align:center}
+.items .rn{color:var(--ink-faint);font-weight:700;width:11mm}
+.items .title{min-height:1.8em;font-weight:600;padding:.15rem .3rem;white-space:pre-wrap}
+.items .qty{width:17mm}
+.items .price,.items .line{width:34mm}
+.items .line{font-weight:800;white-space:nowrap}
+.items .del{width:9mm;padding:0 .2rem}
+.items input{width:100%;font:inherit;color:var(--ink);background:transparent;border:0;border-radius:6px;
+  text-align:center;padding:.2rem .3rem;outline:none;font-weight:600}
+.items input::placeholder{color:var(--ink-faint);opacity:.55}
+.rm{width:26px;height:26px;border-radius:999px;border:0;background:transparent;color:var(--ink-faint);
+  font-size:1.15rem;line-height:1;cursor:pointer}
+.rm:hover{background:var(--surface-2);color:#b3261e}
+.addrow{display:flex;justify-content:center;margin-top:.7rem}
+.addrow button{border:1px dashed var(--line-strong);background:transparent;color:var(--steel);font-weight:800;
+  border-radius:999px;padding:.4rem 1.4rem;cursor:pointer;font-size:.88rem;font-family:inherit}
+.addrow button:hover{background:var(--surface-2)}
+
+/* totals / signature */
+.sum{display:grid;grid-template-columns:1fr 88mm;gap:5mm;padding:5mm var(--pad) 0;align-items:start}
+.words{border:1px solid var(--line);border-radius:var(--r-md);padding:3.5mm 5mm}
+.words h3{font-size:.8rem;font-weight:800;color:var(--steel);margin-bottom:.25rem}
+.words p{margin:0;color:var(--ink);font-weight:700;min-height:1.8em;line-height:1.9}
+.sig{margin-top:4mm;border:1px dashed var(--line-strong);border-radius:var(--r-md);height:34mm;padding:3mm 5mm;
+  display:flex;flex-direction:column;justify-content:space-between;text-align:center;color:var(--ink-faint);font-weight:700;font-size:.85rem}
+.sig b{color:var(--ink)}
+.tot{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.tot .r{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.5rem 1rem;
+  border-bottom:1px solid var(--line);color:var(--ink);font-weight:700}
+.tot .r span:first-child{color:var(--ink-soft);font-weight:600}
+.tot .r input{font:inherit;color:inherit;background:transparent;border:0;outline:none;width:30mm;text-align:end;
+  font-weight:800;border-radius:6px;padding:.1rem .3rem}
+.tot .r input.rate{width:11mm;text-align:center}
+.tot .r.vat{display:none}
+.tot .r.vat span:first-child{white-space:nowrap}
+body.vat-on .tot .r.vat{display:flex}
+.tot .r.pay{background:var(--grad);color:#fff;border:0;font-weight:900;font-size:1.02rem;padding:.75rem 1rem}
+.tot .r.pay span:first-child{color:#fff;font-weight:800}
+
+.notes{margin:5mm var(--pad) 0;border:1px solid var(--line);border-radius:var(--r-md);padding:3.5mm 5mm}
+.notes h3{font-size:.8rem;font-weight:800;color:var(--steel);margin-bottom:.2rem}
+.notes ul{margin:0;padding-inline-start:1.2rem;color:var(--ink-soft);line-height:2;font-size:.9rem;min-height:2em}
+.notes ul:focus{box-shadow:none}
+
+.main{flex:1 0 auto;min-width:0;padding-bottom:8mm}
+.ft{background:var(--navy-deep);color:var(--on-navy-soft);padding:4.5mm var(--pad);font-size:.8rem;
+  display:flex;flex-direction:column;gap:.25rem}
+.ft .row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.2rem 1.2rem}
+.ft a{color:var(--on-navy);text-decoration:none}
+.ft .b{font-weight:900;color:#fff;font-size:1rem;direction:ltr}
+.ft .b .x2{color:var(--steel-soft)}
+.ft .ph{direction:ltr}
+
+/* cancelled invoice stamp */
+.sheet.void .main{position:relative}
+.sheet.void .main::after{content:"باطل شده";position:absolute;top:42%;left:50%;transform:translate(-50%,-50%) rotate(-16deg);
+  font-size:5rem;font-weight:900;color:rgba(179,38,30,.18);border:7px solid rgba(179,38,30,.18);border-radius:24px;
+  padding:0 2rem;pointer-events:none;white-space:nowrap}
+body[data-ro] .addrow,body[data-ro] .del{display:none}
+
+@media (max-width:640px){
+  .info,.sum{grid-template-columns:minmax(0,1fr)}
+  .hd{flex-direction:column;align-items:flex-start}
+  .tbl-wrap{overflow-x:auto}
+  .items{font-size:.82rem;min-width:30rem}
+  .items .price,.items .line{width:auto}
+  .tot .r input{width:24mm}
+  .docbar .spacer{display:none}
+}
+
+/* ---------- print ---------- */
+@page{size:A4;margin:0}
+@media print{
+  html,body{background:#fff}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .nav,.docbar,.flashes,.banners,.addrow,.del,.no-print{display:none!important}
+  .stage{padding:0;display:block}
+  .stage-in{width:auto}
+  .sheet{display:block;overflow:visible;box-shadow:none;border-radius:0;width:210mm;min-height:297mm;--pad:12mm;
+    background:linear-gradient(#fff calc(100% - 20mm),var(--navy-deep) calc(100% - 20mm))}
+  .main{min-height:269mm;background:#fff}
+  .tbl-wrap{overflow:visible}
+  .items{min-width:0}
+  .sheet [contenteditable]:empty::before{content:""}
+  .items input::placeholder,.ce-in::placeholder{color:transparent}
+  .items thead{display:table-header-group}
+  .items tr,.tot,.words,.sig,.notes{break-inside:avoid}
+  .tot .r.zero{display:none}
+}

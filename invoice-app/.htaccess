@@ -1,0 +1,20 @@
+# DaranX invoicing — Apache / LiteSpeed rules.
+DirectoryIndex index.php
+
+# Never serve the database, logs or internal files directly.
+<FilesMatch "\.(sqlite|sqlite3|db|log|md|lock)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Send everyone to HTTPS (uncomment after an SSL certificate is active on the domain).
+# <IfModule mod_rewrite.c>
+#   RewriteEngine On
+#   RewriteCond %{HTTPS} !=on
+#   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
