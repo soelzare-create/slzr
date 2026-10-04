@@ -356,17 +356,6 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
 @keyframes found{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.45)}}
 @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 .prop{padding:.6rem 0 1.4rem}
-#d-prop2{padding-top:0}
-.rec p{margin:0}.rec p+p{margin-top:.35rem}
-.verdict{margin:0 0 .8rem;padding:.6rem .85rem;border-radius:var(--r-sm);background:var(--surface-2);
-  border-inline-start:4px solid var(--steel);color:var(--ink-soft);line-height:1.85}
-.verdict b{color:var(--ink)}
-table.cmp2{margin:0 0 .9rem;font-size:.88rem}
-.cmp2 td:not(:first-child),.cmp2 th:not(:first-child){width:auto;white-space:nowrap}
-:root{--z-hall:#EAF2FB}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--z-hall:#12304E}}
-:root[data-theme="dark"]{--z-hall:#12304E}
-.schem .hall{fill:var(--z-hall);stroke:var(--steel);stroke-width:2;stroke-dasharray:4 5}
 .prop-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:1.4rem;align-items:start;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--shadow)}
 .prop-text h2{font-size:1.25rem;margin:.5rem 0 .6rem}
@@ -374,12 +363,7 @@ table.cmp2{margin:0 0 .9rem;font-size:.88rem}
 .prop-text .legend{justify-content:flex-start}
 .note{color:var(--ink-faint);font-size:.85rem;margin:.7rem 0 0}
 .prop .schem-fig{margin:0}
-@media(max-width:860px){.prop-grid{grid-template-columns:1fr;row-gap:0}
-  /* phones: the plan comes right after the heading and verdict, legend under it */
-  .prop-text{display:contents}
-  .prop-text>.eyebrow{order:1;justify-self:start}.prop-text>h2{order:2}.prop-text>.verdict{order:3}
-  .prop .schem-fig{order:4;margin:.2rem 0 .2rem}.prop-text>.legend{order:5;margin:.3rem 0 1rem}
-  .prop-text>.bul{order:6}.prop-text>.cmp2{order:7}.prop-text>.note{order:8;margin-top:0}}
+@media(max-width:860px){.prop-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.g2{grid-template-columns:1fr}}
 @media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}.top-right .chip{display:none}}
 @media print{*{animation:none!important}.hero-net,.schem .shopper{display:none}.topbar,.btn-x,.locbar,.hint{display:none}.hero,.mk,.dot,.sev i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -403,7 +387,7 @@ table.cmp2{margin:0 0 .9rem;font-size:.88rem}
     <svg class="hero-net" viewBox="0 0 520 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g class="drift"><line x1="175" y1="50" x2="79" y2="66"/><line x1="175" y1="50" x2="89" y2="42"/><line x1="332" y1="32" x2="277" y2="99"/><line x1="332" y1="32" x2="297" y2="106"/><line x1="332" y1="32" x2="489" y2="26"/><line x1="332" y1="32" x2="432" y2="82"/><line x1="277" y1="99" x2="297" y2="106"/><line x1="48" y1="132" x2="38" y2="115"/><line x1="48" y1="132" x2="107" y2="149"/><line x1="38" y1="115" x2="79" y2="66"/><line x1="38" y1="115" x2="107" y2="149"/><line x1="54" y1="36" x2="79" y2="66"/><line x1="54" y1="36" x2="89" y2="42"/><line x1="224" y1="205" x2="321" y2="233"/><line x1="224" y1="205" x2="168" y2="203"/><line x1="79" y1="66" x2="89" y2="42"/><line x1="321" y1="233" x2="297" y2="106"/><line x1="489" y1="26" x2="432" y2="82"/><line x1="168" y1="203" x2="107" y2="149"/><circle cx="175" cy="50" r="4.5"/><circle cx="332" cy="32" r="3"/><circle cx="277" cy="99" r="3"/><circle cx="48" cy="132" r="4.5"/><circle cx="38" cy="115" r="3"/><circle cx="54" cy="36" r="3"/><circle cx="224" cy="205" r="4.5"/><circle cx="79" cy="66" r="3"/><circle cx="321" cy="233" r="3"/><circle cx="297" cy="106" r="4.5"/><circle cx="489" cy="26" r="3"/><circle cx="432" cy="82" r="3"/><circle cx="89" cy="42" r="4.5"/><circle cx="168" cy="203" r="3"/><circle cx="107" cy="149" r="3"/></g></svg>
     <span class="eyebrow">ارزیابی دو طرح چیدمان سوپرمارکت</span>
     <h1>طرح ۱ پایهٔ بهتری است؛ پیش از اجرا ۴ اصلاح فوری لازم است.</h1>
-    <p>هدف: افزایش فروش · دو پیشنهاد: اصلاحی (ساختار طرح ۱) و فرش مارکت</p>
+    <p>هدف: افزایش فروش · پیشنهاد: ساختار طرح ۱ + راهروی میانی طرح ۲</p>
     <p class="meta-line">تهیه‌شده توسط <bdi>DaranX</bdi> · ۱۲ مهر ۱۴۰۵</p>
   </div>
 </section>
@@ -443,10 +427,7 @@ table.cmp2{margin:0 0 .9rem;font-size:.88rem}
       </div>
     </div>
 
-    <div class="rec">
-      <p><b>پیشنهاد ۱ · اصلاحی:</b> طرح ۱ + راهروی عرضی میانی؛ بلوک مرکزی در چهار بخش؛ اداری و رختکن‌ها به پشت‌صحنه. <a href="#d-prop">دیدن طرح ↓</a></p>
-      <p><b>پیشنهاد ۲ · فرش مارکت:</b> ورود مستقیم به بازار میوه و سبزی؛ دیوار پشتی سراسر تازه. <a href="#d-prop2">دیدن طرح ↓</a></p>
-    </div>
+    <p class="rec"><b>پیشنهاد:</b> طرح ۱ + راهروی عرضی میانی؛ بلوک مرکزی در چهار بخش؛ اداری و رختکن‌ها به پشت‌صحنه. <a href="#d-prop">دیدن طرح ↓</a></p>
   </div>
 </section>
 
@@ -454,7 +435,7 @@ table.cmp2{margin:0 0 .9rem;font-size:.88rem}
   <div class="wrap">
     <div class="prop-grid">
       <div class="prop-text">
-        <span class="eyebrow">طرح پیشنهادی ۱ · اصلاحی</span>
+        <span class="eyebrow">طرح پیشنهادی</span>
         <h2>ساختار طرح ۱ + راهروی میانی طرح ۲</h2>
         <ul class="bul">
           <li>بلوک مرکزی در چهار بخش: پخت‌وپز · صبحانه · غیرغذایی · خرید لحظه‌ای.</li>
@@ -561,98 +542,6 @@ table.cmp2{margin:0 0 .9rem;font-size:.88rem}
   <rect style="--i:33" x="40" y="920" width="150" height="66" class="z boh"/><text style="--i:33" class="zt xs2" x="115" y="948">خزانه</text><text style="--i:33" class="zt xs" x="115" y="972">ورود فقط کارکنان</text>
   <rect style="--i:34" x="604" y="996" width="96" height="34" rx="6" class="z boh"/><text style="--i:34" class="zt xs" x="652" y="1018">پست حراست</text>
   <circle r="10" class="shopper"><animateMotion dur="11s" repeatCount="indefinite"><mpath href="#flowpath"/></animateMotion></circle>
-  </g>
-</svg>
-      </figure>
-    </div>
-  </div>
-</section>
-
-<section class="prop" id="d-prop2">
-  <div class="wrap">
-    <div class="prop-grid">
-      <div class="prop-text">
-        <span class="eyebrow">طرح پیشنهادی ۲ · فرش مارکت</span>
-        <h2>از همان در ورودی: «اینجا تازه است»</h2>
-        <p class="verdict"><b>نظر DaranX:</b> ایدهٔ درستی است و با هدف افزایش فروش می‌خواند، به یک شرط: تازه‌ها هر روز واقعاً تازه باشند. میوهٔ پلاسیده جلوی در، بدترین تبلیغ است.</p>
-        <ul class="bul">
-          <li>ورود مستقیم به بازار میوه و سبزی: میزهای کوتاه، دیوار مه‌پاش، قیمت روز، آبمیوهٔ تازه.</li>
-          <li>دیوار پشتی سراسر تازه؛ نانوایی در گوشهٔ دور، مقصد روزانه. گوشت، مرغ، ماهی و نانوایی سر جای فعلی می‌مانند.</li>
-          <li>صبحانه زیر نان و لبنیات، پخت‌وپز زیر پروتئین؛ غیرغذایی دور از میوه، کنار آرایشی.</li>
-          <li>آماده‌سازی تازه‌ها پشت پیشخوان‌ها؛ دریافت کالا و سردخانهٔ میوه کنار بازار.</li>
-        </ul>
-        <table class="cmp cmp2">
-          <thead><tr><th>معیار</th><th>پیشنهاد ۱</th><th>پیشنهاد ۲</th></tr></thead>
-          <tbody>
-            <tr><td>پیام ورودی</td><td>پیشنهاد هفته</td><td>«تازه»</td></tr>
-            <tr><td>هزینه و زمان اجرا</td><td>کم</td><td>بیشتر</td></tr>
-            <tr><td>فضای کالای بسته‌ای</td><td>بیشتر</td><td>کمتر</td></tr>
-            <tr><td>دلیل مراجعهٔ مکرر</td><td>معمولی</td><td>قوی</td></tr>
-            <tr><td>وابستگی به کیفیت روزانه</td><td>کم</td><td>زیاد</td></tr>
-          </tbody>
-        </table>
-        <div class="legend">
-          <span><i class="lg fresh"></i>تازه‌ها</span><span><i class="lg food"></i>غذایی</span>
-          <span><i class="lg food2"></i>خرید لحظه‌ای</span><span><i class="lg non"></i>غیرغذایی</span>
-          <span><i class="lg cold"></i>یخچالی و منجمد</span><span><i class="lg promo"></i>پروموشن</span>
-          <span><i class="lg boh"></i>اداری و پشت‌صحنه</span><span><i class="lg flow"></i>مسیر مشتری</span>
-        </div>
-        <p class="note">پیش‌نیاز: آب، کف‌شوی و برق یخچال در بازار میوه؛ تأمین و دورریز روزانه. شماتیک بدون مقیاس.</p>
-      </div>
-      <figure class="schem-fig">
-        <svg class="schem" viewBox="0 0 1000 1260" role="img" aria-labelledby="schem2-t">
-  <title id="schem2-t">شماتیک طرح پیشنهادی ۲ (فرش مارکت): بازار میوه و سبزی در ورودی، دیوار پشتی سراسر تازه و مسیر پادساعتگرد مشتری</title>
-  <defs>
-    <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0 L10 5 L0 10 z" class="arrow-head"/>
-    </marker>
-  </defs>
-  <rect x="30" y="30" width="940" height="1200" rx="14" class="shell"/>
-  <g class="boh-wrap" style="--i:32">
-    <rect x="40" y="42" width="70" height="126" class="z promo"/><text class="zt xs2" x="75" y="100">ورود</text><text class="zt xs2" x="75" y="124">کارکنان</text>
-    <rect x="115" y="42" width="90" height="126" class="z boh"/><text class="zt xs2" x="160" y="111">مدیریت</text>
-    <rect x="210" y="42" width="110" height="126" class="z boh"/><text class="zt xs2" x="265" y="100">حراست و</text><text class="zt xs2" x="265" y="124">مانیتورینگ</text>
-    <rect x="325" y="42" width="50" height="126" class="z boh"/><text class="zt xs2" x="350" y="111">سرور</text>
-    <rect x="380" y="42" width="70" height="126" class="z boh"/><text class="zt xs2" x="415" y="100">رختکن</text><text class="zt xs2" x="415" y="124">آقایان</text>
-    <rect x="455" y="42" width="70" height="126" class="z boh"/><text class="zt xs2" x="490" y="100">رختکن</text><text class="zt xs2" x="490" y="124">بانوان</text>
-    <rect x="530" y="42" width="230" height="126" class="z boh"/><text class="zt s18" x="645" y="98">آماده‌سازی تازه‌ها</text><text class="zt xs" x="645" y="124">گوشت · مرغ · ماهی · سبزی</text>
-    <rect x="765" y="42" width="195" height="126" class="z boh"/><text class="zt s18" x="862" y="98">دریافت کالا و</text><text class="zt s18" x="862" y="124">سردخانهٔ میوه</text>
-    <rect x="40" y="170" width="920" height="22" class="corridor"/>
-    <text class="zt xs" x="500" y="186">راهروی خدمات کارکنان</text>
-  </g>
-  <g class="floor" transform="translate(0,155)">
-  <g style="--i:1"><rect x="40" y="40" width="190" height="105" class="z fresh"/><text class="zt" x="135" y="100">نانوایی</text></g>
-  <g style="--i:2"><rect x="235" y="40" width="225" height="105" class="z cold"/><text class="zt" x="347" y="100">لبنیات</text></g>
-  <g style="--i:3"><rect x="465" y="40" width="120" height="105" class="z fresh"/><text class="zt" x="525" y="100">گوشت</text></g>
-  <g style="--i:4"><rect x="590" y="40" width="120" height="105" class="z fresh"/><text class="zt" x="650" y="100">مرغ</text></g>
-  <g style="--i:5"><rect x="715" y="40" width="120" height="105" class="z fresh"/><text class="zt" x="775" y="100">ماهی</text></g>
-  <g style="--i:6"><rect x="840" y="40" width="120" height="105" class="z fresh"/><text class="zt s18" x="900" y="88">سالاد و</text><text class="zt s18" x="900" y="114">غذای آماده</text></g>
-  <g style="--i:7"><rect x="40" y="160" width="150" height="95" class="z svc"/><text class="zt s18" x="115" y="214">کافه (رو به مسیر)</text></g>
-  <g style="--i:8"><rect x="40" y="262" width="150" height="120" class="z food"/><text class="zt s18" x="115" y="328">آجیل (پیشخوان باز)</text></g>
-  <g style="--i:9"><rect x="40" y="392" width="50" height="420" class="z food"/><text class="zt v vs" x="65" y="602" transform="rotate(-90 65 602)">قند و شکر · برنج · روغن · نمک</text></g>
-  <g style="--i:10"><rect x="100" y="600" width="120" height="210" class="z cold"/><text class="zt" x="160" y="695">منجمد</text><text class="zt" x="160" y="725">و بستنی</text></g>
-  <g style="--i:11"><rect x="40" y="830" width="150" height="80" class="z non"/><text class="zt" x="115" y="876">آرایشی</text></g>
-  <g style="--i:12"><rect x="260" y="200" width="210" height="150" rx="10" class="z fresh"/><text class="zt" x="365" y="268">پنیر و زیتون</text><text class="zt sm" x="365" y="298">فله و بسته‌ای</text></g>
-  <g style="--i:13"><rect x="490" y="200" width="210" height="150" rx="10" class="z promo"/><text class="zt" x="595" y="268">پیشنهاد هفته /</text><text class="zt" x="595" y="298">نمایش فصلی</text></g>
-  <g style="--i:14"><rect x="260" y="400" width="210" height="190" class="z food"/><g class="gond"><path d="M290 410v170M330 410v170M370 410v170M410 410v170M450 410v170"/></g><g class="zt qt"><text x="365" y="462">صبحانه و</text><text x="365" y="490">نوشیدنی گرم</text><text x="365" y="526" class="sm">صبحانه · چای و قند</text><text x="365" y="552" class="sm">قهوه · کیک و بیسکویت</text></g></g>
-  <g style="--i:15"><rect x="490" y="400" width="210" height="190" class="z food"/><g class="gond"><path d="M520 410v170M560 410v170M600 410v170M640 410v170M680 410v170"/></g><g class="zt qt"><text x="595" y="476">پخت‌وپز</text><text x="595" y="512" class="sm">حبوبات · ماکارونی · ادویه</text><text x="595" y="538" class="sm">رب و کنسرو · ترشی</text></g></g>
-  <g style="--i:16"><rect x="260" y="605" width="440" height="40" rx="6" class="z promo"/><text class="zt sm" x="480" y="631">راهروی عرضی + میزهای پروموشن</text></g>
-  <g style="--i:17"><rect x="260" y="660" width="210" height="160" class="z non"/><g class="gond"><path d="M290 670v140M330 670v140M370 670v140M410 670v140M450 670v140"/></g><g class="zt qt"><text x="365" y="725">غیرغذایی</text><text x="365" y="757" class="sm">بهداشتی · پوشک · دستمال</text><text x="365" y="783" class="sm">شوینده · یک‌بارمصرف</text></g></g>
-  <g style="--i:18"><rect x="490" y="660" width="210" height="160" class="z food2"/><g class="gond"><path d="M520 670v140M560 670v140M600 670v140M640 670v140M680 670v140"/></g><g class="zt qt"><text x="595" y="712">خرید لحظه‌ای</text><text x="595" y="740">و سنگین</text><text x="595" y="772" class="sm">چیپس و پفک · کمپوت</text><text x="595" y="796" class="sm">نوشیدنی بسته‌ای</text></g></g>
-  <g style="--i:19"><rect x="720" y="180" width="178" height="660" rx="10" class="z hall"/><text class="zt" x="809" y="218">بازار</text><text class="zt" x="809" y="246">میوه و سبزی</text></g>
-  <g style="--i:20"><rect x="735" y="268" width="56" height="58" rx="8" class="z fresh"/><rect x="812" y="268" width="56" height="58" rx="8" class="z fresh"/><rect x="735" y="340" width="56" height="58" rx="8" class="z fresh"/><rect x="812" y="340" width="56" height="58" rx="8" class="z fresh"/><rect x="735" y="412" width="56" height="58" rx="8" class="z fresh"/><rect x="812" y="412" width="56" height="58" rx="8" class="z fresh"/><rect x="735" y="484" width="56" height="58" rx="8" class="z fresh"/><rect x="812" y="484" width="56" height="58" rx="8" class="z fresh"/><rect x="735" y="556" width="56" height="58" rx="8" class="z fresh"/><rect x="812" y="556" width="56" height="58" rx="8" class="z fresh"/></g>
-  <g style="--i:21"><rect x="735" y="640" width="133" height="72" rx="8" class="z svc"/><text class="zt s18" x="801" y="672">آبمیوهٔ</text><text class="zt s18" x="801" y="697">تازه</text></g>
-  <g style="--i:22"><rect x="735" y="730" width="133" height="95" rx="40" class="z promo"/><text class="zt s18" x="801" y="772">میوهٔ فصل</text><text class="zt xs" x="801" y="797">اولین نما</text></g>
-  <g style="--i:23"><rect x="905" y="180" width="55" height="660" class="z fresh"/><text class="zt v vs" x="932" y="510" transform="rotate(-90 932 510)">دیوار میوه و سبزی (مه‌پاش)</text></g>
-  <g style="--i:24"><rect x="905" y="850" width="55" height="130" class="z promo"/><text class="zt xs2" x="932" y="915" transform="rotate(-90 932 915)">قیمت روز</text></g>
-  <g style="--i:25"><rect x="230" y="850" width="640" height="70" class="z queue"/><text class="zt sm" x="720" y="891">فضای صف (عمیق‌تر از طرح فعلی)</text></g>
-  <g style="--i:26"><rect x="230" y="930" width="640" height="55" class="z svc"/><text class="zt sm" x="550" y="963">صندوق‌ها + خرید لحظه‌ای + یخچال آبمیوه و سالاد + صندوق سریع</text></g>
-  <g style="--i:27"><rect x="470" y="1040" width="120" height="30" class="door"/><text class="zt sm" x="530" y="1030">خروج</text></g>
-  <g style="--i:28"><rect x="885" y="988" width="78" height="80" class="z promo"/><text class="zt xs" x="924" y="1012">ورود</text><text class="zt xs" x="924" y="1034">چرخ‌دستی</text><text class="zt xs" x="924" y="1056">میز خدمات</text></g>
-  <g style="--i:29"><rect x="40" y="920" width="150" height="66" class="z boh"/><text class="zt xs2" x="115" y="948">خزانه</text><text class="zt xs" x="115" y="972">ورود فقط کارکنان</text></g>
-  <g style="--i:30"><rect x="604" y="996" width="96" height="34" rx="6" class="z boh"/><text class="zt xs" x="652" y="1018">پست حراست</text></g>
-  <path id="flowpath2" class="flow" d="M884 1060 L884 162 L245 162 L245 838 L550 838 L550 905" marker-end="url(#arr2)"/>
-  <circle r="10" class="shopper"><animateMotion dur="12s" repeatCount="indefinite"><mpath href="#flowpath2"/></animateMotion></circle>
   </g>
 </svg>
       </figure>
@@ -831,11 +720,10 @@ table.cmp2{margin:0 0 .9rem;font-size:.88rem}
     function step(ts){if(!t0)t0=ts;var k=Math.min(1,(ts-t0)/dur);k=1-Math.pow(1-k,3);
       el.textContent=faNum(Math.round(to*k));if(k<1)requestAnimationFrame(step);}
     setTimeout(function(){requestAnimationFrame(step)},250+i*90);});}
-  var schs=document.querySelectorAll('.schem');
-  var io='IntersectionObserver' in window&&new IntersectionObserver(function(es){es.forEach(function(e){
-    if(e.isIntersecting){e.target.classList.add('play');io.unobserve(e.target);}})},{threshold:.2});
-  schs.forEach(function(sch){if(io)io.observe(sch);else sch.classList.add('play');
-    if(reduce&&sch.pauseAnimations)sch.pauseAnimations();});
+  var sch=document.querySelector('.schem');
+  function play(){if(sch&&!sch.classList.contains('play'))sch.classList.add('play');}
+  if(sch){if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){play();io.disconnect();}})},{threshold:.2});io.observe(sch);}else play();}
+  if(reduce&&sch&&sch.pauseAnimations)sch.pauseAnimations();
 })();
 </script>
 </body>
