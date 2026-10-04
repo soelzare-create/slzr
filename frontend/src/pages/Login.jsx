@@ -26,7 +26,7 @@ export default function Login() {
         <form className="inner" onSubmit={submit}>
           <div className="flex" style={{ gap: 11, marginBottom: 34 }}>
             <div style={{ width: 44, height: 44, borderRadius: 13, background: "var(--brand-grad)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="chart" size={23} color="#fff" strokeWidth={2.2} /></div>
-            <div><div style={{ fontWeight: 700, fontSize: 19 }}>داران ایکس</div><div style={{ fontSize: 12, color: "var(--muted)" }}>سیستم یکپارچه حسابداری و فاکتور</div></div>
+            <div><div style={{ fontWeight: 700, fontSize: 19 }}>Merchandising</div><div style={{ fontSize: 12, color: "var(--muted)" }}>داران‌ایکس — سیستم یکپارچه حسابداری و فاکتور</div></div>
           </div>
           <div style={{ fontSize: 25, fontWeight: 700, marginBottom: 6 }}>ورود به حساب</div>
           <div style={{ fontSize: 14, color: "var(--muted)", marginBottom: 26 }}>برای ادامه، اطلاعات حساب خود را وارد کنید.</div>
@@ -42,7 +42,7 @@ export default function Login() {
           <button className="btn primary" style={{ width: "100%", height: 48, marginTop: 6, justifyContent: "center", display: "flex", alignItems: "center", gap: 8 }} disabled={busy}>
             {busy ? "در حال ورود…" : "ورود"}{!busy && <Icon name="logout" size={17} color="#fff" />}
           </button>
-          <div style={{ textAlign: "center", fontSize: 12.5, color: "var(--muted-2)", marginTop: 26 }}>© داران ایکس — همه چیز سر جای خودش</div>
+          <div style={{ textAlign: "center", fontSize: 12.5, color: "var(--muted-2)", marginTop: 26 }}>© DaranX — همه چیز سرِ جای درستش.</div>
         </form>
       </div>
       <div className="login-side">

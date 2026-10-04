@@ -1,6 +1,6 @@
-"""Django settings for the DaranX accounting & invoicing system (Phase 1).
+"""Django settings for Merchandising — the DaranX accounting & invoicing system (Phase 1).
 
-Philosophy: «همه چیز سر جای خودش» — modular monolith, one Django project with
+Philosophy: «همه چیز سرِ جای درستش» — modular monolith, one Django project with
 apps aligned to the company's departments. UI language is Persian (RTL); code and
 comments are English.
 

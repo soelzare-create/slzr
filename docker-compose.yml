@@ -1,4 +1,4 @@
-# DaranX backend — one-command deployment for a single VPS.
+# Merchandising (DaranX) backend — one-command deployment for a single VPS.
 #
 #   1) cp backend/.env.production.example backend/.env   # then edit it
 #   2) docker compose up -d --build

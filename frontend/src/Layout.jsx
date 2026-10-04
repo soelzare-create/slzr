@@ -40,7 +40,7 @@ export default function Layout({ children }) {
       <aside className="sidebar">
         <div className="brand">
           <div className="logo"><Icon name="chart" size={20} color="#fff" strokeWidth={2.2} /></div>
-          <div><div className="title">داران ایکس</div><div className="sub">همه چیز سر جای خودش</div></div>
+          <div><div className="title">Merchandising</div><div className="sub">DaranX · همه چیز سرِ جای درستش</div></div>
         </div>
         <nav className="nav">
           {items.map((n) => (

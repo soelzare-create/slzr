@@ -1,4 +1,4 @@
-# استقرار بک‌اند داران ایکس (Deployment)
+# استقرار بک‌اند Merchandising — DaranX (Deployment)
 
 راهنمای استقرارِ بک‌اند Django روی محیط واقعی. استک تولید:
 **gunicorn** (اپلیکیشن‌سرور) + **PostgreSQL** (دیتابیس) + **WhiteNoise** (فایل‌های

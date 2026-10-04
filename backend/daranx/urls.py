@@ -1,4 +1,4 @@
-"""Root URL configuration for the DaranX API."""
+"""Root URL configuration for the Merchandising (DaranX) API."""
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
@@ -6,8 +6,9 @@ from django.urls import include, path
 
 def root(_request):
     return JsonResponse({
-        "app": "DaranX",
-        "motto": "همه چیز سر جای خودش",
+        "app": "Merchandising",
+        "vendor": "DaranX",
+        "motto": "همه چیز سرِ جای درستش",
         "api": "/api/",
     })
 
