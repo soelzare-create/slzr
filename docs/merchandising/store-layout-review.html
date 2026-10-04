@@ -229,9 +229,34 @@ details>*:last-child{margin-bottom:1rem}
 .row p{margin:0;line-height:1.8}
 .row b{color:var(--ink);font-weight:700}
 .fix{display:block;color:var(--ink-faint);font-size:.9rem}
-.row.hit{animation:hit 1.6s ease}
-@keyframes hit{0%{background:var(--surface-2)}100%{background:transparent}}
+.row.target{position:relative;z-index:1;border-radius:10px;padding-inline:.65rem;margin-inline:-.65rem;
+  background:color-mix(in srgb,var(--steel) 9%,var(--surface));box-shadow:0 0 0 2px var(--steel);border-top-color:transparent}
+.row.target+.row{border-top-color:transparent}
+@keyframes hit{0%{box-shadow:0 0 0 9px color-mix(in srgb,var(--steel) 35%,transparent)}100%{box-shadow:0 0 0 2px var(--steel)}}
 @media(max-width:560px){.row{grid-template-columns:auto 1fr}.row p{grid-column:1/-1}}
+/* list -> map locator */
+.hint{margin:-.2rem 0 .5rem;color:var(--ink-faint);font-size:.85rem}
+button.code.loc{font-family:inherit;display:inline-flex;align-items:center;gap:.3rem;cursor:pointer;
+  background:var(--surface-2);border:1px solid var(--line-strong);border-radius:999px;padding:.12rem .55rem .12rem .45rem;margin-top:.05rem;line-height:1.5}
+button.code.loc svg{width:9px;height:12px;fill:currentColor;flex:none}
+button.code.loc:hover,button.code.loc:focus-visible{background:var(--steel);border-color:var(--steel);color:#fff}
+.plan-wrap.locating .mk:not(.found){opacity:.3}
+.plan-wrap .mk{transition:opacity .25s}
+.mk.found{z-index:3}
+.mk.found::before{content:"";position:absolute;inset:-10px;border-radius:999px;border:4px solid #3E7BB6;
+  box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(62,123,182,.35);pointer-events:none}
+.locbar{position:fixed;z-index:60;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:.45rem;max-width:calc(100vw - 24px);padding:.4rem .45rem .4rem .7rem;border-radius:999px;
+  background:#153A62;color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 24px rgba(0,0,0,.28);font-size:.88rem;font-weight:700}
+.locbar[hidden]{display:none}
+.lb-code{direction:ltr;unicode-bidi:isolate;white-space:nowrap;font-weight:900;padding-inline:.2rem}
+.lb-maps{display:inline-flex;gap:.25rem}
+.locbar button{font-family:inherit;font-weight:700;font-size:.82rem;color:#fff;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:.28rem .7rem;cursor:pointer;white-space:nowrap}
+.locbar button[aria-pressed="true"]{background:#fff;color:#153A62}
+.locbar button[hidden]{display:none}
+.locbar .lb-x{padding:.28rem .55rem;background:transparent;border-color:transparent;font-size:1rem;line-height:1}
+@media(max-width:420px){.locbar{gap:.3rem;font-size:.8rem}.locbar button{padding:.26rem .55rem;font-size:.78rem}}
 /* annotated plans */
 .plan{margin-top:.6rem}
 .plan-wrap{position:relative;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:#fff}
@@ -307,6 +332,9 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
   .cmp tr:nth-child(3) span{animation-delay:.71s}.cmp tr:nth-child(4) span{animation-delay:.79s}
   .cmp tr:nth-child(5) span{animation-delay:.87s}
   details[open]>:not(summary){animation:rise .35s ease both}
+  .mk.found{animation:found .9s ease 3}
+  .row.hit{animation:hit 1.4s ease}
+  .locbar:not([hidden]){animation:barin .3s ease both}
   .mk.crit::after{content:"";position:absolute;inset:-5px;border-radius:999px;border:2px solid #B42318;animation:ping 2.2s ease-out infinite}
   .schem.play .floor [style*="--i"],.schem.play .boh-wrap{animation:zin .55s ease both;animation-delay:calc(var(--i,0) * 45ms)}
   .schem .flow{animation:march 1.4s linear infinite}
@@ -323,6 +351,8 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
 @keyframes glow{0%,100%{stroke-width:3;opacity:1}50%{stroke-width:8;opacity:.5}}
 @keyframes drift{from{transform:translate(0,0)}to{transform:translate(22px,-12px)}}
 @keyframes nodepulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.6)}}
+@keyframes barin{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes found{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.45)}}
 @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 .prop{padding:.6rem 0 1.4rem}
 .prop-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:1.4rem;align-items:start;
@@ -335,7 +365,7 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
 @media(max-width:860px){.prop-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.g2{grid-template-columns:1fr}}
 @media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}.top-right .chip{display:none}}
-@media print{*{animation:none!important}.hero-net,.schem .shopper{display:none}.topbar,.btn-x{display:none}.hero,.mk,.dot,.sev i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{*{animation:none!important}.hero-net,.schem .shopper{display:none}.topbar,.btn-x,.locbar,.hint{display:none}.hero,.mk,.dot,.sev i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   details,.row,.plan,.schem-fig{break-inside:avoid}}
 </style>
 
@@ -521,23 +551,24 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
 <section class="more">
   <div class="wrap">
     <div class="more-head"><h2>جزئیات</h2><button class="btn-x" id="toggle-all" type="button">باز کردن همه</button></div>
+    <p class="hint">کدها دوطرفه‌اند: کد روی نقشه ← شرح · کد در فهرست ← محل روی نقشه.</p>
 
     <details id="d-common">
       <summary><span>یافته‌های مشترک هر دو طرح</span><em>۱۴ مورد</em></summary>
       <p class="pro">قوت مشترک: مسیر پادساعتگرد · تازه‌ها روی دیوار پشتی · ورود و خروج جدا</p>
       <ol class="rows">
-        <li class="row" id="C-01"><span class="code">C-01</span><span class="sev major"><i></i>مهم</span><p><b>ورودی بین اتاق مدیریت و رختکن؛ اولین قفسهٔ سمت راست نوشابه است.</b><span class="fix">اصلاح: اتاق‌ها به پشت؛ بعد از ورودی کالای فصلی یا تازه؛ جای چرخ‌دستی.</span></p></li>
-        <li class="row" id="C-02"><span class="code">C-02</span><span class="sev crit"><i></i>بحرانی</span><p><b>فضای صف فقط ۲٫۱۰ تا ۲٫۴۵ متر است؛ در ساعت اوج راهرو بسته می‌شود.</b><span class="fix">اصلاح: کوتاه‌کردن گوندولاهای ردیف پایین و عمیق‌کردن صف.</span></p></li>
-        <li class="row" id="C-03"><span class="code">C-03</span><span class="sev crit"><i></i>بحرانی</span><p><b>بستنی ابتدای مسیر است و تا صندوق آب می‌شود.</b><span class="fix">اصلاح: منجمد و بستنی کنار صندوق‌ها.</span></p></li>
-        <li class="row" id="C-04"><span class="code">C-04</span><span class="sev crit"><i></i>بحرانی</span><p><b>زغال قابل‌اشتعال کنار ماهی و یخچال؛ خروج اضطراری در نقشه نیست.</b><span class="fix">اصلاح: انتقال زغال؛ مشخص‌کردن خروج اضطراری.</span></p></li>
-        <li class="row" id="C-05"><span class="code">C-05</span><span class="sev major"><i></i>مهم</span><p><b>نوشابهٔ سنگین در ابتدای مسیر سبد را زود پر می‌کند.</b><span class="fix">اصلاح: بسته‌های بزرگ آخر مسیر؛ نوشیدنی تکی کنار صندوق.</span></p></li>
-        <li class="row" id="C-06"><span class="code">C-06</span><span class="sev major"><i></i>مهم</span><p><b>جای میوه و سبزی معلوم نیست؛ چند واحد برچسب ندارند.</b><span class="fix">اصلاح: تعیین جای میوه؛ برچسب همهٔ واحدها.</span></p></li>
-        <li class="row" id="C-07"><span class="code">C-07</span><span class="sev major"><i></i>مهم</span><p><b>نمک ۵٫۴ متر دیوار دارد؛ بیشتر از برنج و روغن.</b><span class="fix">اصلاح: تقسیم فضا بر اساس فروش هر دسته.</span></p></li>
-        <li class="row" id="C-08"><span class="code">C-08</span><span class="sev major"><i></i>مهم</span><p><b>چای و قند دور از هم‌اند.</b><span class="fix">اصلاح: نمایش دوم قند کنار چای.</span></p></li>
-        <li class="row" id="C-09"><span class="code">C-09</span><span class="sev major"><i></i>مهم</span><p><b>آرایشی (پرسرقت) پنهان و کنار خزانه است.</b><span class="fix">اصلاح: رو به مسیر و در دید صندوق.</span></p></li>
-        <li class="row" id="C-10"><span class="code">C-10</span><span class="sev major"><i></i>مهم</span><p><b>آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.</b><span class="fix">اصلاح: پیشخوان باز رو به مسیر اصلی.</span></p></li>
-        <li class="row" id="C-11"><span class="code">C-11</span><span class="sev major"><i></i>مهم</span><p><b>فضای باز سمت چپ فقط ۴ میز کوچک دارد.</b><span class="fix">اصلاح: جای منجمد یا پالت پروموشن.</span></p></li>
-        <li class="row" id="C-12"><span class="code">C-12</span><span class="sev major"><i></i>مهم</span><p><b>کنار صندوق‌ها قفسهٔ خرید لحظه‌ای نیست.</b><span class="fix">اصلاح: قفسهٔ خرید لحظه‌ای + یک صندوق سریع.</span></p></li>
+        <li class="row" id="C-01"><button type="button" class="code loc" data-loc="C-01" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-01 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-01</button><span class="sev major"><i></i>مهم</span><p><b>ورودی بین اتاق مدیریت و رختکن؛ اولین قفسهٔ سمت راست نوشابه است.</b><span class="fix">اصلاح: اتاق‌ها به پشت؛ بعد از ورودی کالای فصلی یا تازه؛ جای چرخ‌دستی.</span></p></li>
+        <li class="row" id="C-02"><button type="button" class="code loc" data-loc="C-02" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-02 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-02</button><span class="sev crit"><i></i>بحرانی</span><p><b>فضای صف فقط ۲٫۱۰ تا ۲٫۴۵ متر است؛ در ساعت اوج راهرو بسته می‌شود.</b><span class="fix">اصلاح: کوتاه‌کردن گوندولاهای ردیف پایین و عمیق‌کردن صف.</span></p></li>
+        <li class="row" id="C-03"><button type="button" class="code loc" data-loc="C-03" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-03 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-03</button><span class="sev crit"><i></i>بحرانی</span><p><b>بستنی ابتدای مسیر است و تا صندوق آب می‌شود.</b><span class="fix">اصلاح: منجمد و بستنی کنار صندوق‌ها.</span></p></li>
+        <li class="row" id="C-04"><button type="button" class="code loc" data-loc="C-04" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-04 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-04</button><span class="sev crit"><i></i>بحرانی</span><p><b>زغال قابل‌اشتعال کنار ماهی و یخچال؛ خروج اضطراری در نقشه نیست.</b><span class="fix">اصلاح: انتقال زغال؛ مشخص‌کردن خروج اضطراری.</span></p></li>
+        <li class="row" id="C-05"><button type="button" class="code loc" data-loc="C-05" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-05 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-05</button><span class="sev major"><i></i>مهم</span><p><b>نوشابهٔ سنگین در ابتدای مسیر سبد را زود پر می‌کند.</b><span class="fix">اصلاح: بسته‌های بزرگ آخر مسیر؛ نوشیدنی تکی کنار صندوق.</span></p></li>
+        <li class="row" id="C-06"><button type="button" class="code loc" data-loc="C-06" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-06 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-06</button><span class="sev major"><i></i>مهم</span><p><b>جای میوه و سبزی معلوم نیست؛ چند واحد برچسب ندارند.</b><span class="fix">اصلاح: تعیین جای میوه؛ برچسب همهٔ واحدها.</span></p></li>
+        <li class="row" id="C-07"><button type="button" class="code loc" data-loc="C-07" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-07 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-07</button><span class="sev major"><i></i>مهم</span><p><b>نمک ۵٫۴ متر دیوار دارد؛ بیشتر از برنج و روغن.</b><span class="fix">اصلاح: تقسیم فضا بر اساس فروش هر دسته.</span></p></li>
+        <li class="row" id="C-08"><button type="button" class="code loc" data-loc="C-08" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-08 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-08</button><span class="sev major"><i></i>مهم</span><p><b>چای و قند دور از هم‌اند.</b><span class="fix">اصلاح: نمایش دوم قند کنار چای.</span></p></li>
+        <li class="row" id="C-09"><button type="button" class="code loc" data-loc="C-09" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-09 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-09</button><span class="sev major"><i></i>مهم</span><p><b>آرایشی (پرسرقت) پنهان و کنار خزانه است.</b><span class="fix">اصلاح: رو به مسیر و در دید صندوق.</span></p></li>
+        <li class="row" id="C-10"><button type="button" class="code loc" data-loc="C-10" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-10 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-10</button><span class="sev major"><i></i>مهم</span><p><b>آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.</b><span class="fix">اصلاح: پیشخوان باز رو به مسیر اصلی.</span></p></li>
+        <li class="row" id="C-11"><button type="button" class="code loc" data-loc="C-11" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-11 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-11</button><span class="sev major"><i></i>مهم</span><p><b>فضای باز سمت چپ فقط ۴ میز کوچک دارد.</b><span class="fix">اصلاح: جای منجمد یا پالت پروموشن.</span></p></li>
+        <li class="row" id="C-12"><button type="button" class="code loc" data-loc="C-12" data-maps="1 2" title="نمایش محل روی نقشه" aria-label="نمایش C-12 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>C-12</button><span class="sev major"><i></i>مهم</span><p><b>کنار صندوق‌ها قفسهٔ خرید لحظه‌ای نیست.</b><span class="fix">اصلاح: قفسهٔ خرید لحظه‌ای + یک صندوق سریع.</span></p></li>
         <li class="row" id="C-13"><span class="code">C-13</span><span class="sev minor"><i></i>جزئی</span><p><b>انبار و مسیر شارژ قفسه در نقشه نیست.</b><span class="fix">اصلاح: افزودن پلان پشت‌صحنه.</span></p></li>
         <li class="row" id="C-14"><span class="code">C-14</span><span class="sev minor"><i></i>جزئی</span><p><b>جدول مشخصات خالی؛ بدون مقیاس و راهنما؛ غلط املایی.</b><span class="fix">اصلاح: تکمیل سند.</span></p></li>
       </ol>
@@ -545,68 +576,68 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
 
     <details id="d-1">
       <summary><span>طرح ۱ — با نقشهٔ نشانه‌گذاری‌شده</span><em>۳ مورد</em></summary>
-      <figure class="plan"><div class="plan-wrap">
+      <figure class="plan" id="map-1"><div class="plan-wrap">
         <img src="assets/review-plan-1.jpg" alt="نقشهٔ طرح ۱ با کد یافته‌ها">
-        <a class="mk major" href="#C-01" style="left:84.23%;top:86.08%" title="ورودی بین اتاق مدیریت و رختکن؛ اولین قفسهٔ سمت راست نوشابه است.">C-01</a>
-        <a class="mk crit" href="#C-02" style="left:43.08%;top:78.68%" title="فضای صف فقط ۲٫۱۰ تا ۲٫۴۵ متر است؛ در ساعت اوج راهرو بسته می‌شود.">C-02</a>
-        <a class="mk crit" href="#C-03" style="left:65.38%;top:37.66%" title="بستنی ابتدای مسیر است و تا صندوق آب می‌شود.">C-03</a>
-        <a class="mk crit" href="#C-04" style="left:70.15%;top:16.81%" title="زغال قابل‌اشتعال کنار ماهی و یخچال؛ خروج اضطراری در نقشه نیست.">C-04</a>
-        <a class="mk major" href="#C-05" style="left:91.69%;top:62.54%" title="نوشابهٔ سنگین در ابتدای مسیر سبد را زود پر می‌کند.">C-05</a>
-        <a class="mk major" href="#C-06" style="left:43.46%;top:33.62%" title="جای میوه و سبزی معلوم نیست؛ چند واحد برچسب ندارند.">C-06</a>
-        <a class="mk major" href="#C-07" style="left:3.85%;top:51.11%" title="نمک ۵٫۴ متر دیوار دارد؛ بیشتر از برنج و روغن.">C-07</a>
-        <a class="mk major" href="#C-08" style="left:10.00%;top:44.65%" title="چای و قند دور از هم‌اند.">C-08</a>
-        <a class="mk major" href="#C-08" style="left:66.54%;top:59.18%" title="چای و قند دور از هم‌اند.">C-08</a>
-        <a class="mk major" href="#C-09" style="left:9.23%;top:82.38%" title="آرایشی (پرسرقت) پنهان و کنار خزانه است.">C-09</a>
-        <a class="mk major" href="#C-10" style="left:5.77%;top:36.65%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
-        <a class="mk major" href="#C-10" style="left:9.62%;top:29.59%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
-        <a class="mk major" href="#C-11" style="left:12.31%;top:63.89%" title="فضای باز سمت چپ فقط ۴ میز کوچک دارد.">C-11</a>
-        <a class="mk major" href="#C-12" style="left:33.08%;top:83.05%" title="کنار صندوق‌ها قفسهٔ خرید لحظه‌ای نیست.">C-12</a>
-        <a class="mk major" href="#A-01" style="left:55.00%;top:59.18%" title="راهروهای ۱۰ متری بدون راهروی میانی؛ حدود ۲۰ سرقفسه.">A-01</a>
-        <a class="mk major" href="#A-02" style="left:26.92%;top:59.18%" title="مواد پخت‌وپز از برنج و روغن دور افتاده‌اند.">A-02</a>
-        <a class="mk major" href="#A-03" style="left:61.54%;top:75.66%" title="میزهای پروموشن جلو داخل فضای صف‌اند.">A-03</a>
+        <a class="mk major" href="#C-01" data-c="C-01" style="left:84.23%;top:86.08%" title="ورودی بین اتاق مدیریت و رختکن؛ اولین قفسهٔ سمت راست نوشابه است.">C-01</a>
+        <a class="mk crit" href="#C-02" data-c="C-02" style="left:43.08%;top:78.68%" title="فضای صف فقط ۲٫۱۰ تا ۲٫۴۵ متر است؛ در ساعت اوج راهرو بسته می‌شود.">C-02</a>
+        <a class="mk crit" href="#C-03" data-c="C-03" style="left:65.38%;top:37.66%" title="بستنی ابتدای مسیر است و تا صندوق آب می‌شود.">C-03</a>
+        <a class="mk crit" href="#C-04" data-c="C-04" style="left:70.15%;top:16.81%" title="زغال قابل‌اشتعال کنار ماهی و یخچال؛ خروج اضطراری در نقشه نیست.">C-04</a>
+        <a class="mk major" href="#C-05" data-c="C-05" style="left:91.69%;top:62.54%" title="نوشابهٔ سنگین در ابتدای مسیر سبد را زود پر می‌کند.">C-05</a>
+        <a class="mk major" href="#C-06" data-c="C-06" style="left:43.46%;top:33.62%" title="جای میوه و سبزی معلوم نیست؛ چند واحد برچسب ندارند.">C-06</a>
+        <a class="mk major" href="#C-07" data-c="C-07" style="left:3.85%;top:51.11%" title="نمک ۵٫۴ متر دیوار دارد؛ بیشتر از برنج و روغن.">C-07</a>
+        <a class="mk major" href="#C-08" data-c="C-08" style="left:10.00%;top:44.65%" title="چای و قند دور از هم‌اند.">C-08</a>
+        <a class="mk major" href="#C-08" data-c="C-08" style="left:66.54%;top:59.18%" title="چای و قند دور از هم‌اند.">C-08</a>
+        <a class="mk major" href="#C-09" data-c="C-09" style="left:9.23%;top:82.38%" title="آرایشی (پرسرقت) پنهان و کنار خزانه است.">C-09</a>
+        <a class="mk major" href="#C-10" data-c="C-10" style="left:5.77%;top:36.65%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
+        <a class="mk major" href="#C-10" data-c="C-10" style="left:9.62%;top:29.59%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
+        <a class="mk major" href="#C-11" data-c="C-11" style="left:12.31%;top:63.89%" title="فضای باز سمت چپ فقط ۴ میز کوچک دارد.">C-11</a>
+        <a class="mk major" href="#C-12" data-c="C-12" style="left:33.08%;top:83.05%" title="کنار صندوق‌ها قفسهٔ خرید لحظه‌ای نیست.">C-12</a>
+        <a class="mk major" href="#A-01" data-c="A-01" style="left:55.00%;top:59.18%" title="راهروهای ۱۰ متری بدون راهروی میانی؛ حدود ۲۰ سرقفسه.">A-01</a>
+        <a class="mk major" href="#A-02" data-c="A-02" style="left:26.92%;top:59.18%" title="مواد پخت‌وپز از برنج و روغن دور افتاده‌اند.">A-02</a>
+        <a class="mk major" href="#A-03" data-c="A-03" style="left:61.54%;top:75.66%" title="میزهای پروموشن جلو داخل فضای صف‌اند.">A-03</a>
       </div><figcaption>نقشهٔ نشانه‌گذاری‌شدهٔ طرح ۱ — روی هر کد بزنید تا شرحش را ببینید.</figcaption></figure>
       <p class="pro">قوت: بلوک غذایی و غیرغذایی منظم · صبحانه رو به لبنیات · دو ردیف پروموشن</p>
       <ol class="rows">
-        <li class="row" id="A-01"><span class="code">A-01</span><span class="sev major"><i></i>مهم</span><p><b>راهروهای ۱۰ متری بدون راهروی میانی؛ حدود ۲۰ سرقفسه.</b><span class="fix">اصلاح: افزودن راهروی عرضی میانی.</span></p></li>
-        <li class="row" id="A-02"><span class="code">A-02</span><span class="sev major"><i></i>مهم</span><p><b>مواد پخت‌وپز از برنج و روغن دور افتاده‌اند.</b><span class="fix">اصلاح: پخت‌وپز کنار دیوار برنج و روغن.</span></p></li>
-        <li class="row" id="A-03"><span class="code">A-03</span><span class="sev major"><i></i>مهم</span><p><b>میزهای پروموشن جلو داخل فضای صف‌اند.</b><span class="fix">اصلاح: انتقال به راهروی میانی.</span></p></li>
+        <li class="row" id="A-01"><button type="button" class="code loc" data-loc="A-01" data-maps="1" title="نمایش محل روی نقشه" aria-label="نمایش A-01 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>A-01</button><span class="sev major"><i></i>مهم</span><p><b>راهروهای ۱۰ متری بدون راهروی میانی؛ حدود ۲۰ سرقفسه.</b><span class="fix">اصلاح: افزودن راهروی عرضی میانی.</span></p></li>
+        <li class="row" id="A-02"><button type="button" class="code loc" data-loc="A-02" data-maps="1" title="نمایش محل روی نقشه" aria-label="نمایش A-02 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>A-02</button><span class="sev major"><i></i>مهم</span><p><b>مواد پخت‌وپز از برنج و روغن دور افتاده‌اند.</b><span class="fix">اصلاح: پخت‌وپز کنار دیوار برنج و روغن.</span></p></li>
+        <li class="row" id="A-03"><button type="button" class="code loc" data-loc="A-03" data-maps="1" title="نمایش محل روی نقشه" aria-label="نمایش A-03 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>A-03</button><span class="sev major"><i></i>مهم</span><p><b>میزهای پروموشن جلو داخل فضای صف‌اند.</b><span class="fix">اصلاح: انتقال به راهروی میانی.</span></p></li>
       </ol>
     </details>
 
     <details id="d-2">
       <summary><span>طرح ۲ — با نقشهٔ نشانه‌گذاری‌شده</span><em>۶ مورد</em></summary>
-      <figure class="plan"><div class="plan-wrap">
+      <figure class="plan" id="map-2"><div class="plan-wrap">
         <img src="assets/review-plan-2.jpg" alt="نقشهٔ طرح ۲ با کد یافته‌ها">
-        <a class="mk major" href="#C-01" style="left:80.38%;top:86.84%" title="ورودی بین اتاق مدیریت و رختکن؛ اولین قفسهٔ سمت راست نوشابه است.">C-01</a>
-        <a class="mk crit" href="#C-02" style="left:34.62%;top:78.70%" title="فضای صف فقط ۲٫۱۰ تا ۲٫۴۵ متر است؛ در ساعت اوج راهرو بسته می‌شود.">C-02</a>
-        <a class="mk crit" href="#C-03" style="left:64.62%;top:38.67%" title="بستنی ابتدای مسیر است و تا صندوق آب می‌شود.">C-03</a>
-        <a class="mk crit" href="#C-04" style="left:70.15%;top:17.77%" title="زغال قابل‌اشتعال کنار ماهی و یخچال؛ خروج اضطراری در نقشه نیست.">C-04</a>
-        <a class="mk major" href="#C-05" style="left:89.62%;top:64.45%" title="نوشابهٔ سنگین در ابتدای مسیر سبد را زود پر می‌کند.">C-05</a>
-        <a class="mk major" href="#C-06" style="left:43.85%;top:31.89%" title="جای میوه و سبزی معلوم نیست؛ چند واحد برچسب ندارند.">C-06</a>
-        <a class="mk major" href="#C-07" style="left:3.85%;top:50.20%" title="نمک ۵٫۴ متر دیوار دارد؛ بیشتر از برنج و روغن.">C-07</a>
-        <a class="mk major" href="#C-08" style="left:9.62%;top:43.83%" title="چای و قند دور از هم‌اند.">C-08</a>
-        <a class="mk major" href="#C-08" style="left:63.85%;top:70.56%" title="چای و قند دور از هم‌اند.">C-08</a>
-        <a class="mk major" href="#C-09" style="left:8.46%;top:81.75%" title="آرایشی (پرسرقت) پنهان و کنار خزانه است.">C-09</a>
-        <a class="mk major" href="#C-10" style="left:6.54%;top:37.99%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
-        <a class="mk major" href="#C-10" style="left:10.77%;top:29.17%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
-        <a class="mk major" href="#C-11" style="left:12.31%;top:54.27%" title="فضای باز سمت چپ فقط ۴ میز کوچک دارد.">C-11</a>
-        <a class="mk major" href="#C-12" style="left:32.31%;top:83.45%" title="کنار صندوق‌ها قفسهٔ خرید لحظه‌ای نیست.">C-12</a>
-        <a class="mk crit" href="#B-01" style="left:50.38%;top:71.23%" title="شوینده و قهوه در یک گوندولا، پشت‌به‌پشت.">B-01</a>
-        <a class="mk crit" href="#B-02" style="left:58.46%;top:78.70%" title="فقط ۲٫۱۰ متر تا صندوق؛ ردیف پروموشن جلو حذف شده.">B-02</a>
-        <a class="mk major" href="#B-03" style="left:57.31%;top:49.86%" title="غیرغذایی در دو بلوک پخش است؛ بهداشتی و پوشک جدا.">B-03</a>
-        <a class="mk major" href="#B-04" style="left:20.15%;top:67.16%" title="ادویه رو به قفسهٔ بهداشتی.">B-04</a>
-        <a class="mk minor" href="#B-05" style="left:28.08%;top:48.85%" title="راهروهای ۱٫۷۰ متری سمت چپ، در کرانهٔ پایین استاندارد.">B-05</a>
-        <a class="mk minor" href="#B-06" style="left:76.54%;top:50.20%" title="اقلام صبحانه در دو جا تکرار شده.">B-06</a>
-        <a class="mk minor" href="#B-06" style="left:77.31%;top:71.91%" title="اقلام صبحانه در دو جا تکرار شده.">B-06</a>
+        <a class="mk major" href="#C-01" data-c="C-01" style="left:80.38%;top:86.84%" title="ورودی بین اتاق مدیریت و رختکن؛ اولین قفسهٔ سمت راست نوشابه است.">C-01</a>
+        <a class="mk crit" href="#C-02" data-c="C-02" style="left:34.62%;top:78.70%" title="فضای صف فقط ۲٫۱۰ تا ۲٫۴۵ متر است؛ در ساعت اوج راهرو بسته می‌شود.">C-02</a>
+        <a class="mk crit" href="#C-03" data-c="C-03" style="left:64.62%;top:38.67%" title="بستنی ابتدای مسیر است و تا صندوق آب می‌شود.">C-03</a>
+        <a class="mk crit" href="#C-04" data-c="C-04" style="left:70.15%;top:17.77%" title="زغال قابل‌اشتعال کنار ماهی و یخچال؛ خروج اضطراری در نقشه نیست.">C-04</a>
+        <a class="mk major" href="#C-05" data-c="C-05" style="left:89.62%;top:64.45%" title="نوشابهٔ سنگین در ابتدای مسیر سبد را زود پر می‌کند.">C-05</a>
+        <a class="mk major" href="#C-06" data-c="C-06" style="left:43.85%;top:31.89%" title="جای میوه و سبزی معلوم نیست؛ چند واحد برچسب ندارند.">C-06</a>
+        <a class="mk major" href="#C-07" data-c="C-07" style="left:3.85%;top:50.20%" title="نمک ۵٫۴ متر دیوار دارد؛ بیشتر از برنج و روغن.">C-07</a>
+        <a class="mk major" href="#C-08" data-c="C-08" style="left:9.62%;top:43.83%" title="چای و قند دور از هم‌اند.">C-08</a>
+        <a class="mk major" href="#C-08" data-c="C-08" style="left:63.85%;top:70.56%" title="چای و قند دور از هم‌اند.">C-08</a>
+        <a class="mk major" href="#C-09" data-c="C-09" style="left:8.46%;top:81.75%" title="آرایشی (پرسرقت) پنهان و کنار خزانه است.">C-09</a>
+        <a class="mk major" href="#C-10" data-c="C-10" style="left:6.54%;top:37.99%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
+        <a class="mk major" href="#C-10" data-c="C-10" style="left:10.77%;top:29.17%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
+        <a class="mk major" href="#C-11" data-c="C-11" style="left:12.31%;top:54.27%" title="فضای باز سمت چپ فقط ۴ میز کوچک دارد.">C-11</a>
+        <a class="mk major" href="#C-12" data-c="C-12" style="left:32.31%;top:83.45%" title="کنار صندوق‌ها قفسهٔ خرید لحظه‌ای نیست.">C-12</a>
+        <a class="mk crit" href="#B-01" data-c="B-01" style="left:50.38%;top:71.23%" title="شوینده و قهوه در یک گوندولا، پشت‌به‌پشت.">B-01</a>
+        <a class="mk crit" href="#B-02" data-c="B-02" style="left:58.46%;top:78.70%" title="فقط ۲٫۱۰ متر تا صندوق؛ ردیف پروموشن جلو حذف شده.">B-02</a>
+        <a class="mk major" href="#B-03" data-c="B-03" style="left:57.31%;top:49.86%" title="غیرغذایی در دو بلوک پخش است؛ بهداشتی و پوشک جدا.">B-03</a>
+        <a class="mk major" href="#B-04" data-c="B-04" style="left:20.15%;top:67.16%" title="ادویه رو به قفسهٔ بهداشتی.">B-04</a>
+        <a class="mk minor" href="#B-05" data-c="B-05" style="left:28.08%;top:48.85%" title="راهروهای ۱٫۷۰ متری سمت چپ، در کرانهٔ پایین استاندارد.">B-05</a>
+        <a class="mk minor" href="#B-06" data-c="B-06" style="left:76.54%;top:50.20%" title="اقلام صبحانه در دو جا تکرار شده.">B-06</a>
+        <a class="mk minor" href="#B-06" data-c="B-06" style="left:77.31%;top:71.91%" title="اقلام صبحانه در دو جا تکرار شده.">B-06</a>
       </div><figcaption>نقشهٔ نشانه‌گذاری‌شدهٔ طرح ۲ — روی هر کد بزنید تا شرحش را ببینید.</figcaption></figure>
       <p class="pro">قوت: راهروی میانی و حدود ۳۸ سرقفسه · پخت‌وپز نزدیک برنج و روغن</p>
       <ol class="rows">
-        <li class="row" id="B-01"><span class="code">B-01</span><span class="sev crit"><i></i>بحرانی</span><p><b>شوینده و قهوه در یک گوندولا، پشت‌به‌پشت.</b><span class="fix">اصلاح: جداسازی کامل شوینده از خوراکی.</span></p></li>
-        <li class="row" id="B-02"><span class="code">B-02</span><span class="sev crit"><i></i>بحرانی</span><p><b>فقط ۲٫۱۰ متر تا صندوق؛ ردیف پروموشن جلو حذف شده.</b><span class="fix">اصلاح: کوتاه‌کردن گوندولاهای ردیف پایین.</span></p></li>
-        <li class="row" id="B-03"><span class="code">B-03</span><span class="sev major"><i></i>مهم</span><p><b>غیرغذایی در دو بلوک پخش است؛ بهداشتی و پوشک جدا.</b><span class="fix">اصلاح: یک بلوک واحد غیرغذایی.</span></p></li>
-        <li class="row" id="B-04"><span class="code">B-04</span><span class="sev major"><i></i>مهم</span><p><b>ادویه رو به قفسهٔ بهداشتی.</b><span class="fix">اصلاح: ادویه کنار حبوبات.</span></p></li>
-        <li class="row" id="B-05"><span class="code">B-05</span><span class="sev minor"><i></i>جزئی</span><p><b>راهروهای ۱٫۷۰ متری سمت چپ، در کرانهٔ پایین استاندارد.</b><span class="fix">اصلاح: ۱٫۸۰ متر مثل طرح ۱.</span></p></li>
-        <li class="row" id="B-06"><span class="code">B-06</span><span class="sev minor"><i></i>جزئی</span><p><b>اقلام صبحانه در دو جا تکرار شده.</b><span class="fix">اصلاح: یک جای اصلی رو به لبنیات.</span></p></li>
+        <li class="row" id="B-01"><button type="button" class="code loc" data-loc="B-01" data-maps="2" title="نمایش محل روی نقشه" aria-label="نمایش B-01 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>B-01</button><span class="sev crit"><i></i>بحرانی</span><p><b>شوینده و قهوه در یک گوندولا، پشت‌به‌پشت.</b><span class="fix">اصلاح: جداسازی کامل شوینده از خوراکی.</span></p></li>
+        <li class="row" id="B-02"><button type="button" class="code loc" data-loc="B-02" data-maps="2" title="نمایش محل روی نقشه" aria-label="نمایش B-02 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>B-02</button><span class="sev crit"><i></i>بحرانی</span><p><b>فقط ۲٫۱۰ متر تا صندوق؛ ردیف پروموشن جلو حذف شده.</b><span class="fix">اصلاح: کوتاه‌کردن گوندولاهای ردیف پایین.</span></p></li>
+        <li class="row" id="B-03"><button type="button" class="code loc" data-loc="B-03" data-maps="2" title="نمایش محل روی نقشه" aria-label="نمایش B-03 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>B-03</button><span class="sev major"><i></i>مهم</span><p><b>غیرغذایی در دو بلوک پخش است؛ بهداشتی و پوشک جدا.</b><span class="fix">اصلاح: یک بلوک واحد غیرغذایی.</span></p></li>
+        <li class="row" id="B-04"><button type="button" class="code loc" data-loc="B-04" data-maps="2" title="نمایش محل روی نقشه" aria-label="نمایش B-04 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>B-04</button><span class="sev major"><i></i>مهم</span><p><b>ادویه رو به قفسهٔ بهداشتی.</b><span class="fix">اصلاح: ادویه کنار حبوبات.</span></p></li>
+        <li class="row" id="B-05"><button type="button" class="code loc" data-loc="B-05" data-maps="2" title="نمایش محل روی نقشه" aria-label="نمایش B-05 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>B-05</button><span class="sev minor"><i></i>جزئی</span><p><b>راهروهای ۱٫۷۰ متری سمت چپ، در کرانهٔ پایین استاندارد.</b><span class="fix">اصلاح: ۱٫۸۰ متر مثل طرح ۱.</span></p></li>
+        <li class="row" id="B-06"><button type="button" class="code loc" data-loc="B-06" data-maps="2" title="نمایش محل روی نقشه" aria-label="نمایش B-06 روی نقشه"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.4A2.4 2.4 0 1 1 6 3.6a2.4 2.4 0 0 1 0 4.8z"/></svg>B-06</button><span class="sev minor"><i></i>جزئی</span><p><b>اقلام صبحانه در دو جا تکرار شده.</b><span class="fix">اصلاح: یک جای اصلی رو به لبنیات.</span></p></li>
       </ol>
     </details>
 
@@ -614,6 +645,13 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
   </div>
 </section>
 </main>
+
+<div class="locbar" id="locbar" hidden>
+  <span class="lb-code"></span>
+  <span class="lb-maps"><button type="button" data-m="1">طرح ۱</button><button type="button" data-m="2">طرح ۲</button></span>
+  <button type="button" class="lb-back">بازگشت به شرح</button>
+  <button type="button" class="lb-x" aria-label="بستن">×</button>
+</div>
 
 <footer class="foot">
   <div class="wrap">
@@ -635,8 +673,39 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
   // open the <details> that holds a linked finding before jumping to it
   function reveal(hash){var t=hash&&document.getElementById(hash.slice(1));if(!t)return;
     var d=t.closest('details');if(d&&!d.open)d.open=true;
-    if(t.classList.contains('row')){t.classList.remove('hit');void t.offsetWidth;t.classList.add('hit');}}
-  document.addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(a)reveal(a.getAttribute('href'));});
+    if(t.classList.contains('row'))mark(t,true);}
+  // the current finding keeps a ring until another one is chosen
+  function mark(row,flash){document.querySelectorAll('.row.target').forEach(function(r){if(r!==row)r.classList.remove('target','hit')});
+    row.classList.add('target');if(flash){row.classList.remove('hit');void row.offsetWidth;row.classList.add('hit');}}
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // list -> map: open the map's section, centre the marker(s), dim the rest
+  var lb=document.getElementById('locbar'),lbCode=lb.querySelector('.lb-code'),cur=null,tm=0;
+  function undim(){document.querySelectorAll('.plan-wrap.locating').forEach(function(w){w.classList.remove('locating')});}
+  function clearFound(){undim();document.querySelectorAll('.mk.found').forEach(function(m){m.classList.remove('found')});}
+  function locate(code,map){var fig=document.getElementById('map-'+map);if(!fig)return;
+    var mks=fig.querySelectorAll('.mk[data-c="'+code+'"]');if(!mks.length)return;
+    var d=fig.closest('details');if(d&&!d.open)d.open=true;
+    clearFound();fig.querySelector('.plan-wrap').classList.add('locating');
+    mks.forEach(function(m){void m.offsetWidth;m.classList.add('found')});
+    mks[0].scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});
+    clearTimeout(tm);tm=setTimeout(undim,6000);
+    var src=document.getElementById(code);if(src)mark(src,false);
+    cur={code:code,map:map};lbCode.textContent=code;
+    var maps=document.querySelector('.loc[data-loc="'+code+'"]').dataset.maps.split(' ');
+    lb.querySelectorAll('[data-m]').forEach(function(b){b.hidden=maps.indexOf(b.dataset.m)<0||maps.length<2;
+      b.setAttribute('aria-pressed',b.dataset.m===map?'true':'false')});
+    lb.hidden=false;}
+  function closeBar(){lb.hidden=true;cur=null;clearFound();}
+  lb.addEventListener('click',function(e){var b=e.target.closest('button');if(!b||!cur)return;
+    if(b.dataset.m)locate(cur.code,b.dataset.m);
+    else if(b.classList.contains('lb-back')){var c=cur.code;closeBar();reveal('#'+c);
+      document.getElementById(c).scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});}
+    else closeBar();});
+  document.addEventListener('click',function(e){var l=e.target.closest('.loc');
+    if(l){var maps=l.dataset.maps.split(' '),sec=l.closest('details'),here=sec&&sec.querySelector('.plan');
+      locate(l.dataset.loc,here?here.id.slice(4):maps[0]);return;}
+    var a=e.target.closest('a[href^="#"]');if(a){if(!lb.hidden)closeBar();reveal(a.getAttribute('href'));}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!lb.hidden)closeBar();});
   if(location.hash)reveal(location.hash);
   var all=document.querySelectorAll('details'),tg=document.getElementById('toggle-all');
   tg.addEventListener('click',function(){var open=tg.dataset.open!=='1';
@@ -644,7 +713,6 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
     tg.textContent=open?'بستن همه':'باز کردن همه';});
   addEventListener('beforeprint',function(){all.forEach(function(d){d.open=true})});
   // ---- motion (skipped entirely when the reader prefers reduced motion) ----
-  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   var faNum=function(n){return String(n).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d]})};
   if(!reduce){document.querySelectorAll('.stat .val[data-to]').forEach(function(el,i){
     var to=+el.dataset.to,t0=null,dur=900+i*150;el.textContent=faNum(0);
