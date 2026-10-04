@@ -23,6 +23,8 @@ Examples:
         --component price=100:20 --component posm=50:10
     python merch_calc.py visit-cost --monthly-cost 300000000 --working-days 24 \
         --visits-per-day 6 --travel-per-visit 150000 --price-per-visit 3500000
+    python merch_calc.py occupancy --gross 1422 --sales 1206 --checkouts 6 \
+        --gondola-area 100.8 --block-area 273.5 --gondola-depth 1 --aisle 1.8
     python merch_calc.py selftest
 """
 from __future__ import annotations
@@ -207,6 +209,46 @@ def visit_cost(monthly_cost, working_days, visits_per_day, travel_per_visit=0,
     return out
 
 
+# --- Space occupancy (whole-store plan) ----------------------------------------
+# Reference points (US industry data / design guides — see references/store-layout.md §8):
+FMI_SALES_SHARE = Decimal("72.4")          # % of total store area that is selling space
+FMI_SALES_M2_PER_LANE = Decimal("324")      # ≈ 48,175 ft² × 72.4% / 10 checkout lanes
+AISLE_STD_M = (Decimal("1.5"), Decimal("1.8"))  # two-trolley aisle range
+
+
+def occupancy(gross, sales, checkouts=None, offices_front=None, gondola_area=None,
+              block_area=None, gondola_depth=None, aisle=None) -> dict:
+    """Area-use ratios of a store plan and their gap to reference values.
+
+    gross/sales/offices_front/gondola_area/block_area in m²; gondola_depth/aisle in m.
+    """
+    gross, sales = D(gross), D(sales)
+    _require_positive("gross", gross)
+    _require_positive("sales", sales)
+    share = sales / gross * HUNDRED
+    out = {"sales_share_pct": pct(share), "ref_sales_share_pct": FMI_SALES_SHARE,
+           "sales_share_gap_pts": pct(share - FMI_SALES_SHARE),
+           "non_sales_m2": money(gross - sales)}
+    if checkouts is not None:
+        lanes = D(checkouts)
+        _require_positive("checkouts", lanes)
+        out["sales_m2_per_checkout"] = money(sales / lanes)
+        out["ref_sales_m2_per_checkout"] = FMI_SALES_M2_PER_LANE
+    if offices_front is not None:
+        out["front_offices_pct_of_gross"] = pct(D(offices_front) / gross * HUNDRED)
+    if gondola_area is not None and block_area is not None:
+        out["center_block_density_pct"] = pct(D(gondola_area) / D(block_area) * HUNDRED)
+    if gondola_depth is not None:
+        g = D(gondola_depth)
+        lo = g / (g + AISLE_STD_M[1]) * HUNDRED
+        hi = g / (g + AISLE_STD_M[0]) * HUNDRED
+        out["ref_center_density_pct"] = f"{pct(lo)}-{pct(hi)}"
+    if aisle is not None:
+        a = D(aisle)
+        out["aisle_within_std"] = AISLE_STD_M[0] <= a <= AISLE_STD_M[1]
+    return out
+
+
 # --- CLI -----------------------------------------------------------------------
 def _parse_components(raw: list[str]) -> dict[str, tuple[Decimal, Decimal]]:
     out = {}
@@ -242,6 +284,11 @@ def selftest() -> dict:
     assert ps["perfect_store_score"] == D("85.80")
     vc = visit_cost(300_000_000, 24, 6, 150_000, 3_500_000)
     assert vc["cost_per_visit"] == D(2_233_333) and vc["margin_pct"] == D("36.19")
+    oc = occupancy(1422, 1206, checkouts=6, offices_front=75, gondola_area=100.8,
+                   block_area=273.5, gondola_depth=1, aisle=1.8)
+    assert oc["sales_share_pct"] == D("84.81") and oc["sales_m2_per_checkout"] == D(201)
+    assert oc["center_block_density_pct"] == D("36.86") and oc["ref_center_density_pct"] == "35.71-40.00"
+    assert oc["aisle_within_std"] is True
     return {"selftest": "ok"}
 
 
@@ -300,6 +347,15 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--travel-per-visit", default=0)
     s.add_argument("--price-per-visit")
 
+    s = sub.add_parser("occupancy", help="area-use ratios of a store plan vs reference values")
+    s.add_argument("--gross", required=True, help="total store area m²")
+    s.add_argument("--sales", required=True, help="customer-accessible selling area m²")
+    s.add_argument("--checkouts"); s.add_argument("--offices-front", help="office area in the sales/entry zone m²")
+    s.add_argument("--gondola-area", help="footprint of centre gondolas m²")
+    s.add_argument("--block-area", help="centre block area m² (gondolas + aisles)")
+    s.add_argument("--gondola-depth", help="gondola depth m (for reference density)")
+    s.add_argument("--aisle", help="typical secondary aisle width m")
+
     sub.add_parser("selftest")
     return p
 
@@ -335,6 +391,9 @@ def run(args) -> dict:
     if c == "visit-cost":
         return visit_cost(args.monthly_cost, args.working_days, args.visits_per_day,
                           args.travel_per_visit, args.price_per_visit)
+    if c == "occupancy":
+        return occupancy(args.gross, args.sales, args.checkouts, args.offices_front,
+                         args.gondola_area, args.block_area, args.gondola_depth, args.aisle)
     if c == "selftest":
         return selftest()
     raise ValueError(f"unknown command {c}")

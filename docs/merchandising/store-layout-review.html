@@ -333,6 +333,34 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
 .note{color:var(--ink-faint);font-size:.85rem;margin:.7rem 0 0}
 .prop .schem-fig{margin:0}
 @media(max-width:860px){.prop-grid{grid-template-columns:1fr}}
+.occ{padding:.2rem 0 2.4rem}
+.occ-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--shadow)}
+.occ-box h2{font-size:1.2rem;margin:.5rem 0 .8rem}
+table.occ-t{margin:0;font-size:.92rem;box-shadow:none}
+.occ-t th,.occ-t td{padding:.5rem .6rem}
+.occ-t sup{color:var(--steel);font-weight:800}
+.st{display:inline-block;white-space:nowrap;font-weight:700;font-size:.85rem}
+.st.ok{color:var(--steel)}.st.warn{color:var(--sev-major)}.st.bad{color:var(--sev-crit)}.st.info{color:var(--ink-faint)}
+.occ-b{margin-top:.9rem}
+.occ .note{margin-bottom:.3rem}
+.refs.mini{font-size:.8rem;margin:0;line-height:1.8}
+@media(max-width:560px){
+  .occ .tscroll table{min-width:0}
+  .occ-t thead{display:none}
+  .occ-t,.occ-t tbody{display:block;width:100%;border:0;background:transparent}
+  .occ-t tr{display:grid;grid-template-columns:1fr auto;gap:.15rem .6rem;padding:.6rem 0;border-bottom:1px solid var(--line)}
+  .occ-t td{border:0;padding:0}
+  .occ-t td:nth-child(1){grid-column:1;grid-row:1;font-weight:800;color:var(--ink)}
+  .occ-t td:nth-child(4){grid-column:2;grid-row:1}
+  .occ-t td:nth-child(2),.occ-t td:nth-child(3){grid-column:1/-1;font-size:.88rem}
+  .occ-t td:nth-child(2)::before{content:"این فروشگاه: ";color:var(--ink-faint)}
+  .occ-t td:nth-child(3)::before{content:"معیار: ";color:var(--ink-faint)}
+}
+.refs.mini li::marker{color:var(--steel);font-weight:800}
+@media (prefers-reduced-motion:no-preference){.occ.in .occ-t tbody tr{animation:rise .45s ease both}
+  .occ.in .occ-t tbody tr:nth-child(2){animation-delay:.06s}.occ.in .occ-t tbody tr:nth-child(3){animation-delay:.12s}
+  .occ.in .occ-t tbody tr:nth-child(4){animation-delay:.18s}.occ.in .occ-t tbody tr:nth-child(5){animation-delay:.24s}
+  .occ.in .occ-t tbody tr:nth-child(6){animation-delay:.3s}.occ.in .occ-t tbody tr:nth-child(7){animation-delay:.36s}}
 @media(max-width:760px){.g2{grid-template-columns:1fr}}
 @media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}.top-right .chip{display:none}}
 @media print{*{animation:none!important}.hero-net,.schem .shopper{display:none}.topbar,.btn-x{display:none}.hero,.mk,.dot,.sev i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -396,7 +424,7 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
       </div>
     </div>
 
-    <p class="rec"><b>پیشنهاد:</b> طرح ۱ + راهروی عرضی میانی؛ بلوک مرکزی در چهار بخش؛ اداری و رختکن‌ها به پشت‌صحنه. <a href="#d-prop">دیدن طرح ↓</a></p>
+    <p class="rec"><b>پیشنهاد:</b> طرح ۱ + راهروی عرضی میانی؛ بلوک مرکزی در چهار بخش؛ اداری و رختکن‌ها به پشت‌صحنه. <a href="#d-prop">دیدن طرح ↓</a> <a href="#occ">سطح اشغال ↓</a></p>
   </div>
 </section>
 
@@ -632,6 +660,38 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
     </details>
   </div>
 </section>
+<section class="occ" id="occ">
+  <div class="wrap">
+    <div class="occ-box">
+      <span class="eyebrow">گزارش سطح اشغال</span>
+      <h2>فضای فروش بیش از معیار است؛ پشت‌صحنه و انبار کم‌اند.</h2>
+      <div class="tscroll"><table class="occ-t">
+        <thead><tr><th>شاخص</th><th>این فروشگاه</th><th>معیار جهانی</th><th>وضعیت</th></tr></thead>
+        <tbody>
+          <tr><td>مساحت ناخالص</td><td>حدود ۱٬۴۲۰ مترمربع</td><td>میانگین سوپرمارکت آمریکا حدود ۳٬۹۰۰ مترمربع <sup>۱</sup></td><td><span class="st info">سوپرمارکت متوسط</span></td></tr>
+          <tr><td>سهم فضای فروش</td><td>حدود ۸۵٪</td><td>حدود ۷۲٪ <sup>۲</sup></td><td><span class="st warn">⚠ پشت‌صحنه کم</span></td></tr>
+          <tr><td>اداری در جلوی فروشگاه</td><td>حدود ۷۵ مترمربع (۵٪)</td><td>اداری خارج از فضای فروش و ورودی <sup>۳</sup></td><td><span class="st warn">⚠ قابل آزادسازی</span></td></tr>
+          <tr><td>تراکم گوندولا در بلوک مرکزی</td><td>حدود ۳۷٪ (هر دو طرح)</td><td>۳۶ تا ۴۰٪ (از عرض استاندارد راهرو) <sup>۴</sup></td><td><span class="st ok">✓ در حد معیار</span></td></tr>
+          <tr><td>فضای فروش به‌ازای هر صندوق</td><td>حدود ۲۰۰ مترمربع</td><td>حدود ۳۲۵ مترمربع <sup>۲</sup></td><td><span class="st ok">✓ تعداد کافی</span></td></tr>
+          <tr><td>عمق فضای صف</td><td>۲٫۱۰ تا ۲٫۴۵ متر</td><td>حدود ۴٫۵ متر (برآورد: ۳ مشتری با چرخ)</td><td><span class="st bad">✗ کم</span></td></tr>
+          <tr><td>عرض راهروی فرعی</td><td>۱٫۷۰ تا ۱٫۸۰ متر</td><td>۱٫۵ تا ۱٫۸ متر <sup>۴</sup></td><td><span class="st ok">✓ در حد معیار</span></td></tr>
+        </tbody>
+      </table></div>
+      <ul class="bul occ-b">
+        <li>سهم بالای فروش یعنی انبار و پشت‌صحنه در نقشه کم یا نامشخص است؛ نوار پشت‌صحنهٔ طرح پیشنهادی این شکاف را پر می‌کند.</li>
+        <li>تعداد صندوق کافی است؛ مشکل، عمق صف است (<bdi style="white-space:nowrap">C-02</bdi>).</li>
+        <li>تراکم قفسه‌ها استاندارد است؛ بیشترین ظرفیت خالی، فضای باز سمت چپ است (<bdi style="white-space:nowrap">C-11</bdi>).</li>
+      </ul>
+      <p class="note">برآورد از عکس نقشه (حدود ±۱۰٪)؛ مقیاس از طول ۱۰ متری گوندولاها و عرض ۴٫۲۲ متری ورودی. معیارها داده‌های صنعت آمریکا (FMI) و راهنماهای طراحی‌اند.</p>
+      <ol class="refs mini">
+        <li><bdi><a href="https://www.fmi.org/our-research/food-industry-facts">FMI — Food Industry Facts</a></bdi></li>
+        <li><bdi><a href="http://www.mit.edu/course/4/4.293/!Phoenix/Research/FMI/Food%20Marketing%20Institute%20-%20Facts%20&amp;%20Figures.pdf">FMI — Supermarket Facts</a></bdi> (۷۲٫۴٪ فضای فروش، ۱۰ صندوق)</li>
+        <li><bdi><a href="https://www.smartsheet.com/store-layout">Smartsheet — Store Layout</a></bdi></li>
+        <li><bdi><a href="https://mclernons.com.au/blogs/mclernons-corner/guide-to-supermarket-grocery-store-shelving-layouts">McLernons — Aisle widths</a></bdi></li>
+      </ol>
+    </div>
+  </div>
+</section>
 </main>
 
 <footer class="foot">
@@ -674,6 +734,8 @@ figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
   function play(){if(sch&&!sch.classList.contains('play'))sch.classList.add('play');}
   if(sch){if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){play();io.disconnect();}})},{threshold:.2});io.observe(sch);}else play();}
   if(reduce&&sch&&sch.pauseAnimations)sch.pauseAnimations();
+  var occ=document.getElementById('occ');
+  if(occ&&!reduce&&'IntersectionObserver' in window){var io2=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){occ.classList.add('in');io2.disconnect();}})},{threshold:.15});io2.observe(occ);}
 })();
 </script>
 </body>

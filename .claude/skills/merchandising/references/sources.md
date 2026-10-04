@@ -67,3 +67,8 @@
 - https://mclernons.com.au/blogs/mclernons-corner/guide-to-supermarket-grocery-store-shelving-layouts
 - https://www.posnation.com/blog/grocery-store-layout-strategy
 
+## سطح اشغال و معیارهای مساحت
+- http://www.mit.edu/course/4/4.293/!Phoenix/Research/FMI/Food%20Marketing%20Institute%20-%20Facts%20&%20Figures.pdf (FMI Supermarket Facts: ۷۲٫۴٪ فضای فروش، ۱۰ صندوق)
+- https://www.fmi.org/our-research/food-industry-facts (میانگین اندازهٔ سوپرمارکت)
+- https://dealstream.com/industry-guides/supermarkets/rules-of-thumb (تعریف selling area)
+

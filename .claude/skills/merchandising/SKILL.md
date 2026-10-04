@@ -82,7 +82,7 @@ python .claude/skills/merchandising/scripts/merch_calc.py perfect-store \
 ```
 
 دستورها: `markup-margin`, `price`, `imu`, `gmroi`, `sell-through`, `turnover`, `wos`, `otb`,
-`sos`, `osa`, `compliance`, `perfect-store`, `visit-cost`, `selftest` (فرمول‌ها و دانه‌بندی:
+`sos`, `osa`, `compliance`, `perfect-store`, `visit-cost`, `occupancy`, `selftest` (فرمول‌ها و دانه‌بندی:
 `references/kpis-and-formulas.md`).
 
 ## ۶. برندینگ: هر خروجی با هویت DaranX
@@ -107,6 +107,7 @@ python .claude/skills/merchandising/scripts/merch_calc.py perfect-store \
 برو، هر یافته را با کد، محل دقیق، شدت (§۴)، دلیل و اصلاح بنویس، و نقاط قوت را هم بگو. اگر گزارش
 رسمی خواستند، ساختار خلاصه‌اول §۵ را با قالب DaranX بساز. در پاسخ گفتگو هم همین
 ترتیب: حکم ← اقدام‌های فوری ← مقایسه ← جزئیات کوتاه.
+در انتهای هر نقد پلان، **گزارش سطح اشغال** (§۸ همان فایل) با `merch_calc.py occupancy` را بیاور.
 
 ## ۸. صداقت در دامنه
 
@@ -121,7 +122,7 @@ python .claude/skills/merchandising/scripts/merch_calc.py perfect-store \
 | فایل | کی بخوانی |
 |---|---|
 | `references/glossary.md` | نام‌گذاری مدل/فیلد/برچسب UI، ترجمهٔ اصطلاح |
-| `references/store-layout.md` | نقد یا طراحی پلان کل فروشگاه: اصول با منبع، چک‌لیست، مقیاس شدت، ساختار گزارش |
+| `references/store-layout.md` | نقد یا طراحی پلان کل فروشگاه: اصول با منبع، چک‌لیست، مقیاس شدت، ساختار گزارش، گزارش سطح اشغال و معیارهای جهانی |
 | `references/kpis-and-formulas.md` | هر شاخص، فرمول، دانه‌بندی، تله‌های تجمیع |
 | `references/field-execution.md` | ویزیت، مسیر، پلانوگرام، POSM، بصری، طرح دادهٔ پیشنهادی |
 | `references/planning-and-category.md` | سبد کالا، طبقهٔ کالا، OTB، قیمت و تخفیف، فضای قفسه |

@@ -127,4 +127,6 @@
 | صندوق سریع | Express lane | صندوق ویژهٔ سبد کوچک. |
 | پشت‌صحنه | Back of house (BOH) | انبار، دریافت کالا، اداری، رختکن. |
 | مسیر شارژ قفسه | Replenishment route | مسیر کالا از انبار به قفسه. |
-
+| سطح اشغال | Space occupancy / floor-area utilisation | نحوهٔ مصرف مساحت: فروش، پشت‌صحنه، تجهیزات، گردش. |
+| مساحت ناخالص / فضای فروش | Gross floor area (GFA) / Selling (sales) area | فضای فروش = هر جای در دسترس مشتری. |
+| تراکم گوندولا | Fixture / gondola density | ردپای قفسه ÷ مساحت بلوک. |
