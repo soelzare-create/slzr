@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Store-layout review (DaranX technical report), built from the daranx-proposal-kit template.
-     Keep assets/ (font, logo, plan images) next to this file so it works offline. -->
-<title>ارزیابی دو طرح چیدمان سوپرمارکت — DaranX</title>
-<meta name="description" content="گزارش فنی DaranX: ارزیابی تطبیقی دو طرح چیدمان یک سوپرمارکت بزرگ با هدف افزایش فروش.">
+<!-- Store-layout review — concise DaranX report (summary first, details collapsed).
+     Built from the daranx-proposal-kit template; keep assets/ next to this file. -->
+<title>ارزیابی چیدمان سوپرمارکت — DaranX</title>
+<meta name="description" content="خلاصهٔ ارزیابی دو طرح چیدمان سوپرمارکت: نتیجه، اقدام‌های فوری و مقایسه.">
 <style id="fontface">
 @font-face{font-family:"Vazirmatn";src:url("assets/Vazirmatn-VF.woff2") format("woff2");
   font-weight:100 900;font-style:normal;font-display:swap}
@@ -159,105 +159,125 @@ tr:last-child td{border-bottom:0}
 .reveal{opacity:0;transform:translateY(16px);animation:rise .7s ease forwards}
 @keyframes rise{to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none}}
-/* ---- scientific report additions (brand tokens + functional severity colors) ---- */
-:root{--sev-crit:#B42318;--sev-crit-bg:#FDECEA;--sev-major:#A15C07;--sev-major-bg:#FEF3E2;
-  --sev-minor:#5E6E86;--sev-minor-bg:#EEF2F7;
+/* ---- concise report (summary-first). Severity = functional status colors, always with a label ---- */
+:root{--sev-crit:#B42318;--sev-major:#B76E00;--sev-minor:#7A8699;
   --z-fresh:#D3E5F5;--z-food:#C4D8EE;--z-food2:#E2ECF8;--z-non:#DDE2EA;--z-cold:#D4EEF6;
   --z-promo:#FFFFFF;--z-svc:#ECEFF3;--z-queue:#F6F8FB}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sev-crit:#F97066;--sev-crit-bg:#3B1613;
-  --sev-major:#FDB022;--sev-major-bg:#3A2A10;--sev-minor:#A6BACF;--sev-minor-bg:#142B45;
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sev-crit:#F97066;--sev-major:#FDB022;--sev-minor:#8398AF;
   --z-fresh:#17385A;--z-food:#1C4067;--z-food2:#173250;--z-non:#1F2C3D;--z-cold:#103E50;
   --z-promo:#0F2338;--z-svc:#15253A;--z-queue:#0C1C2E}}
-:root[data-theme="dark"]{--sev-crit:#F97066;--sev-crit-bg:#3B1613;--sev-major:#FDB022;--sev-major-bg:#3A2A10;
-  --sev-minor:#A6BACF;--sev-minor-bg:#142B45;--z-fresh:#17385A;--z-food:#1C4067;--z-food2:#173250;
-  --z-non:#1F2C3D;--z-cold:#103E50;--z-promo:#0F2338;--z-svc:#15253A;--z-queue:#0C1C2E}
+:root[data-theme="dark"]{--sev-crit:#F97066;--sev-major:#FDB022;--sev-minor:#8398AF;
+  --z-fresh:#17385A;--z-food:#1C4067;--z-food2:#173250;--z-non:#1F2C3D;--z-cold:#103E50;
+  --z-promo:#0F2338;--z-svc:#15253A;--z-queue:#0C1C2E}
+.wrap{max-width:980px}
 .top-right{display:flex;align-items:center;gap:.7rem}
+.brand img{height:34px;width:auto}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .topbar .brand img{filter:brightness(0) invert(1)}}
 :root[data-theme="dark"] .topbar .brand img{filter:brightness(0) invert(1)}
-.brand img{height:34px;width:auto}
-.doc .wrap{max-width:1000px}
-.h3{margin:2rem 0 .8rem;font-size:1.15rem}
-.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.tscroll table{min-width:560px}
-td{vertical-align:top}
-caption{caption-side:top;text-align:start;color:var(--ink-faint);font-size:.92rem;padding:0 0 .6rem}
-table.meta{margin-top:0}
-table.meta th{width:9.5rem;white-space:nowrap}
-.abstract{margin-top:2rem;background:var(--surface);border:1px solid var(--line);border-inline-start:4px solid var(--steel);
-  border-radius:var(--r-md);padding:1.4rem 1.6rem;box-shadow:var(--shadow)}
-.abs-h{font-size:1.25rem;margin-bottom:.6rem}
-.abstract p{margin:.4rem 0;line-height:2.05}
-.kw{color:var(--ink-faint);font-size:.95rem}
-.sev{display:inline-block;border-radius:999px;padding:.12rem .7rem;font-size:.82rem;font-weight:800;white-space:nowrap}
-.sev.crit{color:var(--sev-crit);background:var(--sev-crit-bg)}
-.sev.major{color:var(--sev-major);background:var(--sev-major-bg)}
-.sev.minor{color:var(--sev-minor);background:var(--sev-minor-bg)}
-.fds{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1rem;margin-top:1.2rem}
-.fd{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:1.1rem 1.2rem;
-  box-shadow:var(--shadow);scroll-margin-top:90px}
-.fd:target{outline:3px solid var(--steel);outline-offset:2px}
-.fd header{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
-.fd .code{font-weight:900;color:var(--steel);direction:ltr;unicode-bidi:isolate}
-.fd h4{flex-basis:100%;margin:.5rem 0 0;color:var(--ink);font-size:1.02rem;line-height:1.6}
-.fd dl{margin:.7rem 0 0}
-.fd dt{font-size:.8rem;font-weight:800;color:var(--ink-faint);margin-top:.55rem}
-.fd dd{margin:.1rem 0 0;line-height:1.95;font-size:.95rem}
-.plan{margin:1.2rem 0 0}
-.plan-wrap{position:relative;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:#fff}
+/* hero: compact verdict band (no full-screen cover — the answer comes first) */
+.hero{background:linear-gradient(240deg,#0E2749 0%,#153A62 55%,#2E6098 100%);color:#fff;padding:2.2rem 0 2rem}
+.hero .eyebrow{color:#cfe0f2}
+.hero .eyebrow::before{background:#cfe0f2}
+.hero h1{color:#fff;font-size:clamp(1.45rem,1.1rem+1.6vw,2.2rem);font-weight:900;margin:.7rem 0 .5rem;line-height:1.45}
+.hero p{margin:0;color:var(--on-navy);font-size:1.05rem}
+.hero .meta-line{margin-top:.5rem;font-size:.85rem;color:var(--on-navy-soft)}
+@media(max-width:520px){.hero{padding:1.5rem 0 1.4rem}.glance{padding-top:1.1rem}}
+/* at a glance */
+.glance{padding:1.6rem 0 1.4rem}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:.75rem 1rem;
+  display:flex;flex-direction:column;gap:.15rem;box-shadow:var(--shadow)}
+.stat .lbl{color:var(--ink-faint);font-size:.88rem;font-weight:700;display:inline-flex;align-items:center;gap:.4rem}
+.stat .val{color:var(--ink);font-size:1.9rem;font-weight:800;line-height:1.2}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%}
+.dot.crit{background:var(--sev-crit)}.dot.major{background:var(--sev-major)}.dot.minor{background:var(--sev-minor)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-top:.9rem}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:1rem 1.2rem;box-shadow:var(--shadow)}
+.box h2{font-size:1.1rem;margin-bottom:.5rem}
+.acts{margin:0;padding-inline-start:1.2rem;line-height:1.9}
+.acts li{margin:.2rem 0;color:var(--ink-soft)}
+.acts li::marker{color:var(--sev-crit);font-weight:900}
+.acts a,.rec a{white-space:nowrap;font-size:.78rem;font-weight:800;direction:ltr;unicode-bidi:isolate;margin-inline-start:.25rem}
+table.cmp{margin:0;border:0;box-shadow:none;font-size:.93rem}
+.cmp th,.cmp td{padding:.42rem .5rem}
+.cmp td:not(:first-child),.cmp th:not(:first-child){text-align:center;width:4.2rem}
+.yes{color:var(--steel);font-weight:900}.no{color:var(--sev-crit);font-weight:900}
+.rec{margin:.9rem 0 0;padding:.75rem 1rem;border-radius:var(--r-sm);background:var(--surface-2);color:var(--ink-soft)}
+/* details */
+.more{padding:.4rem 0 2.4rem}
+.more-head{display:flex;align-items:center;justify-content:space-between;margin:.6rem 0}
+.more-head h2{font-size:1.2rem}
+.btn-x{font-family:inherit;font-weight:700;font-size:.88rem;color:var(--steel);background:transparent;
+  border:1px solid var(--line-strong);border-radius:999px;padding:.35rem .9rem;cursor:pointer}
+details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);margin:.55rem 0;box-shadow:var(--shadow)}
+summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:.6rem;padding:.85rem 1.1rem;font-weight:800;color:var(--ink)}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"";width:8px;height:8px;border-inline-end:2px solid var(--steel);border-bottom:2px solid var(--steel);
+  transform:rotate(45deg);transition:transform .2s;flex:none;margin-top:-4px}
+details[open]>summary::before{transform:rotate(225deg);margin-top:4px}
+summary em{margin-inline-start:auto;font-style:normal;font-weight:600;font-size:.85rem;color:var(--ink-faint)}
+details>*:not(summary){margin-inline:1.1rem}
+details>*:last-child{margin-bottom:1rem}
+.pro{margin:.1rem 1.1rem .5rem;color:var(--steel);font-size:.9rem;font-weight:700}
+.rows{list-style:none;padding:0;margin-top:.2rem}
+.row{display:grid;grid-template-columns:auto auto 1fr;gap:.25rem .7rem;align-items:start;padding:.55rem 0;
+  border-top:1px solid var(--line);scroll-margin-top:90px}
+.row .code{font-weight:900;color:var(--steel);direction:ltr;unicode-bidi:isolate;font-size:.85rem;padding-top:.15rem}
+.sev{display:inline-flex;align-items:center;gap:.3rem;font-size:.8rem;font-weight:700;color:var(--ink-soft);white-space:nowrap;padding-top:.15rem}
+.sev i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.sev.crit i{background:var(--sev-crit)}.sev.major i{background:var(--sev-major)}.sev.minor i{background:var(--sev-minor)}
+.row p{margin:0;line-height:1.8}
+.row b{color:var(--ink);font-weight:700}
+.fix{display:block;color:var(--ink-faint);font-size:.9rem}
+.row.hit{animation:hit 1.6s ease}
+@keyframes hit{0%{background:var(--surface-2)}100%{background:transparent}}
+@media(max-width:560px){.row{grid-template-columns:auto 1fr}.row p{grid-column:1/-1}}
+/* annotated plans */
+.plan{margin-top:.6rem}
+.plan-wrap{position:relative;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:#fff}
 .plan-wrap img{display:block;width:100%;height:auto}
-.mk{position:absolute;transform:translate(-50%,-50%);direction:ltr;font-size:.74rem;font-weight:900;line-height:1;
-  padding:.28rem .45rem;border-radius:999px;color:#fff;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);
-  text-decoration:none;white-space:nowrap}
+.mk{position:absolute;transform:translate(-50%,-50%);direction:ltr;font-size:.72rem;font-weight:900;line-height:1;
+  padding:.26rem .42rem;border-radius:999px;color:#fff;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);text-decoration:none}
 .mk.crit{background:#B42318}.mk.major{background:#B76E00}.mk.minor{background:#5E6E86}
 .mk:hover,.mk:focus-visible{transform:translate(-50%,-50%) scale(1.15);z-index:2}
-@media(max-width:600px){.mk{font-size:.58rem;padding:.18rem .3rem;border-width:1.5px}}
-figcaption{color:var(--ink-faint);font-size:.92rem;margin-top:.6rem;line-height:1.9}
-.win{color:var(--steel);font-weight:800}.lose{color:var(--sev-crit);font-weight:700}.eq{color:var(--ink-faint)}
-.bul{margin:0;padding-inline-start:1.3rem;line-height:2.05}
-.bul li{margin-bottom:.35rem}
-.refs{margin:0;padding-inline-start:1.4rem;line-height:2;color:var(--ink-faint)}
-.refs li{margin-bottom:.5rem}
+@media(max-width:600px){.mk{font-size:.56rem;padding:.16rem .28rem;border-width:1.5px}}
+figcaption{color:var(--ink-faint);font-size:.85rem;margin-top:.4rem}
+.bul{margin-top:.3rem;padding-inline-start:1.2rem;line-height:1.9;color:var(--ink-soft)}
+.refs{padding-inline-start:1.3rem;line-height:1.9;font-size:.88rem;color:var(--ink-faint)}
 .refs a{overflow-wrap:anywhere}
-/* schematic */
-.schem-fig{margin:1rem 0 1.6rem}
-.schem{width:100%;height:auto;display:block;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md)}
+/* schematic (inline SVG, tokens only) */
+.schem-fig{margin-top:.6rem}
+.schem{width:100%;max-width:640px;height:auto;display:block;margin-inline:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm)}
 .schem .shell{fill:var(--ground);stroke:var(--line-strong);stroke-width:3}
 .schem .z{stroke:var(--line-strong);stroke-width:2}
 .schem .fresh,.schem .fresh rect{fill:var(--z-fresh)}
+.schem .fresh rect{stroke:var(--line-strong);stroke-width:2}
 .schem .food{fill:var(--z-food)}.schem .food2{fill:var(--z-food2)}.schem .non{fill:var(--z-non)}
 .schem .cold{fill:var(--z-cold)}.schem .svc{fill:var(--z-svc)}.schem .queue{fill:var(--z-queue);stroke-dasharray:6 6}
 .schem .promo{fill:var(--z-promo);stroke:var(--steel);stroke-dasharray:8 6}
-.schem .fresh rect{stroke:var(--line-strong);stroke-width:2}
 .schem .door{fill:var(--surface);stroke:var(--steel);stroke-width:2}
 .schem .gond path{stroke:var(--steel-soft);stroke-width:3;opacity:.45}
 .schem .zt,.schem .zt text{fill:var(--ink);font-family:var(--font);font-size:22px;font-weight:700;text-anchor:middle;direction:rtl}
-.schem .zt.v{font-size:20px}.schem .zt.vs{font-size:17px}.schem .zt.s18{font-size:18px}.schem .zt.xs{font-size:14px;font-weight:700}
+.schem .zt.v{font-size:20px}.schem .zt.vs{font-size:17px}.schem .zt.s18{font-size:18px}.schem .zt.xs{font-size:14px}
 .schem .sm,.schem .zt .sm{font-size:16px;font-weight:600;fill:var(--ink-soft)}
 .schem .qt text:not(.sm){font-size:22px;font-weight:800}
 .schem .flow{fill:none;stroke:var(--steel);stroke-width:5;stroke-dasharray:14 10;stroke-linejoin:round}
 .schem .arrow-head{fill:var(--steel)}
-.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;margin-top:.8rem;color:var(--ink-soft);font-size:.9rem}
-.legend span{display:inline-flex;align-items:center;gap:.45rem}
-.lg{display:inline-block;width:18px;height:14px;border-radius:4px;border:1.5px solid var(--line-strong)}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1rem;margin-top:.6rem;color:var(--ink-soft);font-size:.85rem}
+.legend span{display:inline-flex;align-items:center;gap:.4rem}
+.lg{display:inline-block;width:16px;height:12px;border-radius:3px;border:1.5px solid var(--line-strong)}
 .lg.fresh{background:var(--z-fresh)}.lg.food{background:var(--z-food)}.lg.food2{background:var(--z-food2)}
 .lg.non{background:var(--z-non)}.lg.cold{background:var(--z-cold)}
 .lg.promo{background:var(--z-promo);border:1.5px dashed var(--steel)}
 .lg.flow{height:0;border:0;border-top:3px dashed var(--steel);border-radius:0}
-@media(max-width:520px){.top-right .chip{display:none}table.meta th{width:6.5rem;white-space:normal}.abstract{padding:1.1rem}}
-/* print */
-@media print{
-  .topbar,.theme-toggle,.cta .btn{display:none}
-  .cover{min-height:auto;padding:3rem 1rem;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .sec{padding-block:1.6rem}
-  .fd,.plan,.schem-fig,tr{break-inside:avoid}
-  .reveal{animation:none;opacity:1;transform:none}
-  .mk{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-}
+@media(max-width:760px){.g2{grid-template-columns:1fr}}
+@media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}.top-right .chip{display:none}}
+@media print{.topbar,.btn-x{display:none}.hero,.mk,.dot,.sev i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  details,.row,.plan,.schem-fig{break-inside:avoid}}
 </style>
 
 </head>
 <body>
-
 <header class="topbar">
   <div class="wrap">
     <a class="brand" href="#top"><img src="assets/daranx-logo.svg" alt="DaranX" onerror="this.style.display='none';this.nextElementSibling.hidden=false"><span hidden>Daran<span class="x">X</span></span></a>
@@ -268,421 +288,155 @@ figcaption{color:var(--ink-faint);font-size:.92rem;margin-top:.6rem;line-height:
   </div>
 </header>
 
-<!-- ========== COVER ========== -->
-<section class="cover" id="top">
-  <img class="cbrand" src="assets/daranx-logo.svg" alt="DaranX" onerror="this.style.display='none'">
-  <span class="eyebrow" style="color:#cfe0f2">گزارش فنی ـ تحلیلی · Merchandising</span>
-  <h1 style="margin-top:1rem">ارزیابی تطبیقی دو طرح چیدمان یک سوپرمارکت بزرگ</h1>
-  <p class="csub">تحلیل جریان مشتری، مجاورت دسته‌ها، ایمنی و ظرفیت فروش، با هدف افزایش فروش</p>
-  <div class="cmeta">تهیه‌شده توسط DaranX · ۱۲ مهر ۱۴۰۵ · نسخهٔ ۱٫۰</div>
-</section>
-
-<main class="doc">
-
-<!-- ========== DOCUMENT INFO + ABSTRACT ========== -->
-<section class="sec">
-  <div class="wrap reveal">
-    <table class="meta">
-      <tbody>
-        <tr><th>عنوان</th><td>ارزیابی تطبیقی دو طرح چیدمان یک سوپرمارکت بزرگ</td></tr>
-        <tr><th>تهیه‌کننده</th><td>DaranX</td></tr>
-        <tr><th>تاریخ و نسخه</th><td>۱۲ مهر ۱۴۰۵ · نسخهٔ ۱٫۰</td></tr>
-        <tr><th>مبنای بررسی</th><td>تصویر نسخهٔ چاپی دو نقشهٔ چیدمان ارائه‌شده توسط کارفرما (طرح ۱ و طرح ۲)</td></tr>
-        <tr><th>دامنه</th><td>چیدمان کل فروشگاه؛ جریان مشتری، جای دپارتمان‌ها، بلوک‌بندی و مجاورت دسته‌ها، راهروها، صندوق و صف، پشت‌صحنه و ایمنی. نور، تابلو و پلانوگرام قفسه‌ها خارج از دامنه است.</td></tr>
-        <tr><th>هدف کارفرما</th><td>افزایش فروش؛ طرح برای خود فروشگاه</td></tr>
-      </tbody>
-    </table>
-
-    <div class="abstract">
-      <h2 class="abs-h">چکیده</h2>
-      <p>این گزارش دو طرح چیدمان پیشنهادی برای یک سوپرمارکت بزرگ را با هدف افزایش فروش ارزیابی می‌کند. ارزیابی بر پایهٔ یک چک‌لیست پانزده‌معیاره در هفت محور — جریان مشتری، دسته‌های مقصد، ترتیب دما و وزن، بلوک‌بندی و مجاورت، راهرو و پروموشن، صندوق و صف، پشت‌صحنه و ایمنی — و یک مقیاس سه‌سطحی شدت انجام شده است. در مجموع ۲۳ یافته ثبت شد: ۱۴ یافتهٔ مشترک و ۳ و ۶ یافتهٔ ویژهٔ طرح ۱ و طرح ۲؛ از این میان ۵ مورد بحرانی، ۱۴ مورد مهم و ۴ مورد جزئی است. طرح ۱ به‌دلیل بلوک‌بندی منسجم غذایی و غیرغذایی و فضای بیشتر جلوی صندوق پایهٔ مناسب‌تری است. طرح ۲ با راهروی عرضی میانی ایدهٔ ارزشمندی دارد، اما دو ایراد بحرانی آن — هم‌قفسه‌بودن شوینده و قهوه، و حذف فضای جلوی صندوق — آن را ضعیف‌تر می‌کند. در پایان، طرحی ترکیبی پیشنهاد شده است که ساختار طرح ۱ را با راهروی میانی طرح ۲ و بلوک‌بندی چهاربخشی جمع می‌کند.</p>
-      <p class="kw"><b>کلیدواژه‌ها:</b> چیدمان فروشگاه، مرچندایزینگ، جریان مشتری، مجاورت دسته‌ها، فروش مکمل، طراحی صندوق، سوپرمارکت</p>
-    </div>
+<section class="hero" id="top">
+  <div class="wrap">
+    <span class="eyebrow">ارزیابی دو طرح چیدمان سوپرمارکت</span>
+    <h1>طرح ۱ پایهٔ بهتری است؛ پیش از اجرا ۴ اصلاح فوری لازم است.</h1>
+    <p>هدف: افزایش فروش · پیشنهاد: ساختار طرح ۱ + راهروی میانی طرح ۲</p>
+    <p class="meta-line">تهیه‌شده توسط <bdi>DaranX</bdi> · ۱۲ مهر ۱۴۰۵</p>
   </div>
 </section>
 
-<!-- ========== 1. INTRODUCTION ========== -->
-<section class="sec alt">
-  <div class="wrap reveal">
-    <div class="sec-head"><span class="eyebrow">بخش ۱</span><h2>مقدمه و هدف</h2></div>
-    <div class="longcopy">
-      <p>چیدمان کل فروشگاه تعیین می‌کند مشتری از کنار چه کالاهایی، به چه ترتیبی و با چه سهولتی عبور کند؛ بنابراین پیش از هر تصمیم دربارهٔ قفسه و پروموشن، بیشترین اثر را بر فروش و تجربهٔ خرید دارد. کارفرما دو طرح چیدمان برای یک سوپرمارکت بزرگ ارائه کرده و خواسته است همهٔ ایرادهای آن‌ها از دید مرچندایزینگ و با هدف افزایش فروش مشخص شود.</p>
-      <p>مطابق روش کار DaranX — شناخت، طراحی، اجرا، پشتیبانی — این سند مرحلهٔ «شناخت» را پوشش می‌دهد: نقشه‌ها را دقیق می‌خواند، با اصول شناخته‌شدهٔ چیدمان می‌سنجد، ایرادها را با محل دقیق و شدت ثبت می‌کند و طرح پیشنهادی را برای مرحلهٔ «طراحی» آماده می‌سازد.</p>
+<main>
+<section class="glance">
+  <div class="wrap">
+    <div class="stats" role="list">
+      <div class="stat" role="listitem"><span class="lbl">کل یافته‌ها</span><span class="val">۲۳</span></div>
+      <div class="stat" role="listitem"><span class="lbl"><i class="dot crit"></i>بحرانی</span><span class="val">۵</span></div>
+      <div class="stat" role="listitem"><span class="lbl"><i class="dot major"></i>مهم</span><span class="val">۱۴</span></div>
+      <div class="stat" role="listitem"><span class="lbl"><i class="dot minor"></i>جزئی</span><span class="val">۴</span></div>
     </div>
-  </div>
-</section>
 
-<!-- ========== 2. METHOD ========== -->
-<section class="sec">
-  <div class="wrap reveal">
-    <div class="sec-head"><span class="eyebrow">بخش ۲</span><h2>روش بررسی</h2></div>
-    <h3 class="h3">۲٫۱ داده و خوانش نقشه</h3>
-    <div class="longcopy">
-      <p>داده‌ها دو عکس از نسخهٔ چاپی نقشه‌ها است؛ به ترتیب دریافت، «طرح ۱» (بلوک مرکزی با ده گوندولای یکسره) و «طرح ۲» (دو بلوک با راهروی عرضی میانی) نام‌گذاری شدند. برچسب‌های ریز با برش و بزرگ‌نمایی خوانده و دستهٔ کالای هر وجه گوندولا جدول شد. فرض‌های خوانش: اندازه‌ها به متر است؛ نقطه‌های سیاه ستون و مربع‌های تیره ستون یا داکت‌اند؛ اشکال هاشورخورده پیشخوان صندوق‌اند؛ ورود از پایین راست و خروج از میانهٔ ردیف صندوق است. اعدادی مانند تعداد سرقفسه و طول وجه قفسه برداشت تقریبی از نقشه‌اند، نه داده.</p>
-    </div>
-    <h3 class="h3">۲٫۲ چارچوب ارزیابی</h3>
-    <div class="tscroll"><table>
-      <thead><tr><th>محور</th><th>اصل ارزیابی</th><th>منبع</th></tr></thead>
-      <tbody>
-        <tr><td>جریان مشتری</td><td>فضای ورود خالی و دعوت‌کننده؛ بیشتر مشتریان به راست می‌چرخند و پادساعتگرد حرکت می‌کنند؛ مسیر پیرامونی بدون نقطهٔ کور</td><td>[1][2]</td></tr>
-        <tr><td>دسته‌های مقصد</td><td>لبنیات و پیشخوان‌های تازه در عمق، تا مشتری از کنار بقیهٔ کالاها بگذرد؛ میوه و سبزی برای تصویر تازگی</td><td>[3][4]</td></tr>
-        <tr><td>ترتیب دما و وزن</td><td>منجمد و کالای سنگین نزدیک انتهای مسیر</td><td>[5]</td></tr>
-        <tr><td>بلوک‌بندی و مجاورت</td><td>بلوک پیوستهٔ غذایی و غیرغذایی؛ دسته‌های مکمل کنار هم؛ جداسازی شوینده از غذا</td><td>[6][7]</td></tr>
-        <tr><td>راهرو و پروموشن</td><td>عرض کافی برای عبور دو چرخ‌دستی؛ سرقفسه و میز پروموشن بیرون از گلوگاه و صف</td><td>[8]</td></tr>
-        <tr><td>صندوق و صف</td><td>عمق صف متناسب با ترافیک؛ کالای لحظه‌ای کنار صندوق؛ نبود تداخل با ورود</td><td>[9]</td></tr>
-        <tr><td>پشت‌صحنه و ایمنی</td><td>اداری خارج از فضای فروش؛ مسیر شارژ جدا؛ دید روی دسته‌های پرسرقت؛ دوری قابل‌اشتعال از غذا</td><td>[7]</td></tr>
-      </tbody>
-    </table></div>
-    <h3 class="h3">۲٫۳ مقیاس شدت</h3>
-    <div class="tscroll"><table>
-      <thead><tr><th>شدت</th><th>تعریف</th></tr></thead>
-      <tbody>
-        <tr><td><span class="sev crit">بحرانی</span></td><td>ایمنی، بهداشت یا امنیت؛ یا مانعی که در ساعت اوج جریان و فروش را می‌بندد. پیش از اجرا باید اصلاح شود.</td></tr>
-        <tr><td><span class="sev major">مهم</span></td><td>اثر مستقیم بر فروش، اندازهٔ سبد یا تجربهٔ مشتری؛ اصلاح آن بازده دارد.</td></tr>
-        <tr><td><span class="sev minor">جزئی</span></td><td>کیفیت سند، برچسب یا بهینه‌سازی کم‌اثر.</td></tr>
-      </tbody>
-    </table></div>
-  </div>
-</section>
-
-<!-- ========== 3. DESIGN PROFILES ========== -->
-<section class="sec alt">
-  <div class="wrap reveal">
-    <div class="sec-head"><span class="eyebrow">بخش ۳</span><h2>مشخصات دو طرح</h2>
-      <p class="lead">اجزای ثابت — دیوار تازه‌ها، دیوار لبنیات و نوشیدنی، دیوار چپ، اتاق‌ها، ورود و خروج و صندوق‌ها — در هر دو طرح یکسان است؛ تفاوت در بلوک مرکزی کالای خشک است.</p></div>
-    <div class="tscroll"><table>
-      <caption>جدول ۱ — مشخصات بلوک مرکزی (برداشت تقریبی از نقشه)</caption>
-      <thead><tr><th>مشخصه</th><th>طرح ۱</th><th>طرح ۲</th></tr></thead>
-      <tbody>
-        <tr><td>آرایش بلوک مرکزی</td><td>۱۰ گوندولای یکسره</td><td>دو بلوک ۹تایی با راهروی عرضی میانی + یک واحد ۹ متری ادویه</td></tr>
-        <tr><td>طول گوندولا</td><td>۱۰ متر (آخری ۱۰٫۸۰)</td><td>۶ متر (بالا)، ۵٫۶۰ متر (پایین)، ۵ متر (آخری)</td></tr>
-        <tr><td>عرض راهروی فرعی</td><td>عمدتاً ۱٫۸۰ متر</td><td>۱٫۷۰ تا ۲٫۳۳ متر</td></tr>
-        <tr><td>ردیف میز پروموشن</td><td>دو ردیف (بالا و جلو)</td><td>یک ردیف (میانی)</td></tr>
-        <tr><td>سرقفسه</td><td>حدود ۲۰</td><td>حدود ۳۸</td></tr>
-        <tr><td>طول وجه قفسهٔ بلوک مرکزی</td><td>حدود ۲۰۲ متر</td><td>حدود ۲۲۶ متر</td></tr>
-        <tr><td>عمق فضای جلوی صندوق</td><td>۲٫۴۵ متر تا ردیف میز</td><td>۲٫۱۰ متر تا انتهای گوندولا</td></tr>
-        <tr><td>بلوک‌بندی غذایی و غیرغذایی</td><td>پیوسته (چپ غیرغذایی، راست غذایی)</td><td>تکه‌تکه در هر دو بلوک</td></tr>
-      </tbody>
-    </table></div>
-    <h3 class="h3">نقاط قوت مشترک</h3>
-    <div class="outcomes">
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>مسیر پادساعتگرد از ورودی سمت راست، هم‌خوان با «راست ثابت» [1]</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>پیشخوان‌های نان، گوشت، مرغ و ماهی روی دیوار پشتی و لبنیات در عمق؛ کشش ترافیک به عمق [3][4]</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>هم‌جواری نانوایی و کافه</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>برنج، روغن و شوینده نزدیک انتهای مسیر</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>ورود و خروج جدا</span>
-    </div>
-  </div>
-</section>
-
-<!-- ========== 4. COMMON FINDINGS ========== -->
-<section class="sec">
-  <div class="wrap reveal">
-    <div class="sec-head"><span class="eyebrow">بخش ۴</span><h2>یافته‌های مشترک</h2>
-      <p class="lead">این یافته‌ها به اجزای ثابت مربوط‌اند و در هر دو طرح وجود دارند. محل هر کد روی شکل ۱ و شکل ۲ نشانه‌گذاری شده است.</p></div>
-    <div class="fds">
-      <article class="fd" id="C-01">
-        <header><span class="code">C-01</span><span class="sev major">مهم</span><h4>ورودی میان اتاق‌های اداری؛ دیوار قدرت هدر رفته</h4></header>
-        <dl>
-          <dt>محل</dt><dd>راهروی ورود (پایین راست) بین اتاق مدیریت و رختکن‌های کارکنان</dd>
-          <dt>شرح و دلیل</dt><dd>مشتری از راهرویی وارد می‌شود که یک طرف آن اتاق مدیریت و طرف دیگر رختکن کارکنان با درِ رو به مسیر مشتری است. پس از فضای ورود، نخستین سطح نمایش سمت راست — که بیشتر مشتریان به آن رو می‌کنند [1] — به نوشابهٔ گازدار رسیده است. جای چرخ‌دستی و سبد و میز خدمات مشتری در نقشه دیده نمی‌شود.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>انتقال اتاق‌های اداری و رختکن به پشت‌صحنه یا نیم‌طبقه با ورود جداگانهٔ کارکنان؛ فضای ورود باز و بدون کالا [1][2]؛ پس از آن، دیوار قدرت سمت راست برای تازه‌ها، کالای فصلی یا پیشنهاد هفته؛ جایگاه چرخ‌دستی و میز خدمات کنار ورودی.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-02">
-        <header><span class="code">C-02</span><span class="sev crit">بحرانی</span><h4>فضای صف ناکافی و تداخل جریان ورود با صف</h4></header>
-        <dl>
-          <dt>محل</dt><dd>بین ردیف صندوق‌ها و راهروی جلو — طرح ۱: ۲٫۴۵ متر تا ردیف میز پروموشن؛ طرح ۲: ۲٫۱۰ متر تا انتهای گوندولاها</dd>
-          <dt>شرح و دلیل</dt><dd>با برآورد حدود ۱٫۵ متر برای هر مشتری همراه چرخ‌دستی، این عمق کمتر از دو مشتری در هر صف جا می‌دهد؛ در ساعت اوج صف به راهروی جلو و سرِ گوندولاها می‌رسد. مسیر ورود از سمت راست هم از کنار صف آخرین صندوق می‌گذرد.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>افزایش عمق فضای صف (کوتاه‌کردن بلوک پایینی گوندولاها و انتقال میزهای پروموشن به راهروی عرضی میانی)، جداکردن مسیر ورود از صف، و تعیین ظرفیت صندوق‌ها بر پایهٔ تعداد تراکنش ساعت اوج.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-03">
-        <header><span class="code">C-03</span><span class="sev crit">بحرانی</span><h4>بستنی در ابتدای مسیر</h4></header>
-        <dl>
-          <dt>محل</dt><dd>یخچال بستنی (۷٫۲۶ متر) در میانهٔ سمت راست، بلافاصله پس از لبنیات</dd>
-          <dt>شرح و دلیل</dt><dd>در مسیر پادساعتگرد، بستنی از نخستین اقلامی است که برداشته می‌شود و تا رسیدن به صندوق در سبد می‌ماند. راهنماهای ایمنی غذا برداشتن کالای منجمد را در پایان خرید توصیه می‌کنند و یادآوری می‌کنند که فروشگاه‌ها همیشه این‌گونه طراحی نشده‌اند [5].</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>انتقال منجمد و بستنی به نزدیک صندوق‌ها (پیشنهاد: فضای باز پایین سمت چپ) پس از بررسی برق و تخلیهٔ آب؛ جای فعلی برای توسعهٔ تازه‌ها یا نمایش فصلی.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-04">
-        <header><span class="code">C-04</span><span class="sev crit">بحرانی</span><h4>کالای قابل‌اشتعال کنار تازه‌ها؛ خروج اضطراری نامشخص</h4></header>
-        <dl>
-          <dt>محل</dt><dd>زغال و آتش‌زا در گوشهٔ بالا راست، کنار پیشخوان ماهی و ابتدای یخچال لبنیات</dd>
-          <dt>شرح و دلیل</dt><dd>زغال آلاینده و آتش‌زا قابل‌اشتعال است و کنار غذای باز و تجهیزات سرمایشی قرار گرفته است. در نقشه به‌جز ورود و خروج اصلی، خروج اضطراری دیده نمی‌شود.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>انتقال زغال و آتش‌زا به نقطه‌ای دور از غذای باز و تجهیزات سرمایشی (در فصل کباب، نمایش بسته‌بندی‌شده با فاصله در نزدیکی گوشت)؛ مشخص‌کردن خروج‌های اضطراری و تجهیزات اطفا و تطبیق با مقررات آتش‌نشانی.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-05">
-        <header><span class="code">C-05</span><span class="sev major">مهم</span><h4>کالای سنگین در ابتدای مسیر</h4></header>
-        <dl>
-          <dt>محل</dt><dd>دیوار شیب‌دار راست، از ورودی تا میانه: نوشیدنی گازدار و بدون گاز</dd>
-          <dt>شرح و دلیل</dt><dd>بطری‌های بزرگ نوشیدنی در ابتدای مسیر سبد را زود سنگین و پر می‌کنند و فرصت دیوار قدرت را هم می‌گیرند (C-01).</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>بسته‌های بزرگ نوشیدنی در انتهای مسیر؛ نوشیدنی تکی و سرد در یخچال کنار صندوق‌ها [9].</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-06">
-        <header><span class="code">C-06</span><span class="sev major">مهم</span><h4>میوه و سبزی بدون جایگاه روشن؛ واحدهای بی‌برچسب</h4></header>
-        <dl>
-          <dt>محل</dt><dd>اتاقک «vegetable» در دیوار پشتی؛ island، یخچال ۷ متری و دو واحد ۲ متری بدون برچسب</dd>
-          <dt>شرح و دلیل</dt><dd>میوه و سبزی از دسته‌های مقصد اصلی و نشانهٔ تازگی فروشگاه است [3][4]، اما از نقشه معلوم نیست کجا و با چه مساحتی عرضه می‌شود.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>تعیین صریح جایگاه و مساحت میوه و سبزی — نزدیک ورودی برای تصویر تازگی یا در عقب برای کشش ترافیک [4] — و برچسب‌گذاری همهٔ واحدها.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-07">
-        <header><span class="code">C-07</span><span class="sev major">مهم</span><h4>تخصیص فضا متناسب با فروش نیست</h4></header>
-        <dl>
-          <dt>محل</dt><dd>دیوار چپ: نمک ۵٫۳۹ متر، برنج ۵ متر، روغن ۴ متر؛ همهٔ گوندولاها هم‌طول</dd>
-          <dt>شرح و دلیل</dt><dd>طول قفسهٔ هر دسته باید با سهم فروش، سود و سرعت فروش آن متناسب باشد. فضای بیشتر برای نمک نسبت به برنج و روغن — دو دستهٔ مقصد — نشانهٔ تخصیص بدون داده است.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>بازتخصیص طول قفسه با دادهٔ فروش صندوق‌ها (سهم فروش و سود هر دسته).</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-08">
-        <header><span class="code">C-08</span><span class="sev major">مهم</span><h4>جفت مکمل چای و قند از هم دور است</h4></header>
-        <dl>
-          <dt>محل</dt><dd>قند و شکر روی دیوار چپ؛ چای در گوندولاهای سمت راست</dd>
-          <dt>شرح و دلیل</dt><dd>مجاورت دسته‌های مکمل جست‌وجو را ساده و نیاز فراموش‌شده را یادآوری می‌کند [6]؛ چای و قند در سبد خرید ایرانی جفت رایج است.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>نمایش ثانویهٔ قند کنار چای، یا جابه‌جایی چای به مجاورت قند.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-09">
-        <header><span class="code">C-09</span><span class="sev major">مهم</span><h4>غرفهٔ آرایشی پنهان؛ در خزانه رو به فضای مشتری</h4></header>
-        <dl>
-          <dt>محل</dt><dd>گوشهٔ پایین چپ، پشت دیوار هاشورخورده و کنار خزانه</dd>
-          <dt>شرح و دلیل</dt><dd>آرایشی دسته‌ای پرحاشیه و پرسرقت است و باید در دید صندوق یا حراست باشد. به نظر می‌رسد در خزانه هم به فضای در دسترس مشتری باز می‌شود؛ اگر تأیید شود، این مورد از نظر امنیت بحرانی است.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>باز کردن غرفه رو به مسیر اصلی و در خط دید صندوق؛ دسترسی خزانه از مسیر کارکنان.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-10">
-        <header><span class="code">C-10</span><span class="sev major">مهم</span><h4>آجیل و کافه محصور و کم‌دید</h4></header>
-        <dl>
-          <dt>محل</dt><dd>سمت چپ میانه (آجیل) و بالا چپ (کافه)</dd>
-          <dt>شرح و دلیل</dt><dd>آجیل دسته‌ای پرحاشیه و مناسبتی (نوروز و یلدا) است و دیوارکشی دور آن دید از مسیر اصلی را کم می‌کند. در کافه به گذرگاه کور کنار دیوار چپ باز می‌شود.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>پیشخوان باز آجیل رو به مسیر اصلی؛ ورودی کافه رو به راهروی اصلی و هم‌جوار نانوایی.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-11">
-        <header><span class="code">C-11</span><span class="sev major">مهم</span><h4>فضای باز سمت چپ کم‌بازده</h4></header>
-        <dl>
-          <dt>محل</dt><dd>بین دیوار چپ (برنج، روغن، نمک) و بلوک مرکزی؛ حدود ۴٫۷ متر عرض با ۴ میز ۱٫۲۰×۰٫۸۰</dd>
-          <dt>شرح و دلیل</dt><dd>مساحت قابل‌توجهی در انتهای مسیر با بار نمایشی اندک.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>استفاده برای منجمد (C-03)، پالت پروموشن برنج و روغن، یا نمایش مناسبتی.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-12">
-        <header><span class="code">C-12</span><span class="sev major">مهم</span><h4>ناحیهٔ صندوق بدون قفسهٔ خرید لحظه‌ای</h4></header>
-        <dl>
-          <dt>محل</dt><dd>ردیف صندوق‌ها</dd>
-          <dt>شرح و دلیل</dt><dd>صف صندوق جای کالای کوچک پرحاشیه و خرید لحظه‌ای است [9]؛ در نقشه نه قفسه‌ای برای آن دیده می‌شود و نه صندوق سریع برای سبدهای کوچک.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>قفسهٔ خرید لحظه‌ای و یخچال نوشیدنی تکی در هر مسیر صندوق؛ یک صندوق سریع.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-13">
-        <header><span class="code">C-13</span><span class="sev minor">جزئی</span><h4>پشت‌صحنه و مسیر شارژ قفسه در نقشه نیست</h4></header>
-        <dl>
-          <dt>محل</dt><dd>کل پلان</dd>
-          <dt>شرح و دلیل</dt><dd>انبار کالای خشک، محل دریافت کالا و مسیر شارژ قفسه مشخص نیست. اگر شارژ از مسیر مشتری انجام شود، با راهروهای ۱٫۷۰ تا ۱٫۸۰ متری تداخل جدی دارد.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>افزودن پلان پشت‌صحنه و مسیر شارژ قفسه به سند.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="C-14">
-        <header><span class="code">C-14</span><span class="sev minor">جزئی</span><h4>کیفیت سند</h4></header>
-        <dl>
-          <dt>محل</dt><dd>جدول مشخصات و برچسب‌ها</dd>
-          <dt>شرح و دلیل</dt><dd>جدول مشخصات (نام پروژه، مقیاس، طراح، تاریخ‌ها، امضای کارفرما، موارد اصلاحی) خالی است؛ راهنمای علائم و جهت شمال ندارد؛ «chiken» و «managment» غلط املایی دارند؛ متن «DECK» روی در خروج افتاده؛ برچسب ماهی سیاه شده و لوله‌کشی فاضلاب روی نقشهٔ چیدمان آمده است.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>تکمیل جدول و راهنما، اصلاح برچسب‌ها و انتقال تأسیسات به لایهٔ جداگانه.</dd>
-        </dl>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ========== 5. DESIGN 1 ========== -->
-<section class="sec alt">
-  <div class="wrap reveal">
-    <div class="sec-head"><span class="eyebrow">بخش ۵</span><h2>یافته‌های طرح ۱</h2></div>
-    <figure class="plan" id="fig1">
-      <div class="plan-wrap">
-      <img src="assets/review-plan-1.jpg" alt="نقشهٔ طرح ۱ با نشانه‌گذاری یافته‌ها" loading="lazy">
-      <a class="mk major" href="#C-01" style="left:84.23%;top:86.08%" title="ورودی میان اتاق‌های اداری؛ دیوار قدرت هدر رفته">C-01</a>
-      <a class="mk crit" href="#C-02" style="left:43.08%;top:78.68%" title="فضای صف ناکافی و تداخل جریان ورود با صف">C-02</a>
-      <a class="mk crit" href="#C-03" style="left:65.38%;top:37.66%" title="بستنی در ابتدای مسیر">C-03</a>
-      <a class="mk crit" href="#C-04" style="left:70.15%;top:16.81%" title="کالای قابل‌اشتعال کنار تازه‌ها؛ خروج اضطراری نامشخص">C-04</a>
-      <a class="mk major" href="#C-05" style="left:91.69%;top:62.54%" title="کالای سنگین در ابتدای مسیر">C-05</a>
-      <a class="mk major" href="#C-06" style="left:43.46%;top:33.62%" title="میوه و سبزی بدون جایگاه روشن؛ واحدهای بی‌برچسب">C-06</a>
-      <a class="mk major" href="#C-07" style="left:3.85%;top:51.11%" title="تخصیص فضا متناسب با فروش نیست">C-07</a>
-      <a class="mk major" href="#C-08" style="left:10.00%;top:44.65%" title="جفت مکمل چای و قند از هم دور است">C-08</a>
-      <a class="mk major" href="#C-08" style="left:66.54%;top:59.18%" title="جفت مکمل چای و قند از هم دور است">C-08</a>
-      <a class="mk major" href="#C-09" style="left:9.23%;top:82.38%" title="غرفهٔ آرایشی پنهان؛ در خزانه رو به فضای مشتری">C-09</a>
-      <a class="mk major" href="#C-10" style="left:5.77%;top:36.65%" title="آجیل و کافه محصور و کم‌دید">C-10</a>
-      <a class="mk major" href="#C-10" style="left:9.62%;top:29.59%" title="آجیل و کافه محصور و کم‌دید">C-10</a>
-      <a class="mk major" href="#C-11" style="left:12.31%;top:63.89%" title="فضای باز سمت چپ کم‌بازده">C-11</a>
-      <a class="mk major" href="#C-12" style="left:33.08%;top:83.05%" title="ناحیهٔ صندوق بدون قفسهٔ خرید لحظه‌ای">C-12</a>
-      <a class="mk major" href="#A-01" style="left:55.00%;top:59.18%" title="راهروهای ۱۰ متری بدون راهروی عرضی میانی">A-01</a>
-      <a class="mk major" href="#A-02" style="left:26.92%;top:59.18%" title="دسته‌های پخت‌وپز دور از برنج و روغن">A-02</a>
-      <a class="mk major" href="#A-03" style="left:61.54%;top:75.66%" title="ردیف میز پروموشن جلو داخل فضای صف">A-03</a>
+    <div class="g2">
+      <div class="box">
+        <h2>۴ اقدام فوری</h2>
+        <ol class="acts">
+          <li>فضای صف جلوی صندوق را عمیق‌تر کنید. <a href="#C-02">C-02</a> <a href="#B-02">B-02</a></li>
+          <li>بستنی و منجمد را کنار صندوق‌ها ببرید. <a href="#C-03">C-03</a></li>
+          <li>زغال را از کنار ماهی دور و خروج اضطراری را مشخص کنید. <a href="#C-04">C-04</a></li>
+          <li>طرح ۲: شوینده و قهوه را از یک گوندولا جدا کنید. <a href="#B-01">B-01</a></li>
+        </ol>
       </div>
-      <figcaption>شکل ۱ — طرح ۱ با نشانه‌گذاری یافته‌ها (روی هر کد بزنید تا به شرح آن بروید). جدول مشخصات نقشهٔ اصلی از تصویر حذف شده است.</figcaption>
-    </figure>
-    <h3 class="h3">نقاط قوت</h3>
-    <div class="outcomes">
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>بلوک غیرغذایی پیوسته (گوندولاهای ۱ تا ۴) و بلوک غذایی پیوسته (۵ تا ۱۰)</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>شوینده‌های سنگین نزدیک انتهای مسیر و جدا از خوراکی</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>اقلام صبحانه رو به دیوار لبنیات</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>خوشهٔ چای، قهوه، کیک، بیسکویت و چیپس نزدیک نوشیدنی‌ها</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>دو راهروی عرضی با میز پروموشن</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>راهروی فرعی ۱٫۸۰ متر، در کرانهٔ بالای محدودهٔ توصیه‌شده [8]</span>
-    </div>
-    <h3 class="h3">ایرادها</h3>
-    <div class="fds">
-      <article class="fd" id="A-01">
-        <header><span class="code">A-01</span><span class="sev major">مهم</span><h4>راهروهای ۱۰ متری بدون راهروی عرضی میانی</h4></header>
-        <dl>
-          <dt>محل</dt><dd>بلوک مرکزی (۱۰ گوندولا)</dd>
-          <dt>شرح و دلیل</dt><dd>تعداد سرقفسه‌ها حدود ۲۰ است و مشتری برای رفتن از یک راهرو به راهروی دیگر باید تمام طول را طی کند؛ این، احتمال نادیده‌گرفتن کل یک راهرو را بالا می‌برد.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>افزودن راهروی عرضی میانی (ایدهٔ طرح ۲) با حفظ بلوک‌بندی طرح ۱.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="A-02">
-        <header><span class="code">A-02</span><span class="sev major">مهم</span><h4>دسته‌های پخت‌وپز دور از برنج و روغن</h4></header>
-        <dl>
-          <dt>محل</dt><dd>گوندولاهای ۵ تا ۷ (ادویه، حبوبات، ماکارونی، کنسرو، رب) در برابر دیوار چپ (برنج، روغن)</dd>
-          <dt>شرح و دلیل</dt><dd>کل بلوک غیرغذایی (گوندولاهای ۱ تا ۴) میان مواد پخت‌وپز و برنج و روغن فاصله انداخته و سبد «غذای خانه» دو تکه شده است [6].</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>جابه‌جایی بلوک‌ها مطابق طرح پیشنهادی (بخش ۷).</dd>
-        </dl>
-      </article>
-      <article class="fd" id="A-03">
-        <header><span class="code">A-03</span><span class="sev major">مهم</span><h4>ردیف میز پروموشن جلو داخل فضای صف</h4></header>
-        <dl>
-          <dt>محل</dt><dd>ردیف میزهای ۱٫۲۰×۰٫۸۰ بین انتهای گوندولاها و صندوق‌ها</dd>
-          <dt>شرح و دلیل</dt><dd>در ساعت اوج، صف به میزها می‌رسد و هم دسترسی به میز و هم عبور چرخ‌دستی بند می‌آید (C-02).</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>انتقال میزها به راهروی عرضی میانی.</dd>
-        </dl>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ========== 6. DESIGN 2 ========== -->
-<section class="sec">
-  <div class="wrap reveal">
-    <div class="sec-head"><span class="eyebrow">بخش ۶</span><h2>یافته‌های طرح ۲</h2></div>
-    <figure class="plan" id="fig2">
-      <div class="plan-wrap">
-      <img src="assets/review-plan-2.jpg" alt="نقشهٔ طرح ۲ با نشانه‌گذاری یافته‌ها" loading="lazy">
-      <a class="mk major" href="#C-01" style="left:80.38%;top:86.84%" title="ورودی میان اتاق‌های اداری؛ دیوار قدرت هدر رفته">C-01</a>
-      <a class="mk crit" href="#C-02" style="left:34.62%;top:78.70%" title="فضای صف ناکافی و تداخل جریان ورود با صف">C-02</a>
-      <a class="mk crit" href="#C-03" style="left:64.62%;top:38.67%" title="بستنی در ابتدای مسیر">C-03</a>
-      <a class="mk crit" href="#C-04" style="left:70.15%;top:17.77%" title="کالای قابل‌اشتعال کنار تازه‌ها؛ خروج اضطراری نامشخص">C-04</a>
-      <a class="mk major" href="#C-05" style="left:89.62%;top:64.45%" title="کالای سنگین در ابتدای مسیر">C-05</a>
-      <a class="mk major" href="#C-06" style="left:43.85%;top:31.89%" title="میوه و سبزی بدون جایگاه روشن؛ واحدهای بی‌برچسب">C-06</a>
-      <a class="mk major" href="#C-07" style="left:3.85%;top:50.20%" title="تخصیص فضا متناسب با فروش نیست">C-07</a>
-      <a class="mk major" href="#C-08" style="left:9.62%;top:43.83%" title="جفت مکمل چای و قند از هم دور است">C-08</a>
-      <a class="mk major" href="#C-08" style="left:63.85%;top:70.56%" title="جفت مکمل چای و قند از هم دور است">C-08</a>
-      <a class="mk major" href="#C-09" style="left:8.46%;top:81.75%" title="غرفهٔ آرایشی پنهان؛ در خزانه رو به فضای مشتری">C-09</a>
-      <a class="mk major" href="#C-10" style="left:6.54%;top:37.99%" title="آجیل و کافه محصور و کم‌دید">C-10</a>
-      <a class="mk major" href="#C-10" style="left:10.77%;top:29.17%" title="آجیل و کافه محصور و کم‌دید">C-10</a>
-      <a class="mk major" href="#C-11" style="left:12.31%;top:54.27%" title="فضای باز سمت چپ کم‌بازده">C-11</a>
-      <a class="mk major" href="#C-12" style="left:32.31%;top:83.45%" title="ناحیهٔ صندوق بدون قفسهٔ خرید لحظه‌ای">C-12</a>
-      <a class="mk crit" href="#B-01" style="left:50.38%;top:71.23%" title="شوینده و قهوه در یک گوندولا">B-01</a>
-      <a class="mk crit" href="#B-02" style="left:58.46%;top:78.70%" title="فضای جلوی صندوق عملاً حذف شده">B-02</a>
-      <a class="mk major" href="#B-03" style="left:57.31%;top:49.86%" title="دسته‌های غیرغذایی تکه‌تکه">B-03</a>
-      <a class="mk major" href="#B-04" style="left:20.15%;top:67.16%" title="ادویه رو به بهداشتی">B-04</a>
-      <a class="mk minor" href="#B-05" style="left:28.08%;top:48.85%" title="راهروهای ۱٫۷۰ متری">B-05</a>
-      <a class="mk minor" href="#B-06" style="left:76.54%;top:50.20%" title="اقلام صبحانه در دو جا">B-06</a>
-      <a class="mk minor" href="#B-06" style="left:77.31%;top:71.91%" title="اقلام صبحانه در دو جا">B-06</a>
+      <div class="box">
+        <h2>طرح ۱ یا طرح ۲؟</h2>
+        <table class="cmp">
+          <thead><tr><th>معیار</th><th>طرح ۱</th><th>طرح ۲</th></tr></thead>
+          <tbody>
+            <tr><td>نظم دسته‌ها (غذایی/غیرغذایی)</td><td><span class="yes" aria-label="بهتر">✓</span></td><td><span class="no" aria-label="ضعیف‌تر">✗</span></td></tr>
+            <tr><td>ایمنی غذا</td><td><span class="yes" aria-label="بهتر">✓</span></td><td><span class="no" aria-label="ضعیف‌تر">✗</span></td></tr>
+            <tr><td>فضای صف</td><td><span class="yes" aria-label="بهتر">✓</span></td><td><span class="no" aria-label="ضعیف‌تر">✗</span></td></tr>
+            <tr><td>سرقفسه و مسیریابی</td><td><span class="no" aria-label="ضعیف‌تر">✗</span></td><td><span class="yes" aria-label="بهتر">✓</span></td></tr>
+            <tr><td>نزدیکی پخت‌وپز به برنج و روغن</td><td><span class="no" aria-label="ضعیف‌تر">✗</span></td><td><span class="yes" aria-label="بهتر">✓</span></td></tr>
+          </tbody>
+        </table>
       </div>
-      <figcaption>شکل ۲ — طرح ۲ با نشانه‌گذاری یافته‌ها. جدول مشخصات نقشهٔ اصلی از تصویر حذف شده است.</figcaption>
-    </figure>
-    <h3 class="h3">نقاط قوت</h3>
-    <div class="outcomes">
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>راهروی عرضی میانی: حدود ۳۸ سرقفسه و مسیریابی ساده‌تر</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>حبوبات و ماکارونی نزدیک برنج و روغن؛ خوشهٔ پخت‌وپز بهتر</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>اقلام صبحانه رو به لبنیات</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>طول وجه قفسهٔ کمی بیشتر (حدود ۲۲۶ در برابر ۲۰۲ متر)</span>
     </div>
-    <h3 class="h3">ایرادها</h3>
-    <div class="fds">
-      <article class="fd" id="B-01">
-        <header><span class="code">B-01</span><span class="sev crit">بحرانی</span><h4>شوینده و قهوه در یک گوندولا</h4></header>
-        <dl>
-          <dt>محل</dt><dd>بلوک پایین، گوندولای پنجم از چپ: وجه چپ شوینده، وجه راست قهوه</dd>
-          <dt>شرح و دلیل</dt><dd>راهنماهای ایمنی غذا نگه‌داری مواد شوینده و شیمیایی را جدا از غذا می‌خواهند [7]؛ قهوه بو جذب می‌کند و راهروی قهوه رو به شوینده است.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>جداسازی کامل؛ شوینده فقط در بلوک غیرغذایی.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="B-02">
-        <header><span class="code">B-02</span><span class="sev crit">بحرانی</span><h4>فضای جلوی صندوق عملاً حذف شده</h4></header>
-        <dl>
-          <dt>محل</dt><dd>انتهای بلوک پایین تا صندوق‌ها: ۲٫۱۰ متر</dd>
-          <dt>شرح و دلیل</dt><dd>ردیف میز پروموشن جلو حذف شده و راهروی جلو عملاً همان فضای صف است؛ سرقفسه‌های رو به صندوق در ساعت اوج از دسترس خارج می‌شوند (C-02).</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>کوتاه‌کردن گوندولاهای بلوک پایین.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="B-03">
-        <header><span class="code">B-03</span><span class="sev major">مهم</span><h4>دسته‌های غیرغذایی تکه‌تکه</h4></header>
-        <dl>
-          <dt>محل</dt><dd>بلوک بالا: دستمال کاغذی، پوشک و یک‌بارمصرف در میانه و راست؛ بلوک پایین: بهداشتی و شوینده در چپ و میانه</dd>
-          <dt>شرح و دلیل</dt><dd>غیرغذایی‌ها در هر دو بلوک پخش‌اند و غذایی‌ها میان آن‌ها؛ بهداشتی و پوشک از هم جدا افتاده‌اند و مشتری برای یک خرید بهداشتی باید میان دو بلوک رفت‌وآمد کند.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>یکپارچه‌کردن غیرغذایی در یک ربع از بلوک مرکزی.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="B-04">
-        <header><span class="code">B-04</span><span class="sev major">مهم</span><h4>ادویه رو به بهداشتی</h4></header>
-        <dl>
-          <dt>محل</dt><dd>واحد ۹ متری ادویه، سویا، جو دوسر و غلات (پایین چپ) روبه‌روی گوندولای بهداشتی</dd>
-          <dt>شرح و دلیل</dt><dd>راهرو میان خوراکی و بهداشتی مختلط است و ادویه بوی محیط را می‌گیرد.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>انتقال به ربع پخت‌وپز، کنار حبوبات و ماکارونی.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="B-05">
-        <header><span class="code">B-05</span><span class="sev minor">جزئی</span><h4>راهروهای ۱٫۷۰ متری</h4></header>
-        <dl>
-          <dt>محل</dt><dd>سه راهروی سمت چپ هر دو بلوک</dd>
-          <dt>شرح و دلیل</dt><dd>۱٫۷۰ متر در محدودهٔ توصیه‌شده برای عبور دو چرخ‌دستی در سوپرمارکت شلوغ (۱٫۵ تا ۱٫۸ متر) است [8]، ولی در کرانهٔ پایین آن؛ با چرخ شارژ و ستون تنگ می‌شود.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>در صورت امکان ۱٫۸۰ متر، هم‌تراز طرح ۱.</dd>
-        </dl>
-      </article>
-      <article class="fd" id="B-06">
-        <header><span class="code">B-06</span><span class="sev minor">جزئی</span><h4>اقلام صبحانه در دو جا</h4></header>
-        <dl>
-          <dt>محل</dt><dd>بلوک بالا (گوندولای آخر راست) و بلوک پایین (گوندولای آخر راست)</dd>
-          <dt>شرح و دلیل</dt><dd>تکرار غیرعمدی یک دسته فضا را هدر می‌دهد و مشتری را سردرگم می‌کند؛ نمایش ثانویه باید عمدی و کوچک باشد.</dd>
-          <dt>اصلاح پیشنهادی</dt><dd>یک جای اصلی برای اقلام صبحانه، رو به لبنیات.</dd>
-        </dl>
-      </article>
-    </div>
+
+    <p class="rec"><b>پیشنهاد:</b> طرح ۱ + راهروی عرضی میانی؛ بلوک مرکزی در چهار بخش: پخت‌وپز · صبحانه · غیرغذایی · خرید لحظه‌ای. <a href="#d-prop">شماتیک</a></p>
   </div>
 </section>
 
-<!-- ========== 7. DISCUSSION + PROPOSAL ========== -->
-<section class="sec alt">
-  <div class="wrap reveal">
-    <div class="sec-head"><span class="eyebrow">بخش ۷</span><h2>بحث، مقایسه و طرح پیشنهادی</h2></div>
-    <h3 class="h3">۷٫۱ مقایسهٔ معیار به معیار</h3>
-    <div class="tscroll"><table>
-      <caption>جدول ۲ — مقایسهٔ کیفی دو طرح (بدون امتیاز عددی؛ «برتر» یعنی بهتر در همان معیار)</caption>
-      <thead><tr><th>معیار</th><th>طرح ۱</th><th>طرح ۲</th></tr></thead>
-      <tbody>
-        <tr><td>جریان کلی و دسته‌های مقصد</td><td class="eq">برابر</td><td class="eq">برابر</td></tr>
-        <tr><td>بلوک‌بندی دسته‌ها</td><td class="win">برتر</td><td class="lose">ضعیف‌تر</td></tr>
-        <tr><td>ایمنی غذا (جداسازی شوینده)</td><td class="win">برتر</td><td class="lose">ایراد بحرانی</td></tr>
-        <tr><td>مجاورت پخت‌وپز با برنج و روغن</td><td class="lose">ضعیف‌تر</td><td class="win">برتر</td></tr>
-        <tr><td>سرقفسه و فرصت پروموشن</td><td class="lose">ضعیف‌تر</td><td class="win">برتر</td></tr>
-        <tr><td>مسیریابی و طول راهرو</td><td class="lose">ضعیف‌تر</td><td class="win">برتر</td></tr>
-        <tr><td>فضای صف و جلوی صندوق</td><td class="win">برتر</td><td class="lose">ایراد بحرانی</td></tr>
-        <tr><td>عرض راهروی فرعی</td><td class="win">کمی برتر</td><td class="eq">قابل‌قبول</td></tr>
-        <tr><td>ظرفیت قفسه</td><td class="eq">کمی کمتر</td><td class="win">کمی بیشتر</td></tr>
-      </tbody>
-    </table></div>
-    <div class="longcopy" style="margin-top:1.4rem">
-      <p>طرح ۲ در معیارهای ساختاری (سرقفسه، مسیریابی، ظرفیت) برتر است، اما دو ایراد بحرانی آن به ایمنی غذا و جریان ساعت اوج مربوط است و بدون بازطراحی قابل‌پذیرش نیست. طرح ۱ در چیدمان دسته‌ها و فضای صف برتر است و ایرادهایش با افزودن راهروی میانی و جابه‌جایی بلوک‌ها برطرف می‌شود. بنابراین طرح ۱ پایهٔ طرح پیشنهادی است.</p>
-      <p><b>اصلاح یک برداشت اولیه:</b> در بررسی مقدماتی، راهروی ۱٫۸۰ متری برای فروشگاه بزرگ «تنگ» ارزیابی شده بود؛ منابع، ۱٫۵ تا ۱٫۸ متر را برای عبور دو چرخ‌دستی در سوپرمارکت شلوغ توصیه می‌کنند [8]. در این سند، عرض راهروهای فرعی قابل‌قبول و تمرکز بر راهروی جلو و فضای صف است.</p>
-    </div>
+<section class="more">
+  <div class="wrap">
+    <div class="more-head"><h2>جزئیات</h2><button class="btn-x" id="toggle-all" type="button">باز کردن همه</button></div>
 
-    <h3 class="h3">۷٫۲ طرح پیشنهادی</h3>
-    <figure class="schem-fig">
-      <svg class="schem" viewBox="0 0 1000 1100" role="img" aria-labelledby="schem-t">
+    <details id="d-common">
+      <summary><span>یافته‌های مشترک هر دو طرح</span><em>۱۴ مورد</em></summary>
+      <p class="pro">قوت مشترک: مسیر پادساعتگرد · تازه‌ها روی دیوار پشتی · ورود و خروج جدا</p>
+      <ol class="rows">
+        <li class="row" id="C-01"><span class="code">C-01</span><span class="sev major"><i></i>مهم</span><p><b>ورودی بین اتاق مدیریت و رختکن؛ اولین قفسهٔ سمت راست نوشابه است.</b><span class="fix">اصلاح: اتاق‌ها به پشت؛ بعد از ورودی کالای فصلی یا تازه؛ جای چرخ‌دستی.</span></p></li>
+        <li class="row" id="C-02"><span class="code">C-02</span><span class="sev crit"><i></i>بحرانی</span><p><b>فضای صف فقط ۲٫۱۰ تا ۲٫۴۵ متر است؛ در ساعت اوج راهرو بسته می‌شود.</b><span class="fix">اصلاح: کوتاه‌کردن گوندولاهای ردیف پایین و عمیق‌کردن صف.</span></p></li>
+        <li class="row" id="C-03"><span class="code">C-03</span><span class="sev crit"><i></i>بحرانی</span><p><b>بستنی ابتدای مسیر است و تا صندوق آب می‌شود.</b><span class="fix">اصلاح: منجمد و بستنی کنار صندوق‌ها.</span></p></li>
+        <li class="row" id="C-04"><span class="code">C-04</span><span class="sev crit"><i></i>بحرانی</span><p><b>زغال قابل‌اشتعال کنار ماهی و یخچال؛ خروج اضطراری در نقشه نیست.</b><span class="fix">اصلاح: انتقال زغال؛ مشخص‌کردن خروج اضطراری.</span></p></li>
+        <li class="row" id="C-05"><span class="code">C-05</span><span class="sev major"><i></i>مهم</span><p><b>نوشابهٔ سنگین در ابتدای مسیر سبد را زود پر می‌کند.</b><span class="fix">اصلاح: بسته‌های بزرگ آخر مسیر؛ نوشیدنی تکی کنار صندوق.</span></p></li>
+        <li class="row" id="C-06"><span class="code">C-06</span><span class="sev major"><i></i>مهم</span><p><b>جای میوه و سبزی معلوم نیست؛ چند واحد برچسب ندارند.</b><span class="fix">اصلاح: تعیین جای میوه؛ برچسب همهٔ واحدها.</span></p></li>
+        <li class="row" id="C-07"><span class="code">C-07</span><span class="sev major"><i></i>مهم</span><p><b>نمک ۵٫۴ متر دیوار دارد؛ بیشتر از برنج و روغن.</b><span class="fix">اصلاح: تقسیم فضا بر اساس فروش هر دسته.</span></p></li>
+        <li class="row" id="C-08"><span class="code">C-08</span><span class="sev major"><i></i>مهم</span><p><b>چای و قند دور از هم‌اند.</b><span class="fix">اصلاح: نمایش دوم قند کنار چای.</span></p></li>
+        <li class="row" id="C-09"><span class="code">C-09</span><span class="sev major"><i></i>مهم</span><p><b>آرایشی (پرسرقت) پنهان و کنار خزانه است.</b><span class="fix">اصلاح: رو به مسیر و در دید صندوق.</span></p></li>
+        <li class="row" id="C-10"><span class="code">C-10</span><span class="sev major"><i></i>مهم</span><p><b>آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.</b><span class="fix">اصلاح: پیشخوان باز رو به مسیر اصلی.</span></p></li>
+        <li class="row" id="C-11"><span class="code">C-11</span><span class="sev major"><i></i>مهم</span><p><b>فضای باز سمت چپ فقط ۴ میز کوچک دارد.</b><span class="fix">اصلاح: جای منجمد یا پالت پروموشن.</span></p></li>
+        <li class="row" id="C-12"><span class="code">C-12</span><span class="sev major"><i></i>مهم</span><p><b>کنار صندوق‌ها قفسهٔ خرید لحظه‌ای نیست.</b><span class="fix">اصلاح: قفسهٔ خرید لحظه‌ای + یک صندوق سریع.</span></p></li>
+        <li class="row" id="C-13"><span class="code">C-13</span><span class="sev minor"><i></i>جزئی</span><p><b>انبار و مسیر شارژ قفسه در نقشه نیست.</b><span class="fix">اصلاح: افزودن پلان پشت‌صحنه.</span></p></li>
+        <li class="row" id="C-14"><span class="code">C-14</span><span class="sev minor"><i></i>جزئی</span><p><b>جدول مشخصات خالی؛ بدون مقیاس و راهنما؛ غلط املایی.</b><span class="fix">اصلاح: تکمیل سند.</span></p></li>
+      </ol>
+    </details>
+
+    <details id="d-1">
+      <summary><span>طرح ۱ — با نقشهٔ نشانه‌گذاری‌شده</span><em>۳ مورد</em></summary>
+      <p class="pro">قوت: بلوک غذایی و غیرغذایی منظم · صبحانه رو به لبنیات · دو ردیف پروموشن</p>
+      <ol class="rows">
+        <li class="row" id="A-01"><span class="code">A-01</span><span class="sev major"><i></i>مهم</span><p><b>راهروهای ۱۰ متری بدون راهروی میانی؛ حدود ۲۰ سرقفسه.</b><span class="fix">اصلاح: افزودن راهروی عرضی میانی.</span></p></li>
+        <li class="row" id="A-02"><span class="code">A-02</span><span class="sev major"><i></i>مهم</span><p><b>مواد پخت‌وپز از برنج و روغن دور افتاده‌اند.</b><span class="fix">اصلاح: پخت‌وپز کنار دیوار برنج و روغن.</span></p></li>
+        <li class="row" id="A-03"><span class="code">A-03</span><span class="sev major"><i></i>مهم</span><p><b>میزهای پروموشن جلو داخل فضای صف‌اند.</b><span class="fix">اصلاح: انتقال به راهروی میانی.</span></p></li>
+      </ol>
+      <figure class="plan"><div class="plan-wrap">
+        <img src="assets/review-plan-1.jpg" alt="نقشهٔ طرح ۱ با کد یافته‌ها" loading="lazy">
+        <a class="mk major" href="#C-01" style="left:84.23%;top:86.08%" title="ورودی بین اتاق مدیریت و رختکن؛ اولین قفسهٔ سمت راست نوشابه است.">C-01</a>
+        <a class="mk crit" href="#C-02" style="left:43.08%;top:78.68%" title="فضای صف فقط ۲٫۱۰ تا ۲٫۴۵ متر است؛ در ساعت اوج راهرو بسته می‌شود.">C-02</a>
+        <a class="mk crit" href="#C-03" style="left:65.38%;top:37.66%" title="بستنی ابتدای مسیر است و تا صندوق آب می‌شود.">C-03</a>
+        <a class="mk crit" href="#C-04" style="left:70.15%;top:16.81%" title="زغال قابل‌اشتعال کنار ماهی و یخچال؛ خروج اضطراری در نقشه نیست.">C-04</a>
+        <a class="mk major" href="#C-05" style="left:91.69%;top:62.54%" title="نوشابهٔ سنگین در ابتدای مسیر سبد را زود پر می‌کند.">C-05</a>
+        <a class="mk major" href="#C-06" style="left:43.46%;top:33.62%" title="جای میوه و سبزی معلوم نیست؛ چند واحد برچسب ندارند.">C-06</a>
+        <a class="mk major" href="#C-07" style="left:3.85%;top:51.11%" title="نمک ۵٫۴ متر دیوار دارد؛ بیشتر از برنج و روغن.">C-07</a>
+        <a class="mk major" href="#C-08" style="left:10.00%;top:44.65%" title="چای و قند دور از هم‌اند.">C-08</a>
+        <a class="mk major" href="#C-08" style="left:66.54%;top:59.18%" title="چای و قند دور از هم‌اند.">C-08</a>
+        <a class="mk major" href="#C-09" style="left:9.23%;top:82.38%" title="آرایشی (پرسرقت) پنهان و کنار خزانه است.">C-09</a>
+        <a class="mk major" href="#C-10" style="left:5.77%;top:36.65%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
+        <a class="mk major" href="#C-10" style="left:9.62%;top:29.59%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
+        <a class="mk major" href="#C-11" style="left:12.31%;top:63.89%" title="فضای باز سمت چپ فقط ۴ میز کوچک دارد.">C-11</a>
+        <a class="mk major" href="#C-12" style="left:33.08%;top:83.05%" title="کنار صندوق‌ها قفسهٔ خرید لحظه‌ای نیست.">C-12</a>
+        <a class="mk major" href="#A-01" style="left:55.00%;top:59.18%" title="راهروهای ۱۰ متری بدون راهروی میانی؛ حدود ۲۰ سرقفسه.">A-01</a>
+        <a class="mk major" href="#A-02" style="left:26.92%;top:59.18%" title="مواد پخت‌وپز از برنج و روغن دور افتاده‌اند.">A-02</a>
+        <a class="mk major" href="#A-03" style="left:61.54%;top:75.66%" title="میزهای پروموشن جلو داخل فضای صف‌اند.">A-03</a>
+      </div><figcaption>روی هر کد بزنید تا شرحش را ببینید.</figcaption></figure>
+    </details>
+
+    <details id="d-2">
+      <summary><span>طرح ۲ — با نقشهٔ نشانه‌گذاری‌شده</span><em>۶ مورد</em></summary>
+      <p class="pro">قوت: راهروی میانی و حدود ۳۸ سرقفسه · پخت‌وپز نزدیک برنج و روغن</p>
+      <ol class="rows">
+        <li class="row" id="B-01"><span class="code">B-01</span><span class="sev crit"><i></i>بحرانی</span><p><b>شوینده و قهوه در یک گوندولا، پشت‌به‌پشت.</b><span class="fix">اصلاح: جداسازی کامل شوینده از خوراکی.</span></p></li>
+        <li class="row" id="B-02"><span class="code">B-02</span><span class="sev crit"><i></i>بحرانی</span><p><b>فقط ۲٫۱۰ متر تا صندوق؛ ردیف پروموشن جلو حذف شده.</b><span class="fix">اصلاح: کوتاه‌کردن گوندولاهای ردیف پایین.</span></p></li>
+        <li class="row" id="B-03"><span class="code">B-03</span><span class="sev major"><i></i>مهم</span><p><b>غیرغذایی در دو بلوک پخش است؛ بهداشتی و پوشک جدا.</b><span class="fix">اصلاح: یک بلوک واحد غیرغذایی.</span></p></li>
+        <li class="row" id="B-04"><span class="code">B-04</span><span class="sev major"><i></i>مهم</span><p><b>ادویه رو به قفسهٔ بهداشتی.</b><span class="fix">اصلاح: ادویه کنار حبوبات.</span></p></li>
+        <li class="row" id="B-05"><span class="code">B-05</span><span class="sev minor"><i></i>جزئی</span><p><b>راهروهای ۱٫۷۰ متری سمت چپ، در کرانهٔ پایین استاندارد.</b><span class="fix">اصلاح: ۱٫۸۰ متر مثل طرح ۱.</span></p></li>
+        <li class="row" id="B-06"><span class="code">B-06</span><span class="sev minor"><i></i>جزئی</span><p><b>اقلام صبحانه در دو جا تکرار شده.</b><span class="fix">اصلاح: یک جای اصلی رو به لبنیات.</span></p></li>
+      </ol>
+      <figure class="plan"><div class="plan-wrap">
+        <img src="assets/review-plan-2.jpg" alt="نقشهٔ طرح ۲ با کد یافته‌ها" loading="lazy">
+        <a class="mk major" href="#C-01" style="left:80.38%;top:86.84%" title="ورودی بین اتاق مدیریت و رختکن؛ اولین قفسهٔ سمت راست نوشابه است.">C-01</a>
+        <a class="mk crit" href="#C-02" style="left:34.62%;top:78.70%" title="فضای صف فقط ۲٫۱۰ تا ۲٫۴۵ متر است؛ در ساعت اوج راهرو بسته می‌شود.">C-02</a>
+        <a class="mk crit" href="#C-03" style="left:64.62%;top:38.67%" title="بستنی ابتدای مسیر است و تا صندوق آب می‌شود.">C-03</a>
+        <a class="mk crit" href="#C-04" style="left:70.15%;top:17.77%" title="زغال قابل‌اشتعال کنار ماهی و یخچال؛ خروج اضطراری در نقشه نیست.">C-04</a>
+        <a class="mk major" href="#C-05" style="left:89.62%;top:64.45%" title="نوشابهٔ سنگین در ابتدای مسیر سبد را زود پر می‌کند.">C-05</a>
+        <a class="mk major" href="#C-06" style="left:43.85%;top:31.89%" title="جای میوه و سبزی معلوم نیست؛ چند واحد برچسب ندارند.">C-06</a>
+        <a class="mk major" href="#C-07" style="left:3.85%;top:50.20%" title="نمک ۵٫۴ متر دیوار دارد؛ بیشتر از برنج و روغن.">C-07</a>
+        <a class="mk major" href="#C-08" style="left:9.62%;top:43.83%" title="چای و قند دور از هم‌اند.">C-08</a>
+        <a class="mk major" href="#C-08" style="left:63.85%;top:70.56%" title="چای و قند دور از هم‌اند.">C-08</a>
+        <a class="mk major" href="#C-09" style="left:8.46%;top:81.75%" title="آرایشی (پرسرقت) پنهان و کنار خزانه است.">C-09</a>
+        <a class="mk major" href="#C-10" style="left:6.54%;top:37.99%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
+        <a class="mk major" href="#C-10" style="left:10.77%;top:29.17%" title="آجیل و کافه دیوارکشی شده‌اند و دیده نمی‌شوند.">C-10</a>
+        <a class="mk major" href="#C-11" style="left:12.31%;top:54.27%" title="فضای باز سمت چپ فقط ۴ میز کوچک دارد.">C-11</a>
+        <a class="mk major" href="#C-12" style="left:32.31%;top:83.45%" title="کنار صندوق‌ها قفسهٔ خرید لحظه‌ای نیست.">C-12</a>
+        <a class="mk crit" href="#B-01" style="left:50.38%;top:71.23%" title="شوینده و قهوه در یک گوندولا، پشت‌به‌پشت.">B-01</a>
+        <a class="mk crit" href="#B-02" style="left:58.46%;top:78.70%" title="فقط ۲٫۱۰ متر تا صندوق؛ ردیف پروموشن جلو حذف شده.">B-02</a>
+        <a class="mk major" href="#B-03" style="left:57.31%;top:49.86%" title="غیرغذایی در دو بلوک پخش است؛ بهداشتی و پوشک جدا.">B-03</a>
+        <a class="mk major" href="#B-04" style="left:20.15%;top:67.16%" title="ادویه رو به قفسهٔ بهداشتی.">B-04</a>
+        <a class="mk minor" href="#B-05" style="left:28.08%;top:48.85%" title="راهروهای ۱٫۷۰ متری سمت چپ، در کرانهٔ پایین استاندارد.">B-05</a>
+        <a class="mk minor" href="#B-06" style="left:76.54%;top:50.20%" title="اقلام صبحانه در دو جا تکرار شده.">B-06</a>
+        <a class="mk minor" href="#B-06" style="left:77.31%;top:71.91%" title="اقلام صبحانه در دو جا تکرار شده.">B-06</a>
+      </div><figcaption>روی هر کد بزنید تا شرحش را ببینید.</figcaption></figure>
+    </details>
+
+    <details id="d-prop">
+      <summary><span>طرح پیشنهادی</span><em>شماتیک</em></summary>
+      <ul class="bul">
+        <li>اتاق‌های اداری بیرون از ورودی؛ بعد از ورودی کالای فصلی.</li>
+        <li>منجمد و بستنی در فضای باز چپ، کنار صندوق.</li>
+        <li>میزهای پروموشن در راهروی میانی، نه داخل صف.</li>
+      </ul>
+      <figure class="schem-fig">
+        <svg class="schem" viewBox="0 0 1000 1100" role="img" aria-labelledby="schem-t">
   <title id="schem-t">شماتیک طرح پیشنهادی: بلوک‌ها و مسیر پادساعتگرد مشتری</title>
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -749,95 +503,37 @@ figcaption{color:var(--ink-faint);font-size:.92rem;margin-top:.6rem;line-height:
   <!-- counter-clockwise shopper path -->
   <path class="flow" d="M872 1060 L872 170 L245 170 L245 838 L550 838 L550 905" marker-end="url(#arr)"/>
 </svg>
-      <div class="legend">
-        <span><i class="lg fresh"></i>تازه‌ها و پیشخوان خدمت</span>
-        <span><i class="lg food"></i>غذایی خشک</span>
-        <span><i class="lg food2"></i>خرید لحظه‌ای و نوشیدنی</span>
-        <span><i class="lg non"></i>غیرغذایی</span>
-        <span><i class="lg cold"></i>یخچالی و منجمد</span>
-        <span><i class="lg promo"></i>پروموشن و فصلی</span>
-        <span><i class="lg flow"></i>مسیر پادساعتگرد مشتری</span>
-      </div>
-      <figcaption>شکل ۳ — شماتیک طرح پیشنهادی (بدون مقیاس). اندازهٔ دقیق بلوک‌ها پس از دریافت دادهٔ فروش تعیین می‌شود.</figcaption>
-    </figure>
-    <div class="tscroll"><table>
-      <caption>جدول ۳ — تغییرات پیشنهادی و یافته‌هایی که برطرف می‌کنند</caption>
-      <thead><tr><th>کد</th><th>تغییر</th><th>برطرف‌کنندهٔ</th></tr></thead>
-      <tbody>
-        <tr><td>P-01</td><td>انتقال اتاق‌های اداری و رختکن؛ فضای ورود باز، جایگاه چرخ‌دستی و میز خدمات؛ دیوار قدرت برای فصلی و پیشنهاد هفته</td><td>C-01، C-05</td></tr>
-        <tr><td>P-02</td><td>بلوک مرکزی بر پایهٔ طرح ۱ با راهروی عرضی میانی و چهار ربع: پخت‌وپز (بالا چپ)، صبحانه و نوشیدنی گرم (بالا راست)، غیرغذایی (پایین چپ)، خرید لحظه‌ای و نوشیدنی بسته‌ای (پایین راست)</td><td>A-01، A-02، B-01، B-03، B-04، B-06</td></tr>
-        <tr><td>P-03</td><td>کوتاه‌کردن بلوک پایین و انتقال میزهای پروموشن به راهروی میانی برای عمیق‌کردن فضای صف</td><td>C-02، A-03، B-02</td></tr>
-        <tr><td>P-04</td><td>انتقال منجمد و بستنی به فضای باز پایین چپ، نزدیک صندوق</td><td>C-03، C-11</td></tr>
-        <tr><td>P-05</td><td>قفسهٔ خرید لحظه‌ای و یخچال نوشیدنی تکی در هر صندوق؛ یک صندوق سریع</td><td>C-12</td></tr>
-        <tr><td>P-06</td><td>انتقال زغال و آتش‌زا؛ تعیین خروج اضطراری و تجهیزات اطفا</td><td>C-04</td></tr>
-        <tr><td>P-07</td><td>باز کردن آرایشی، آجیل و کافه رو به مسیر اصلی؛ دسترسی خزانه از مسیر کارکنان</td><td>C-09، C-10</td></tr>
-        <tr><td>P-08</td><td>بازتخصیص طول قفسه با دادهٔ فروش؛ کاهش فضای نمک؛ قند ثانویه کنار چای</td><td>C-07، C-08</td></tr>
-        <tr><td>P-09</td><td>جایگاه و مساحت صریح میوه و سبزی؛ برچسب همهٔ واحدها؛ پلان پشت‌صحنه؛ تکمیل سند</td><td>C-06، C-13، C-14</td></tr>
-      </tbody>
-    </table></div>
+        <div class="legend">
+          <span><i class="lg fresh"></i>تازه‌ها</span><span><i class="lg food"></i>غذایی</span>
+          <span><i class="lg food2"></i>خرید لحظه‌ای</span><span><i class="lg non"></i>غیرغذایی</span>
+          <span><i class="lg cold"></i>یخچالی و منجمد</span><span><i class="lg promo"></i>پروموشن</span>
+          <span><i class="lg flow"></i>مسیر مشتری</span>
+        </div>
+        <figcaption>شماتیک بدون مقیاس؛ اندازهٔ بلوک‌ها پس از دریافت دادهٔ فروش تعیین می‌شود.</figcaption>
+      </figure>
+    </details>
+
+    <details id="d-meth">
+      <summary><span>روش، محدودیت‌ها و منابع</span><em>۹ منبع</em></summary>
+      <ul class="bul">
+        <li><b>مبنا:</b> عکس نسخهٔ چاپی دو نقشه؛ اندازه‌ها به متر؛ نقطهٔ سیاه = ستون.</li>
+        <li><b>معیارها:</b> جریان مشتری، دسته‌های مقصد، ترتیب دما و وزن، مجاورت، راهرو، صندوق، ایمنی.</li>
+        <li><b>محدودیت:</b> بدون دادهٔ فروش، مقیاس و ارتفاع قفسه؛ مقررات ساختمان بررسی نشده؛ اعداد تقریبی‌اند.</li>
+      </ul>
+      <ol class="refs">
+        <li><a href="https://www.shopify.com/blog/the-ultimate-guide-to-retail-store-layouts">Underhill, Why We Buy — مسیر و فضای ورود</a></li>
+        <li><a href="https://www.smartsheet.com/store-layout">Smartsheet — Store Layout</a></li>
+        <li><a href="https://planohero.com/en/blog/grocery-store-layout-strategy/">PlanoHero — Grocery Layout</a></li>
+        <li><a href="https://www.agmrc.org/media/cms/EB6_Departments_and_Layout_in_a_Rur_C9CD9FF2F16AF.pdf">AgMRC (Iowa State) — Departments and Layout</a></li>
+        <li><a href="https://www.ndsu.edu/agriculture/extension/publications/keep-food-safe-store-storage-shopping-food-safety-facts">NDSU — Keep Food Safe</a></li>
+        <li><a href="https://link.springer.com/article/10.1007/s40547-014-0012-1">Springer — Cross-Category Effects</a></li>
+        <li><a href="https://louis.pressbooks.pub/foodsafety/chapter/11-5-chemical-storage/">Food Safety — Chemical Storage</a></li>
+        <li><a href="https://mclernons.com.au/blogs/mclernons-corner/guide-to-supermarket-grocery-store-shelving-layouts">McLernons — Aisle widths</a></li>
+        <li><a href="https://www.posnation.com/blog/grocery-store-layout-strategy">POS Nation — Checkout zone</a></li>
+      </ol>
+    </details>
   </div>
 </section>
-
-<!-- ========== 8–10. LIMITS, CONCLUSION, NEXT ========== -->
-<section class="sec">
-  <div class="wrap reveal">
-    <div class="sec-head"><span class="eyebrow">بخش ۸</span><h2>محدودیت‌های بررسی</h2></div>
-    <ul class="bul">
-      <li>مبنای بررسی عکس نسخهٔ چاپی است؛ اعوجاج تصویر، نبود مقیاس و راهنمای علائم ممکن است در خوانش برخی جزئیات خطا ایجاد کند.</li>
-      <li>چند واحد (island، یخچال ۷ متری، دو واحد ۲ متری) برچسب ندارند و کاربرد آن‌ها فرض نشده است.</li>
-      <li>دادهٔ فروش، حاشیهٔ سود و ترافیک ساعت اوج در دسترس نبود؛ داوری دربارهٔ تخصیص فضا و ظرفیت صندوق کیفی است.</li>
-      <li>ارتفاع قفسه‌ها و تعداد طبقات مشخص نیست و تحلیل دید مشتری انجام نشده است.</li>
-      <li>انطباق با مقررات ساختمان و آتش‌نشانی ارزیابی نشده و به بررسی مهندس ذی‌صلاح نیاز دارد.</li>
-      <li>تعداد سرقفسه، طول وجه قفسه و ظرفیت صف برآورد تقریبی از روی نقشه است.</li>
-    </ul>
-
-    <div class="sec-head" style="margin-top:2.6rem"><span class="eyebrow">بخش ۹</span><h2>نتیجه‌گیری</h2></div>
-    <div class="longcopy">
-      <p>هر دو طرح از اسکلت درستی بهره می‌برند: مسیر پادساعتگرد، پیشخوان‌های تازه در عمق و جدایی ورود و خروج. با این حال، پنج ایراد بحرانی — فضای صف ناکافی، بستنی در ابتدای مسیر، کالای قابل‌اشتعال کنار تازه‌ها، و در طرح ۲ هم‌قفسه‌بودن شوینده و قهوه و حذف فضای جلوی صندوق — باید پیش از اجرا برطرف شود. طرح ۱ پایهٔ مناسب‌تری است و با افزودن راهروی میانی طرح ۲ و بلوک‌بندی چهاربخشی (شکل ۳) می‌تواند هم‌زمان از مزیت‌های هر دو طرح بهره ببرد.</p>
-    </div>
-
-    <div class="sec-head" style="margin-top:2.6rem"><span class="eyebrow">بخش ۱۰</span><h2>داده‌های موردنیاز برای مرحلهٔ طراحی</h2></div>
-    <ul class="bul">
-      <li>فروش و حاشیهٔ سود هر دستهٔ کالا از سامانهٔ صندوق، ترجیحاً دوازده ماه اخیر</li>
-      <li>تعداد تراکنش در ساعت اوج برای تعیین تعداد صندوق و عمق صف</li>
-      <li>ارتفاع و تعداد طبقات گوندولاها و یخچال‌ها</li>
-      <li>کاربرد واحدهای بی‌برچسب و جایگاه میوه و سبزی</li>
-      <li>پلان پشت‌صحنه: انبار، دریافت کالا و مسیر شارژ</li>
-      <li>محدودیت‌های برق، تخلیهٔ آب و سازه برای جابه‌جایی منجمدها؛ طرح ایمنی و خروج اضطراری</li>
-    </ul>
-  </div>
-</section>
-
-<!-- ========== REFERENCES ========== -->
-<section class="sec alt">
-  <div class="wrap reveal">
-    <div class="sec-head"><span class="eyebrow">منابع</span><h2>فهرست منابع</h2></div>
-    <ol class="refs">
-      <li>Underhill, P. <i>Why We Buy: The Science of Shopping</i> (updated ed.). Simon &amp; Schuster. خلاصهٔ «راست ثابت» و فضای ورود: <a href="https://www.shopify.com/blog/the-ultimate-guide-to-retail-store-layouts">Shopify — Retail Store Layout</a></li>
-      <li><a href="https://www.smartsheet.com/store-layout">Smartsheet — Retail Store Layout Design and Planning</a></li>
-      <li><a href="https://planohero.com/en/blog/grocery-store-layout-strategy/">PlanoHero — Grocery Store Layout Strategy</a></li>
-      <li><a href="https://www.agmrc.org/media/cms/EB6_Departments_and_Layout_in_a_Rur_C9CD9FF2F16AF.pdf">AgMRC, Iowa State University — Departments and Layout in a Rural Grocery Store</a></li>
-      <li><a href="https://www.ndsu.edu/agriculture/extension/publications/keep-food-safe-store-storage-shopping-food-safety-facts">NDSU Extension — Keep Food Safe from Store to Storage</a>؛ <a href="https://blogs.ifas.ufl.edu/sarasotaco/2021/10/12/grocery-shopping-for-your-health-the-freezer-section/">UF/IFAS Extension — The freezer section</a></li>
-      <li><a href="https://link.springer.com/article/10.1007/s40547-014-0012-1">An Across-Store Analysis of Intrinsic and Extrinsic Cross-Category Effects — Customer Needs and Solutions (Springer, 2014)</a></li>
-      <li><a href="https://louis.pressbooks.pub/foodsafety/chapter/11-5-chemical-storage/">Food Safety (LOUIS Pressbooks) — 11.5 Chemical Storage</a></li>
-      <li><a href="https://mclernons.com.au/blogs/mclernons-corner/guide-to-supermarket-grocery-store-shelving-layouts">McLernons — Guide to Supermarket &amp; Grocery Store Shelving Layouts</a></li>
-      <li><a href="https://www.posnation.com/blog/grocery-store-layout-strategy">POS Nation — Grocery Store Layout Strategy</a></li>
-    </ol>
-  </div>
-</section>
-
-<!-- ========== CLOSE ========== -->
-<section class="sec">
-  <div class="wrap reveal">
-    <div class="cta">
-      <span class="eyebrow" style="color:#cfe0f2">گام بعد</span>
-      <h2 style="margin-top:.6rem">طراحی مقدم بر اجراست.</h2>
-      <p>با دریافت داده‌های بخش ۱۰، طرح پیشنهادی به نقشهٔ اجرایی با اندازهٔ دقیق بلوک‌ها و تخصیص فضای هر دسته تبدیل می‌شود.</p>
-      <a class="btn btn-light" href="tel:+982188964116">تماس با DaranX</a>
-    </div>
-  </div>
-</section>
-
 </main>
 
 <footer class="foot">
@@ -850,13 +546,25 @@ figcaption{color:var(--ink-faint);font-size:.92rem;margin-top:.6rem;line-height:
 </footer>
 
 <script>
-  (function(){var r=document.documentElement,b=document.getElementById('tt');if(!b)return;
-    try{var s=localStorage.getItem('dx-doc-theme');if(s)r.setAttribute('data-theme',s);}catch(e){}
-    b.addEventListener('click',function(){var cur=r.getAttribute('data-theme');
-      var dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
-      var next=dark?'light':'dark';r.setAttribute('data-theme',next);
-      try{localStorage.setItem('dx-doc-theme',next)}catch(e){}});
-  })();
+(function(){
+  var r=document.documentElement,b=document.getElementById('tt');
+  try{var s=localStorage.getItem('dx-doc-theme');if(s)r.setAttribute('data-theme',s);}catch(e){}
+  if(b)b.addEventListener('click',function(){var cur=r.getAttribute('data-theme');
+    var dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+    var next=dark?'light':'dark';r.setAttribute('data-theme',next);
+    try{localStorage.setItem('dx-doc-theme',next)}catch(e){}});
+  // open the <details> that holds a linked finding before jumping to it
+  function reveal(hash){var t=hash&&document.getElementById(hash.slice(1));if(!t)return;
+    var d=t.closest('details');if(d&&!d.open)d.open=true;
+    if(t.classList.contains('row')){t.classList.remove('hit');void t.offsetWidth;t.classList.add('hit');}}
+  document.addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(a)reveal(a.getAttribute('href'));});
+  if(location.hash)reveal(location.hash);
+  var all=document.querySelectorAll('details'),tg=document.getElementById('toggle-all');
+  tg.addEventListener('click',function(){var open=tg.dataset.open!=='1';
+    all.forEach(function(d){d.open=open});tg.dataset.open=open?'1':'0';
+    tg.textContent=open?'بستن همه':'باز کردن همه';});
+  addEventListener('beforeprint',function(){all.forEach(function(d){d.open=true})});
+})();
 </script>
 </body>
 </html>
