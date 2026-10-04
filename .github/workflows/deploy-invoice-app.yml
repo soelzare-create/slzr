@@ -1,0 +1,169 @@
+# Upload the invoicing web app (invoice-app/) to the DaranX host over FTP/FTPS/SFTP.
+#
+# It goes into a NEW sub-folder of the site (default: <web root>/factor →
+# https://www.daranx.com/factor/), so the existing website is never touched.
+# Server data (data/db_*.sqlite, sessions, logs) is never overwritten or deleted.
+#
+# Credentials come from repository secrets (Settings → Secrets and variables →
+# Actions). Accepted names, first match wins:
+#   host:      FTP_SERVER | FTP_HOST | SFTP_HOST | SSH_HOST | HOST
+#   user:      FTP_USERNAME | FTP_USER | SFTP_USERNAME | SSH_USERNAME | SSH_USER | USERNAME
+#   password:  FTP_PASSWORD | FTP_PASS | SFTP_PASSWORD | SSH_PASSWORD | PASSWORD
+#   optional:  FTP_PORT | SFTP_PORT | SSH_PORT | PORT, SSH_PRIVATE_KEY | SSH_KEY,
+#              FTP_PROTOCOL (ftp | sftp), FTP_WEBROOT (e.g. public_html)
+# Optional repository variables: INVOICE_APP_DIR (default "factor"), SITE_URL.
+name: deploy-invoice-app
+
+on:
+  push:
+    branches: [main, claude/nice-ramanujan-xdnetp]
+    paths:
+      - "invoice-app/**"
+      - ".github/workflows/deploy-invoice-app.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-invoice-app
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      R_HOST: ${{ secrets.FTP_SERVER || secrets.FTP_HOST || secrets.SFTP_HOST || secrets.SSH_HOST || secrets.HOST }}
+      R_USER: ${{ secrets.FTP_USERNAME || secrets.FTP_USER || secrets.SFTP_USERNAME || secrets.SSH_USERNAME || secrets.SSH_USER || secrets.USERNAME }}
+      LFTP_PASSWORD: ${{ secrets.FTP_PASSWORD || secrets.FTP_PASS || secrets.SFTP_PASSWORD || secrets.SSH_PASSWORD || secrets.PASSWORD }}
+      R_PORT: ${{ secrets.FTP_PORT || secrets.SFTP_PORT || secrets.SSH_PORT || secrets.PORT }}
+      R_KEY: ${{ secrets.SSH_PRIVATE_KEY || secrets.SSH_KEY }}
+      R_PROTOCOL: ${{ secrets.FTP_PROTOCOL || vars.FTP_PROTOCOL }}
+      R_WEBROOT: ${{ secrets.FTP_WEBROOT || vars.FTP_WEBROOT }}
+      APP_DIR: ${{ vars.INVOICE_APP_DIR || 'factor' }}
+      SITE_URL: ${{ vars.SITE_URL || 'https://www.daranx.com' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Report which credentials are configured (names only, never values)
+        env:
+          S_FTP_SERVER: ${{ secrets.FTP_SERVER != '' }}
+          S_FTP_HOST: ${{ secrets.FTP_HOST != '' }}
+          S_SFTP_HOST: ${{ secrets.SFTP_HOST != '' }}
+          S_SSH_HOST: ${{ secrets.SSH_HOST != '' }}
+          S_HOST: ${{ secrets.HOST != '' }}
+          S_FTP_USERNAME: ${{ secrets.FTP_USERNAME != '' }}
+          S_FTP_USER: ${{ secrets.FTP_USER != '' }}
+          S_SFTP_USERNAME: ${{ secrets.SFTP_USERNAME != '' }}
+          S_SSH_USERNAME: ${{ secrets.SSH_USERNAME != '' }}
+          S_SSH_USER: ${{ secrets.SSH_USER != '' }}
+          S_USERNAME: ${{ secrets.USERNAME != '' }}
+          S_FTP_PASSWORD: ${{ secrets.FTP_PASSWORD != '' }}
+          S_FTP_PASS: ${{ secrets.FTP_PASS != '' }}
+          S_SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD != '' }}
+          S_SSH_PASSWORD: ${{ secrets.SSH_PASSWORD != '' }}
+          S_PASSWORD: ${{ secrets.PASSWORD != '' }}
+          S_FTP_PORT: ${{ secrets.FTP_PORT != '' }}
+          S_SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY != '' }}
+          S_SSH_KEY: ${{ secrets.SSH_KEY != '' }}
+          S_FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL != '' }}
+          S_FTP_WEBROOT: ${{ secrets.FTP_WEBROOT != '' }}
+        run: |
+          env | grep '^S_' | sed 's/^S_//' | sort
+          if [ -z "$R_HOST" ] || [ -z "$R_USER" ] || { [ -z "$LFTP_PASSWORD" ] && [ -z "$R_KEY" ]; }; then
+            echo "::error::Host credentials are missing. Add repository secrets FTP_SERVER, FTP_USERNAME and FTP_PASSWORD (see the header of this workflow)."
+            exit 1
+          fi
+
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp netcat-openbsd > /dev/null
+
+      - name: Connect and find the web root
+        id: probe
+        run: |
+          set -u
+          host="${R_HOST#*://}"; host="${host%%/*}"; host="${host%%:*}"
+          proto="${R_PROTOCOL:-}"
+          if [ -z "$proto" ]; then
+            if [ -n "$R_KEY" ] || [ "${R_PORT:-}" = "22" ]; then proto=sftp; else proto=ftp; fi
+          fi
+          port="${R_PORT:-}"; [ -n "$port" ] || { [ "$proto" = sftp ] && port=22 || port=21; }
+          echo "protocol=$proto port=$port"
+          nc -vz -w 15 "$host" "$port" || { echo "::error::Cannot reach the host on port $port from GitHub's servers (firewall or wrong host/port)."; exit 1; }
+
+          setup="set net:timeout 25; set net:max-retries 2; set net:reconnect-interval-base 5; set ftp:passive-mode yes; set ssl:verify-certificate no; set sftp:auto-confirm yes;"
+          if [ "$proto" = sftp ] && [ -n "$R_KEY" ]; then
+            install -m 600 /dev/null ~/deploy_key && printf '%s\n' "$R_KEY" > ~/deploy_key
+            setup="$setup set sftp:connect-program \"ssh -a -x -i $HOME/deploy_key -o StrictHostKeyChecking=no\";"
+          fi
+          url="$proto://$host:$port"
+          auth=(-u "$R_USER")
+          [ -n "$LFTP_PASSWORD" ] && auth=(--env-password -u "$R_USER")
+          [ "$proto" = sftp ] && [ -z "$LFTP_PASSWORD" ] && auth=(-u "$R_USER,")
+
+          # Prefer FTPS (encrypted); fall back to plain FTP if the server has no working TLS.
+          tls="set ftp:ssl-allow yes;"
+          if [ "$proto" = ftp ] && ! lftp "${auth[@]}" -e "$setup $tls cls -1 >/dev/null; bye" "$url"; then
+            echo "FTPS login failed; retrying without TLS"
+            tls="set ftp:ssl-allow no;"
+            lftp "${auth[@]}" -e "$setup $tls cls -1 >/dev/null; bye" "$url" || { echo "::error::Login failed (check username/password)."; exit 1; }
+          fi
+          echo "Logged in. Top level of the account:"
+          lftp "${auth[@]}" -e "$setup $tls cls -1aF | head -n 60; bye" "$url"
+
+          webroot="${R_WEBROOT:-}"
+          if [ -z "$webroot" ]; then
+            for cand in domains/daranx.com/public_html domains/www.daranx.com/public_html public_html httpdocs www htdocs web; do
+              if lftp "${auth[@]}" -e "$setup $tls cd '$cand' && bye || exit 1" "$url" >/dev/null 2>&1; then webroot="$cand"; break; fi
+            done
+          fi
+          if [ -z "$webroot" ]; then
+            if lftp "${auth[@]}" -e "$setup $tls cls -1 | grep -qiE '^(index\.(php|html?)|\.htaccess)$' && bye || exit 1" "$url" >/dev/null 2>&1; then webroot="."; fi
+          fi
+          [ -n "$webroot" ] || { echo "::error::Could not find the web root. Set secret FTP_WEBROOT (e.g. public_html)."; exit 1; }
+          echo "Web root: $webroot  →  app folder: $webroot/$APP_DIR"
+          { echo "url=$url"; echo "setup=$setup $tls"; echo "webroot=$webroot"; } >> "$GITHUB_OUTPUT"
+          printf '%s\n' "${auth[@]}" > ~/lftp_auth
+
+      - name: Upload invoice-app (keeps server data)
+        env:
+          URL: ${{ steps.probe.outputs.url }}
+          SETUP: ${{ steps.probe.outputs.setup }}
+          WEBROOT: ${{ steps.probe.outputs.webroot }}
+        run: |
+          mapfile -t auth < ~/lftp_auth
+          target="$WEBROOT/$APP_DIR"
+          lftp "${auth[@]}" -e "$SETUP
+            mkdir -p -f '$target';
+            set cmd:fail-exit yes;
+            mirror -R --verbose --no-perms --parallel=4 \
+              --exclude-glob .git* \
+              --exclude-glob data/db_* --exclude-glob data/sessions/ --exclude-glob data/sessions/* \
+              --exclude-glob data/*.log --exclude-glob data/.lock \
+              --exclude-glob app/config.php \
+              invoice-app/ '$target/';
+            set cmd:fail-exit no;
+            chmod 755 '$target/data';
+            bye" "$URL"
+
+      - name: Check the app answers on the website
+        run: |
+          base="${SITE_URL%/}/$APP_DIR"
+          ok=""
+          for u in "$base/" "${base/https:/http:}/"; do
+            code=$(curl -sS -m 25 -L -o page.html -w '%{http_code}' "$u" || echo 000)
+            echo "$u → HTTP $code"
+            if [ "$code" = 200 ] && grep -q 'DaranX' page.html; then ok="$u"; break; fi
+          done
+          if [ -z "$ok" ]; then
+            echo "::error::Uploaded, but $base/ did not return the app. First bytes of the response:"; head -c 600 page.html || true
+            exit 1
+          fi
+          title=$(grep -o '<title>[^<]*</title>' page.html | head -1)
+          echo "App is live at $ok — $title"
+          for p in "data/" "app/model.php"; do
+            echo "$p → HTTP $(curl -sS -m 20 -o /dev/null -w '%{http_code}' "${ok}$p" || echo 000) (should be 403/empty)"
+          done
+          echo "### Invoicing app deployed: $ok" >> "$GITHUB_STEP_SUMMARY"
+          echo "Page: $title" >> "$GITHUB_STEP_SUMMARY"
