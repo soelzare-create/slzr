@@ -54,3 +54,16 @@
 - https://ariataraz.com/planogram/
 - https://www.sepidarsystem.com/blog/vat-rate/ (نرخ ارزش افزودهٔ ۱۴۰۵)
 - https://keysuntsp.com/blog/modian-system/ (سامانهٔ مودیان)
+
+## چیدمان کل فروشگاه (افزوده در بررسی پلان، مهر ۱۴۰۵)
+- Underhill, P. *Why We Buy: The Science of Shopping* — خلاصه: https://www.shopify.com/blog/the-ultimate-guide-to-retail-store-layouts
+- https://www.smartsheet.com/store-layout
+- https://planohero.com/en/blog/grocery-store-layout-strategy/
+- https://www.agmrc.org/media/cms/EB6_Departments_and_Layout_in_a_Rur_C9CD9FF2F16AF.pdf
+- https://www.ndsu.edu/agriculture/extension/publications/keep-food-safe-store-storage-shopping-food-safety-facts
+- https://blogs.ifas.ufl.edu/sarasotaco/2021/10/12/grocery-shopping-for-your-health-the-freezer-section/
+- https://link.springer.com/article/10.1007/s40547-014-0012-1
+- https://louis.pressbooks.pub/foodsafety/chapter/11-5-chemical-storage/
+- https://mclernons.com.au/blogs/mclernons-corner/guide-to-supermarket-grocery-store-shelving-layouts
+- https://www.posnation.com/blog/grocery-store-layout-strategy
+

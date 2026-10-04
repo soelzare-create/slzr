@@ -1,6 +1,6 @@
 ---
 name: merchandising
-description: Domain knowledge, working method and DaranX branding for the «Merchandising» project (this repo, by DaranX). Use it whenever a task touches merchandising in any sense — field/retail execution (مرچندایزینگ، مرچندایزر، بازارپردازی، چیدمان، ویزیت فروشگاه، پلانوگرام، فیسینگ، سهم قفسه، OSA/OOS، POSM، perfect store، route plan), visual merchandising (ویترین، دیسپلی), merchandise planning (سبد کالا، category management، open-to-buy، markup/margin، markdown، GMROI، sell-through، stock turn), accounting for a goods-trading business (موجودی، بهای تمام‌شده، برگشت از خرید/فروش، trade spend) or billing merchandising services to brands. Also use it when designing models, APIs, screens, KPIs, reports, proposals or any client-facing document for this project, even if the word «merchandising» never appears — it carries the KPI formulas, a Persian/English glossary, a data-model blueprint, codebase mapping and the DaranX visual-identity rules.
+description: Domain knowledge, working method and DaranX branding for the «Merchandising» project (this repo, by DaranX). Use it whenever a task touches merchandising in any sense — designing or reviewing a store layout / floor plan (پلان و نقشهٔ چیدمان فروشگاه، مسیر مشتری، دپارتمان‌ها، صندوق)، field/retail execution (مرچندایزر، چیدمان، ویزیت، پلانوگرام، فیسینگ، سهم قفسه، OSA/OOS، POSM)، visual merchandising (ویترین، دیسپلی)، merchandise planning (سبد کالا، category management، open-to-buy، markup/margin، GMROI، sell-through)، goods-trading accounting (موجودی، بهای تمام‌شده، برگشت از خرید/فروش، trade spend) or billing merchandising services. Also use it for models, APIs, screens, KPIs, reports, proposals or any client-facing document of this project, even if «merchandising» never appears — it carries a plan-review checklist, KPI formulas, a Persian/English glossary, a data-model blueprint, codebase mapping and DaranX visual-identity rules.
 ---
 
 # Merchandising — دانش دامنه و روش کار
@@ -11,11 +11,12 @@ description: Domain knowledge, working method and DaranX branding for the «Merc
 
 ## ۱. اول بفهم کدام «مرچندایزینگ»
 
-واژهٔ merchandising چهار معنای رایج دارد. پیش از طراحی، درخواست را به یکی (یا چند) نگاشت
+واژهٔ merchandising چند معنای رایج دارد. پیش از طراحی، درخواست را به یکی (یا چند) نگاشت
 کن، چون مدل داده و شاخص‌ها کاملاً فرق می‌کنند:
 
 | عدسی | نشانه‌ها در درخواست | بخوان |
 |---|---|---|
+| **چیدمان کل فروشگاه (پلان)** | نقشه/پلان فروشگاه، جای دپارتمان‌ها، مسیر مشتری، ورودی، صندوق، گوندولا، نقد یا مقایسهٔ طرح چیدمان | `references/store-layout.md` (+ `planning-and-category.md` §۵ برای تخصیص فضا) |
 | **اجرای میدانی / خرده‌فروشی** | مرچندایزر، ویزیت، چیدمان، قفسه، فیسینگ، پلانوگرام، OSA، POSM، فروشگاه زنجیره‌ای، مسیر، عکس، ممیزی | `references/field-execution.md` + `references/kpis-and-formulas.md` |
 | **مرچندایزینگ بصری** | ویترین، دیسپلی، سرقفسه، نور، مسیر مشتری | `references/field-execution.md` §۶ |
 | **برنامه‌ریزی کالا و طبقهٔ کالا** | سبد کالا، OTB، خرید فصل، قیمت‌گذاری، تخفیف، sell-through، GMROI | `references/planning-and-category.md` + `references/kpis-and-formulas.md` |
@@ -97,7 +98,14 @@ python .claude/skills/merchandising/scripts/merch_calc.py perfect-store \
 جزئیات، توکن‌ها و نگاشت پالت اپ به برند: `references/branding.md`. نمونهٔ کامل:
 `docs/merchandising/research.html`.
 
-## ۷. صداقت در دامنه
+## ۷. نقد یا طراحی پلان فروشگاه
+
+وقتی نقشه/پلان می‌رسد: اول طبق `references/store-layout.md` §۱ نقشه را دقیق بخوان (برچسب‌های
+ریز را برش و بزرگ کن، دستهٔ هر وجه گوندولا را جدول کن، مسیر مشتری را رسم کن)، بعد چک‌لیست §۳ را
+برو، هر یافته را با کد، محل دقیق، شدت (§۴)، دلیل و اصلاح بنویس، و نقاط قوت را هم بگو. اگر گزارش
+رسمی خواستند، ساختار §۵ را با قالب DaranX بساز.
+
+## ۸. صداقت در دامنه
 
 - ارقام بازار، تعرفهٔ زنجیره‌ها، نرخ قرارداد و حقوق نیرو را حدس نزن؛ بپرس یا جای خالی بگذار.
 - نرخ مالیات و الزامات سامانهٔ مودیان سالانه عوض می‌شوند؛ قبل از استفاده بررسی کن.
@@ -110,6 +118,7 @@ python .claude/skills/merchandising/scripts/merch_calc.py perfect-store \
 | فایل | کی بخوانی |
 |---|---|
 | `references/glossary.md` | نام‌گذاری مدل/فیلد/برچسب UI، ترجمهٔ اصطلاح |
+| `references/store-layout.md` | نقد یا طراحی پلان کل فروشگاه: اصول با منبع، چک‌لیست، مقیاس شدت، ساختار گزارش |
 | `references/kpis-and-formulas.md` | هر شاخص، فرمول، دانه‌بندی، تله‌های تجمیع |
 | `references/field-execution.md` | ویزیت، مسیر، پلانوگرام، POSM، بصری، طرح دادهٔ پیشنهادی |
 | `references/planning-and-category.md` | سبد کالا، طبقهٔ کالا، OTB، قیمت و تخفیف، فضای قفسه |
