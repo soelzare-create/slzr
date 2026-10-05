@@ -67,24 +67,12 @@ class InvoiceLineSerializer(serializers.ModelSerializer):
     item_kind = serializers.CharField(source="item.kind", read_only=True)
     item_kind_display = serializers.CharField(source="item.get_kind_display", read_only=True)
     line_total = serializers.DecimalField(max_digits=18, decimal_places=0, read_only=True)
-    serials = serializers.SerializerMethodField()
 
     class Meta:
         model = InvoiceLine
         fields = ["id", "item", "item_name", "item_kind", "item_kind_display",
                   "description", "quantity", "unit_price", "source_purchase_line",
-                  "line_total", "serials"]
-
-    def get_serials(self, obj) -> list[str]:
-        """Serials allocated to this line — recorded by the warehouse on the
-        receipts of the purchases linked to this line's invoice, for this item."""
-        from apps.warehouse.models import ReceiptItem
-        out: list[str] = []
-        for ri in ReceiptItem.objects.filter(
-            receipt__purchase__sale_invoice_id=obj.invoice_id, item_id=obj.item_id
-        ):
-            out.extend(s for s in (ri.serials or []) if s)
-        return out
+                  "line_total"]
 
 
 class InvoiceSerializer(serializers.ModelSerializer):

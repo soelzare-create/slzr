@@ -61,7 +61,7 @@ class Proforma(NumberedModel):
 
     @property
     def goods_total(self) -> Decimal:
-        """Sum of goods (کالا) lines — warehouse-related sales."""
+        """Sum of goods (کالا) lines — physical-item sales."""
         return sum(
             (line.line_total for line in self.lines.all() if line.item.kind == Item.Kind.GOODS),
             Decimal("0"),
@@ -69,7 +69,7 @@ class Proforma(NumberedModel):
 
     @property
     def service_total(self) -> Decimal:
-        """Sum of service (خدمت) lines — sales unrelated to the warehouse."""
+        """Sum of service (خدمت) lines — non-physical sales."""
         return sum(
             (line.line_total for line in self.lines.all() if line.item.kind == Item.Kind.SERVICE),
             Decimal("0"),

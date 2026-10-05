@@ -62,7 +62,7 @@ class Purchase(NumberedModel):
 
     @property
     def goods_total(self) -> Decimal:
-        """Sum of goods (کالا) lines — warehouse-related purchases."""
+        """Sum of goods (کالا) lines — physical-item purchases."""
         return sum(
             (line.line_total for line in self.lines.all() if line.item.kind == Item.Kind.GOODS),
             Decimal("0"),
@@ -70,7 +70,7 @@ class Purchase(NumberedModel):
 
     @property
     def service_total(self) -> Decimal:
-        """Sum of service (خدمت) lines — purchases unrelated to the warehouse."""
+        """Sum of service (خدمت) lines — non-physical purchases."""
         return sum(
             (line.line_total for line in self.lines.all() if line.item.kind == Item.Kind.SERVICE),
             Decimal("0"),

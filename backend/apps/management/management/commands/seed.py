@@ -25,7 +25,6 @@ DEPARTMENTS = [
     ("accounting", "حسابداری"),
     ("procurement", "بازرگانی"),
     ("technical", "فنی و پشتیبانی"),
-    ("warehouse", "انبار"),
     ("management", "مدیریت"),
 ]
 

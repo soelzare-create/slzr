@@ -29,15 +29,11 @@ export default function DocumentPrint() {
   const isProforma = kind === "proforma";
   const lines = doc.lines || [];
 
-  // Delivery: one row per serial (fall back to a quantity row when no serials).
+  // Delivery: one row per invoice line (quantity of each item delivered).
   const deliveryRows = [];
   if (isDelivery) {
-    lines.forEach((l) => {
-      const serials = l.serials || [];
-      if (serials.length) serials.forEach((s) => deliveryRows.push({ name: l.item_name, qty: 1, serial: s }));
-      else deliveryRows.push({ name: l.item_name, qty: l.quantity, serial: "" });
-    });
-    while (deliveryRows.length < 12) deliveryRows.push({ name: "", qty: "", serial: "" });
+    lines.forEach((l) => deliveryRows.push({ name: l.item_name, qty: l.quantity }));
+    while (deliveryRows.length < 12) deliveryRows.push({ name: "", qty: "" });
   }
 
   const faNum = (n) => Number(n).toLocaleString("fa-IR");
@@ -91,14 +87,13 @@ export default function DocumentPrint() {
         {/* line items */}
         {isDelivery ? (
           <table className="items">
-            <thead><tr><th className="c-row">ردیف</th><th>شرح کالا / خدمات</th><th className="c-qty">تعداد</th><th className="c-serial">سریال نامبر</th></tr></thead>
+            <thead><tr><th className="c-row">ردیف</th><th>شرح کالا / خدمات</th><th className="c-qty">تعداد</th></tr></thead>
             <tbody>
               {deliveryRows.map((r, i) => (
                 <tr key={i}>
                   <td className="c-row">{r.name ? faNum(i + 1) : ""}</td>
                   <td className="r">{r.name}</td>
                   <td className="c-qty">{r.qty !== "" ? faNum(r.qty) : ""}</td>
-                  <td className="c-serial" dir="ltr">{r.serial}</td>
                 </tr>
               ))}
             </tbody>
@@ -247,7 +242,7 @@ const CSS = `
 .items th { background:#1c3a5e; color:#fff; font-size:13px; font-weight:700; padding:11px 8px; }
 .items td { border:1px solid #d7deea; padding:9px 8px; font-size:12.5px; text-align:center; height:30px; }
 .items td.r { text-align:right; }
-.c-row { width:44px; } .c-qty { width:70px; } .c-price,.c-total { width:120px; } .c-serial { width:150px; }
+.c-row { width:44px; } .c-qty { width:70px; } .c-price,.c-total { width:120px; }
 .items .sum td { border:none; }
 .items .sum .sum-label { background:#1c3a5e; color:#fff; font-weight:800; text-align:center; border-radius:0 0 4px 4px; }
 .items .sum .c-total { font-weight:800; font-size:14px; }

@@ -31,7 +31,6 @@ from apps.management.api import DashboardView
 from apps.procurement.api import PurchaseViewSet
 from apps.sales.api import InvoiceViewSet, ProformaViewSet
 from apps.technical.api import DirectInvoiceView
-from apps.warehouse.api import GoodsReceiptViewSet
 
 router = DefaultRouter(trailing_slash=False)
 router.register("users", UserViewSet, basename="user")
@@ -47,7 +46,6 @@ router.register("accounts", AccountViewSet, basename="account")
 router.register("journal", JournalEntryViewSet, basename="journal")
 router.register("expenses", ExpenseViewSet, basename="expense")
 router.register("payments", PaymentViewSet, basename="payment")
-router.register("receipts", GoodsReceiptViewSet, basename="receipt")
 
 urlpatterns = [
     # Auth
