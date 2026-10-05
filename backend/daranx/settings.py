@@ -132,6 +132,16 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# --- Frontend (React SPA), served by this same app in production -----------
+# The deploy workflow builds the frontend and places its `dist/` output
+# here before upload; WhiteNoise serves its hashed asset files directly at
+# the URL root (matching how Vite references them), and the catch-all view
+# in urls.py serves index.html for client-side routes. Absent in local dev
+# (the Vite dev server on :5173 is used instead), so this stays optional.
+FRONTEND_DIST = BASE_DIR / "frontend_dist"
+if FRONTEND_DIST.is_dir():
+    WHITENOISE_ROOT = FRONTEND_DIST
+
 # In production, hash + compress static assets (manifest storage). Kept off in
 # development so `runserver` needs no `collectstatic` first.
 if not DEBUG:

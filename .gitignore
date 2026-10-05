@@ -25,6 +25,14 @@ node_modules/
 dist/
 .vite/
 
+# Frontend build copied into the backend for the cPanel/Passenger deploy
+# (see .github/workflows/deploy-app.yml) — generated, never committed.
+backend/frontend_dist/
+
+# Passenger startup-tasks marker (see backend/passenger_wsgi.py) — only
+# ever exists on the deployed host, never in a checkout.
+backend/.deployed
+
 # OS / editor
 .DS_Store
 Thumbs.db

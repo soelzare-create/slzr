@@ -95,6 +95,109 @@ SECURE_HSTS_SECONDS=31536000
 
 ---
 
+## گزینهٔ C — هاست اشتراکی cPanel، بدون SSH (Passenger + دیپلوی خودکار با FTP)
+
+برای هاستی مثل همانی که سایت داران ایکس رویش است: بدون SSH، فقط File Manager/FTP و
+پنل cPanel. این گزینه از ماژول پایتون هاست (**Phusion Passenger**، در cPanel با نام
+«Setup Python App») استفاده می‌کند؛ بک‌اند و فرانت **یک اپ واحد** می‌شوند — Django
+با WhiteNoise فایل‌های ساخته‌شدهٔ React را هم سرو می‌کند، پس نیازی به هاست استاتیک
+جدا یا تنظیم CORS نیست. دیتابیس **SQLite** است (این هاست دسترسی به PostgreSQL ندارد؛
+برای ۶ تا ۲۰ کاربر همزمان و جریان فعلی کفایت می‌کند).
+
+### مرحلهٔ ۱ — ساخت اپ پایتون در cPanel (یک‌بار)
+
+۱. cPanel → **Setup Python App** → **Create Application**.
+۲. **Python version**: بالاترین نسخهٔ موجود (۳.۱۱ یا ۳.۱۲).
+۳. **Application root**: یک پوشه خارج از `public_html`، مثلاً `app_daranx`.
+۴. **Application URL**: زیردامنهٔ `app.daranx.com` (یا هر زیردامنه‌ای که ساختید).
+۵. **Application startup file**: `passenger_wsgi.py`
+۶. **Application Entry point**: `application`
+۷. **Create** بزنید. cPanel یک virtualenv می‌سازد، پوشهٔ Application root را آماده
+   می‌کند، و یک `passenger_wsgi.py` نمونه داخلش می‌گذارد — همان فایلی که اولین دیپلوی
+   این پروژه با نسخهٔ واقعی خودش (`backend/passenger_wsgi.py`) جایگزینش می‌کند؛ طبیعی
+   و مورد انتظار است.
+
+### مرحلهٔ ۲ — حساب FTP مخصوص این اپ (یک‌بار)
+
+cPanel → **FTP Accounts** → یک حساب جدید بسازید که **Directory** آن دقیقاً همان
+Application root مرحلهٔ قبل باشد (نه `public_html`). این یعنی ریشهٔ همین حساب FTP از
+الان معادل پوشهٔ `backend/` پروژه است.
+
+### مرحلهٔ ۳ — Secretهای گیت‌هاب (یک‌بار)
+
+در مخزن GitHub → Settings → Secrets and variables → Actions، سه Secret بسازید
+(دقیقاً با همین نام‌ها؛ Workflow آن‌ها را می‌خواند):
+
+| نام Secret | مقدار |
+|---|---|
+| `FTP_SERVER` | آدرس FTP هاست (از Configure FTP Client در cPanel) |
+| `FTP_USERNAME` | نام کاربری حساب FTP مرحلهٔ ۲ |
+| `FTP_PASSWORD` | رمز همان حساب |
+
+### مرحلهٔ ۴ — فایل `.env` (یک‌بار، دستی با File Manager)
+
+این فایل هرگز از طریق گیت یا Workflow آپلود نمی‌شود (رمزها داخلش است). با File
+Manager هاست، داخل همان Application root یک فایل به نام `.env` بسازید:
+
+```
+SECRET_KEY=uJbuMHqMZD3hJkkQIfpvsXORgThxpORx0tfWHMhvQbOyY3e9As8xL23abtg4cnZDPv_dZNSlgJqZDuu9eeX0pg
+DEBUG=false
+ALLOWED_HOSTS=app.daranx.com
+CSRF_TRUSTED_ORIGINS=https://app.daranx.com
+SECURE_SSL_REDIRECT=false
+SECURE_HSTS_SECONDS=0
+FIRST_ADMIN_PHONE=09120000000
+FIRST_ADMIN_PASSWORD=یک-رمز-قوی-اینجا-بگذارید
+FIRST_ADMIN_NAME=مدیر سیستم
+SEED_ON_START=true
+```
+
+> `SECRET_KEY` بالا یک مقدار واقعی و تازه‌ساخته‌شده است — فقط همین یک‌بار از آن
+> استفاده کنید (آن را جای دیگری کپی نکنید). `DATABASE_URL` را خالی بگذارید —
+> یعنی SQLite، که این گزینه با آن کار می‌کند. `SECURE_SSL_REDIRECT=true` را فقط بعد
+> از اینکه مطمئن شدید زیردامنه روی HTTPS بالا می‌آید بگذارید؛ تا آن موقع `false`.
+
+### مرحلهٔ ۵ — نصب پکیج‌ها (یک‌بار، و هر بار که requirements.txt عوض شود)
+
+در همان صفحهٔ **Setup Python App** → روی اپ بزنید → **Run Pip Install** (مسیر
+`requirements.txt` را نشان می‌دهد). این تنها قدمی است که این هاست بدون SSH آن را
+خودکار نمی‌کند؛ هر بار `requirements.txt` تغییر کرد، یک‌بار دیگر همین دکمه را بزنید.
+
+### مرحلهٔ ۶ — همان است؛ از این به بعد خودکار
+
+با push روی شاخهٔ `main`، فایل `.github/workflows/deploy-app.yml` خودش: تست‌ها را
+اجرا، فرانت را build، و همه‌چیز را با FTP روی همان Application root آپلود می‌کند —
+و با تازه‌کردن `tmp/restart.txt`، Passenger را وادار به ری‌استارت می‌کند. در همان
+ری‌استارت، `passenger_wsgi.py` به‌صورت خودکار `migrate` + `seed` (بار اول) +
+`collectstatic` را اجرا می‌کند؛ یعنی **نیازی به اجرای دستی هیچ‌کدام نیست**.
+
+برای اجرای اولین دیپلوی، کافی است یک‌بار به شاخهٔ `main` push کنید (یا از تب
+Actions، روی این Workflow «Run workflow» بزنید).
+
+### بررسی بعد از اولین دیپلوی
+
+> اگر `app.daranx.com` تازه ساخته شده، ممکن است گواهی HTTPS (AutoSSL هاست) چند
+> دقیقه تا چند ساعت طول بکشد تا صادر شود؛ تا آن موقع با `http://` تست کنید و
+> `SECURE_SSL_REDIRECT` را روی `false` نگه دارید (طبق مرحلهٔ ۴).
+
+- `https://app.daranx.com/health` → `{"status":"ok"}`
+- `https://app.daranx.com/` → صفحهٔ ورود نرم‌افزار (React) باز شود
+- ورود با `FIRST_ADMIN_PHONE` / `FIRST_ADMIN_PASSWORD` همان `.env` → و **بلافاصله
+  رمز را از تنظیمات عوض کنید**.
+
+### کار دوره‌ای آزادسازی رزرو (اختیاری)
+
+برای آزادسازی خودکار رزرو نرم ۴۸ ساعته، در cPanel → **Cron Jobs** یک کار هر ۱۵ دقیقه
+بسازید. صفحهٔ Setup Python App یک دستور «فعال‌سازی محیط مجازی» نشان می‌دهد
+(چیزی شبیه `source /home/USERNAME/virtualenv/app_daranx/3.11/bin/activate`)؛ همان
+مسیر پایتون را برای این فرمان بگذارید:
+```
+/home/USERNAME/virtualenv/app_daranx/3.11/bin/python /home/USERNAME/app_daranx/manage.py release_reservations
+```
+(مسیرهای واقعی را از همان صفحهٔ Setup Python App کپی کنید — برای هر حساب فرق دارد.)
+
+---
+
 ## متغیرهای محیطی
 
 | متغیر | نمونه | توضیح |
@@ -128,8 +231,13 @@ SECURE_HSTS_SECONDS=31536000
 ---
 
 ## فرانت‌اند (خلاصه)
-فرانت (Vite/React) جدا build و روی هاست استاتیک/CDN مستقر می‌شود. آدرس API را به
-دامنهٔ بک‌اند بدهید و همان دامنهٔ فرانت را در `CORS_ORIGINS` بک‌اند اضافه کنید.
+در گزینه‌های A و B، فرانت (Vite/React) جدا build و روی هاست استاتیک/CDN مستقر
+می‌شود. آدرس API را به دامنهٔ بک‌اند بدهید و همان دامنهٔ فرانت را در `CORS_ORIGINS`
+بک‌اند اضافه کنید.
+
+در **گزینهٔ C**، فرانت و بک‌اند یک اپ‌اند — همان Workflow فرانت را build و کنار
+بک‌اند می‌گذارد، Django (با WhiteNoise) هر دو را از یک دامنه سرو می‌کند، و چون فراخوانیِ
+API هم‌مبدأ (same-origin) است، نیازی به `CORS_ORIGINS` نیست.
 
 ## عیب‌یابی سریع
 - **DisallowedHost** → دامنه در `ALLOWED_HOSTS` نیست.
