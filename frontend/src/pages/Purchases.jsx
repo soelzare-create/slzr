@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, toman } from "../api";
+import { api, toman, jalali } from "../api";
 import { Modal, StatusBadge, useList, useOptions, useItems, ItemPicker } from "../components.jsx";
+import { Avatar, Icon, Menu } from "../ui.jsx";
 import { KindSplit } from "./Proformas.jsx";
 
 export default function Purchases() {
@@ -78,46 +79,58 @@ export default function Purchases() {
     catch (err) { setError(err.message); }
   }
 
+  function menuFor(p) {
+    const items = [];
+    if (p.status === "DRAFT") {
+      items.push({ label: "ثبت خرید", icon: "check", color: "#10a86b", onClick: () => act(p.id, "register") });
+      items.push({ label: "ویرایش", icon: "edit", onClick: () => startEdit(p) });
+    }
+    if (p.status !== "CANCELLED") {
+      items.push({ sep: true });
+      items.push({ label: "ابطال", icon: "close", color: "#e0483d", onClick: () => act(p.id, "cancel") });
+    }
+    return items;
+  }
+
   return (
     <div>
       <div className="toolbar">
-        <h1 className="page-title">خریدها</h1>
+        <div>
+          <h1 className="page-title">خریدها</h1>
+          <div className="page-sub">{data.length} خرید</div>
+        </div>
         <button className="btn primary" onClick={openNew}>+ خرید جدید</button>
       </div>
       {error && <div className="error">{error}</div>}
-      <div className="card">
-        {loading ? <div className="empty">در حال بارگذاری…</div> : (
-          <table>
-            <thead><tr><th>شماره</th><th>تأمین‌کننده</th><th>فاکتور مرتبط</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
-            <tbody>
-              {data.map((p) => (
-                <tr key={p.id}>
-                  <td className="mono">{p.number}</td>
-                  <td>{p.supplier_name}</td>
-                  <td className="mono">{p.sale_invoice_number || "—"}</td>
-                  <td className="mono">
-                    {toman(p.total)}
-                    <KindSplit goods={p.goods_total} service={p.service_total} />
-                  </td>
-                  <td><StatusBadge status={p.status} display={p.status_display} kind="purchase" /></td>
-                  <td className="flex">
-                    {p.status === "DRAFT" && (
-                      <button className="btn success sm" onClick={() => act(p.id, "register")}>ثبت خرید</button>
-                    )}
-                    {p.status === "DRAFT" && (
-                      <button className="btn sm" onClick={() => startEdit(p)}>ویرایش</button>
-                    )}
-                    {p.status !== "CANCELLED" && (
-                      <button className="btn danger sm" onClick={() => act(p.id, "cancel")}>ابطال</button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {data.length === 0 && <tr><td colSpan={6} className="empty">هنوز خریدی ثبت نشده.</td></tr>}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {loading ? <div className="empty">در حال بارگذاری…</div> : (
+        <div className="cards-grid">
+          {data.map((p) => (
+            <div className="pcard" key={p.id}>
+              <div className="flex" style={{ alignItems: "flex-start", gap: 12 }}>
+                <Avatar name={p.supplier_name} size={46} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="mono" style={{ fontWeight: 600, fontSize: 15 }}>{p.number}</div>
+                  <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>{p.supplier_name}</div>
+                </div>
+                <Menu title="اقدامات با این خرید" items={menuFor(p)} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "13px 0 0" }}>
+                <div className="metaline"><Icon name="calendar" size={14} />{jalali(p.date || p.created_at)}</div>
+                <div className="metaline"><Icon name="invoice" size={14} />{p.sale_invoice_number || "بدون فاکتور مرتبط"}</div>
+              </div>
+              <div className="foot">
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--muted-2)" }}>مبلغ کل</div>
+                  <div className="num" style={{ fontWeight: 700, fontSize: 14 }}>{toman(p.total)}</div>
+                  <KindSplit goods={p.goods_total} service={p.service_total} />
+                </div>
+                <StatusBadge status={p.status} display={p.status_display} kind="purchase" />
+              </div>
+            </div>
+          ))}
+          {data.length === 0 && <div className="empty">هنوز خریدی ثبت نشده.</div>}
+        </div>
+      )}
 
       {open && (
         <Modal title={editId ? "ویرایش خرید" : "خرید جدید"} onClose={closeModal} wide>

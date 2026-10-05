@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../api";
 import { Modal, useList } from "../components.jsx";
+import { Avatar, Icon } from "../ui.jsx";
 
 export default function Items() {
   const { data, loading, error, reload, setError } = useList("/items");
@@ -9,31 +10,34 @@ export default function Items() {
   return (
     <div>
       <div className="toolbar">
-        <h1 className="page-title">کالا و خدمات</h1>
+        <div>
+          <h1 className="page-title">کالا و خدمات</h1>
+          <div className="page-sub">{data.length} مورد</div>
+        </div>
         <button className="btn primary" onClick={() => setEditing({})}>+ مورد جدید</button>
       </div>
       {error && <div className="error">{error}</div>}
-      <div className="card">
-        {loading ? <div className="empty">در حال بارگذاری…</div> : (
-          <table>
-            <thead><tr><th>نام</th><th>نوع</th><th>واحد</th><th>کد (SKU)</th><th></th></tr></thead>
-            <tbody>
-              {data.map((it) => (
-                <tr key={it.id}>
-                  <td>{it.name}</td>
-                  <td><span className={`badge ${it.kind === "GOODS" ? "blue" : "green"}`}>{it.kind_display}</span></td>
-                  <td>{it.unit}</td>
-                  <td dir="ltr" style={{ textAlign: "right" }}>{it.sku || "—"}</td>
-                  <td style={{ textAlign: "left" }}>
-                    <button className="btn sm" onClick={() => setEditing(it)}>ویرایش</button>
-                  </td>
-                </tr>
-              ))}
-              {data.length === 0 && <tr><td colSpan={5} className="empty">هنوز کالا/خدمتی ثبت نشده.</td></tr>}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {loading ? <div className="empty">در حال بارگذاری…</div> : (
+        <div className="cards-grid">
+          {data.map((it) => (
+            <div className="pcard" key={it.id}>
+              <div className="flex" style={{ alignItems: "flex-start", gap: 12 }}>
+                <Avatar name={it.name} size={46} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15 }}>{it.name}</div>
+                  <span className={`badge ${it.kind === "GOODS" ? "blue" : "green"}`} style={{ marginTop: 4, display: "inline-block" }}>{it.kind_display}</span>
+                </div>
+                <button className="dot-btn" onClick={() => setEditing(it)} title="ویرایش"><Icon name="edit" size={16} /></button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "13px 0 0" }}>
+                <div className="metaline"><Icon name="card" size={14} />واحد: {it.unit}</div>
+                <div className="metaline"><Icon name="doc" size={14} />کد: <span dir="ltr">{it.sku || "—"}</span></div>
+              </div>
+            </div>
+          ))}
+          {data.length === 0 && <div className="empty">هنوز کالا/خدمتی ثبت نشده.</div>}
+        </div>
+      )}
 
       {editing && (
         <ItemModal
