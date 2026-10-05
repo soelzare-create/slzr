@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- DaranX document template. Replace {{...}} placeholders and sample copy with real content.
+     Keep assets/ (font + logo) next to this file so it works offline. -->
+<title>{{عنوان سند}} — DaranX</title>
+<style id="fontface">
+@font-face{font-family:"Vazirmatn";src:url("assets/Vazirmatn-VF.woff2") format("woff2");
+  font-weight:100 900;font-style:normal;font-display:swap}
+</style>
+<style>
+:root{
+  --navy:#153A62; --navy-deep:#0E2749;
+  --steel:#3E7BB6; --steel-soft:#6FA3D2; --silver:#D9D9D9;
+  --ground:#F3F6FA; --surface:#FFFFFF; --surface-2:#EAF0F7;
+  --ink:#12233A; --ink-soft:#43566E; --ink-faint:#5E6E86;
+  --line:#DCE4EE; --line-strong:#C2D0E0;
+  --on-navy:#EAF1F8; --on-navy-soft:#AEC4DB; --on-navy-faint:#6E89A6;
+  --accent-solid:#153A62; --on-accent:#FFFFFF;
+  --grad:linear-gradient(120deg,#153A62 0%,#2E6098 55%,#3E7BB6 100%);
+  --grad-soft:linear-gradient(120deg,#153A62,#3E7BB6);
+  --shadow:0 1px 2px rgba(21,58,98,.06), 0 10px 30px rgba(21,58,98,.08);
+  --shadow-lift:0 2px 8px rgba(21,58,98,.09), 0 22px 60px rgba(21,58,98,.16);
+  --r-sm:10px; --r-md:16px; --r-lg:26px;
+  --maxw:1160px; --gutter:clamp(1rem,4vw,2.5rem); --sp:clamp(4rem,8vw,7rem);
+  --font:"Vazirmatn",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --navy:#0C2036; --navy-deep:#081627;
+  --steel:#5B95CE; --steel-soft:#7FB0DF; --silver:#31465D;
+  --ground:#081320; --surface:#0F2338; --surface-2:#142B45;
+  --ink:#E9F0F8; --ink-soft:#A6BACF; --ink-faint:#8398AF;
+  --line:#1E3450; --line-strong:#2A4666;
+  --accent-solid:#5B95CE; --on-accent:#08151f;
+  --grad:linear-gradient(120deg,#1B4C7A 0%,#3E7BB6 55%,#7FB0DF 100%);
+  --grad-soft:linear-gradient(120deg,#2E6098,#7FB0DF);
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 12px 34px rgba(0,0,0,.4);
+  --shadow-lift:0 2px 8px rgba(0,0,0,.45), 0 26px 64px rgba(0,0,0,.55);
+}}
+:root[data-theme="dark"]{
+  --navy:#0C2036; --navy-deep:#081627; --steel:#5B95CE; --steel-soft:#7FB0DF; --silver:#31465D;
+  --ground:#081320; --surface:#0F2338; --surface-2:#142B45; --ink:#E9F0F8; --ink-soft:#A6BACF;
+  --ink-faint:#8398AF; --line:#1E3450; --line-strong:#2A4666; --accent-solid:#5B95CE; --on-accent:#08151f;
+  --grad:linear-gradient(120deg,#1B4C7A 0%,#3E7BB6 55%,#7FB0DF 100%);
+  --grad-soft:linear-gradient(120deg,#2E6098,#7FB0DF);
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 12px 34px rgba(0,0,0,.4);
+  --shadow-lift:0 2px 8px rgba(0,0,0,.45), 0 26px 64px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);background:var(--ground);color:var(--ink-soft);line-height:1.9;
+  -webkit-font-smoothing:antialiased}
+img{max-width:100%}
+h1,h2,h3{color:var(--ink);line-height:1.2;margin:0}
+h1{font-size:clamp(2.2rem,2.4vw+1.4rem,3.7rem);font-weight:900}
+h2{font-size:clamp(1.6rem,1.3rem+1.4vw,2.4rem);font-weight:800}
+h3{font-size:1.25rem;font-weight:800}
+a{color:var(--steel);text-decoration:none}
+.wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:var(--gutter)}
+.sec{padding-block:var(--sp)}
+.sec.alt{background:var(--surface-2)}
+
+/* nav / brand */
+.topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--ground) 88%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+.brand{display:flex;align-items:center;gap:.6rem;font-weight:900;font-size:1.3rem;color:var(--ink)}
+.brand .x{color:var(--steel)}
+.brand img{height:30px;width:auto}
+.theme-toggle{background:transparent;border:1px solid var(--line-strong);color:var(--ink-soft);
+  border-radius:999px;width:40px;height:40px;cursor:pointer;font-size:1.1rem}
+
+/* header rhythm */
+.eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-size:.85rem;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
+.eyebrow::before{content:"";width:26px;height:2px;background:var(--steel-soft);border-radius:2px}
+.sec-head{margin-bottom:1.8rem}
+.sec-head h2{margin-top:.6rem}
+.lead{color:var(--ink-soft);font-size:1.08rem;line-height:1.95;max-width:64ch;margin-top:1rem}
+.longcopy{color:var(--ink-soft);line-height:2.05;font-size:1.04rem}
+.longcopy p{margin:0 0 1.1rem}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;font-weight:800;
+  font-family:inherit;font-size:1rem;padding:.85rem 1.9rem;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.btn-primary{background:var(--accent-solid);color:var(--on-accent);box-shadow:var(--shadow)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift)}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line-strong)}
+.btn-light{background:#fff;color:var(--navy)}
+.btn-light:hover{transform:translateY(-2px)}
+
+/* pills */
+.chip{display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;padding:.4rem 1rem;
+  font-weight:700;font-size:.9rem;color:var(--steel);background:var(--surface-2);border:1px solid var(--line)}
+
+/* cover */
+.cover{position:relative;min-height:100vh;display:grid;place-items:center;text-align:center;
+  overflow:hidden;isolation:isolate;color:#fff;padding:var(--gutter)}
+.cover::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:radial-gradient(120% 95% at 72% 8%,var(--steel),var(--navy) 62%)}
+.cover .cbrand{height:46px;margin-bottom:2rem;filter:brightness(0) invert(1)}
+.cover h1{color:#fff;max-width:20ch;text-wrap:balance}
+.cover .csub{color:var(--on-navy);font-size:1.15rem;margin-top:1.2rem;max-width:52ch}
+.cover .cmeta{margin-top:2.2rem;color:var(--on-navy-soft);font-weight:700;letter-spacing:.04em}
+
+/* method strip */
+.mstrip{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1.5rem}
+.mstep{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:1.4rem}
+.mstep .n{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
+  background:var(--grad-soft);color:#fff;font-weight:800;margin-bottom:.7rem}
+.mstep h3{font-size:1.1rem}
+.mstep p{margin:.4rem 0 0;font-size:.95rem;color:var(--ink-faint)}
+@media(max-width:760px){.mstrip{grid-template-columns:repeat(2,1fr)}}
+
+/* outcomes */
+.outcomes{display:flex;flex-wrap:wrap;gap:.7rem 1.6rem;margin-top:1.6rem}
+.outcomes span{display:inline-flex;align-items:center;gap:.5rem;color:var(--ink-soft);font-weight:600}
+.outcomes svg{width:20px;height:20px;color:var(--steel);flex:none}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.2rem;margin-top:1.5rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.6rem;box-shadow:var(--shadow)}
+.card h3{margin-bottom:.5rem}
+.card .en{color:var(--steel);font-size:.82rem;font-weight:700;letter-spacing:.06em}
+.card p{margin:.6rem 0 0;color:var(--ink-faint)}
+
+/* banner (decorative; a text-labeled brand image is fine here) */
+.banner{position:relative;height:24vh;min-height:160px;max-height:300px;border-radius:var(--r-lg);
+  overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow-lift);background:var(--surface-2);margin-bottom:1.8rem}
+.banner img{width:100%;height:100%;object-fit:cover;display:block}
+.banner.noimg img{display:none}
+.banner .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:.55rem;
+  color:var(--ink-faint);font-weight:700;background:radial-gradient(120% 130% at 80% 0,
+  color-mix(in srgb,var(--steel) 16%,transparent),transparent 60%),var(--surface-2)}
+.banner:not(.noimg) .ph{display:none}
+
+/* table */
+table{width:100%;border-collapse:collapse;margin-top:1.4rem;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+th,td{padding:.9rem 1.1rem;text-align:start;border-bottom:1px solid var(--line)}
+th{background:var(--surface-2);color:var(--ink);font-weight:800}
+tr:last-child td{border-bottom:0}
+
+/* cta */
+.cta{background:var(--grad);color:#fff;border-radius:var(--r-lg);padding:clamp(2rem,5vw,3.5rem);text-align:center}
+.cta h2{color:#fff}
+.cta p{color:var(--on-navy);max-width:52ch;margin:.8rem auto 1.6rem}
+
+/* footer */
+.foot{background:var(--navy-deep);color:var(--on-navy-soft);padding-block:2.4rem}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:center}
+.foot a{color:var(--on-navy)}
+.foot .ph-row{direction:ltr}
+
+/* motion */
+.reveal{opacity:0;transform:translateY(16px);animation:rise .7s ease forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/daranx-logo.svg" alt="DaranX" onerror="this.style.display='none'"><span>Daran<span class="x">X</span></span></a>
+    <button class="theme-toggle" id="tt" aria-label="روشن/تیره">◐</button>
+  </div>
+</header>
+
+<!-- ========== COVER ========== -->
+<section class="cover">
+  <img class="cbrand" src="assets/daranx-logo.svg" alt="DaranX" onerror="this.style.display='none'">
+  <span class="eyebrow" style="color:#cfe0f2">{{نوع سند: پروپوزال / فاینال‌بوک}}</span>
+  <h1 style="margin-top:1rem">{{عنوان پروژه برای مشتری}}</h1>
+  <p class="csub">{{یک جملهٔ کوتاه که وعدهٔ اصلی این سند را می‌گوید.}}</p>
+  <div class="cmeta">{{نام مشتری}} · {{تاریخ}}</div>
+</section>
+
+<!-- ========== EXECUTIVE SUMMARY ========== -->
+<section class="sec">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">خلاصهٔ اجرایی</span><h2>چرا این سند، و چه پیشنهادی داریم</h2></div>
+    <p class="lead">{{در ۳ تا ۵ خط: شناختِ ما از وضعیت مشتری و آنچه این سند پیشنهاد می‌دهد. با زبان کسب‌وکار، بدون اغراق.}}</p>
+  </div>
+</section>
+
+<!-- ========== UNDERSTANDING (شناخت) ========== -->
+<section class="sec alt">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">شناخت</span><h2>مسئلهٔ واقعی شما</h2></div>
+    <div class="longcopy" style="max-width:860px">
+      <p>{{نشان بدهید که مسئله را درست فهمیده‌اید — نیاز امروز، فشار فردا، نقاط حساس. اعتماد همین‌جا ساخته می‌شود.}}</p>
+      <p>{{طراحی مقدم بر اجراست: پیش از هر تجهیز و راهکار، اول مسئله را روشن می‌کنیم.}}</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== METHOD (روش کار) ========== -->
+<section class="sec">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">روش کار</span><h2>از شناخت تا پشتیبانی</h2></div>
+    <div class="mstrip">
+      <div class="mstep"><div class="n">۱</div><h3>شناخت</h3><p>{{بررسی وضعیت، نیاز و نقاط حساس.}}</p></div>
+      <div class="mstep"><div class="n">۲</div><h3>طراحی</h3><p>{{تعیین جای درست هر جزء در یک راهکار واحد.}}</p></div>
+      <div class="mstep"><div class="n">۳</div><h3>اجرا</h3><p>{{پیاده‌سازی با روش و مستندسازی دقیق.}}</p></div>
+      <div class="mstep"><div class="n">۴</div><h3>پشتیبانی</h3><p>{{نگهداری و توسعهٔ پیوسته پس از تحویل.}}</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SCOPE / SOLUTION ========== -->
+<section class="sec alt">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">محدوده و راهکار</span><h2>آنچه ارائه می‌دهیم</h2></div>
+    <div class="cards">
+      <div class="card"><h3>{{سرفصل ۱}}</h3><div class="en">{{English label}}</div><p>{{توضیح کوتاه.}}</p></div>
+      <div class="card"><h3>{{سرفصل ۲}}</h3><div class="en">{{English label}}</div><p>{{توضیح کوتاه.}}</p></div>
+      <div class="card"><h3>{{سرفصل ۳}}</h3><div class="en">{{English label}}</div><p>{{توضیح کوتاه.}}</p></div>
+    </div>
+    <div class="outcomes">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>{{نتیجهٔ ۱}}</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>{{نتیجهٔ ۲}}</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>{{نتیجهٔ ۳}}</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== EVIDENCE (optional — only if real) ========== -->
+<section class="sec">
+  <div class="wrap reveal">
+    <figure class="banner" style="margin:0 0 1.8rem">
+      <img src="assets/sample-banner.jpg" alt="" onerror="this.closest('.banner').classList.add('noimg')">
+      <div class="ph">تصویر بنر — {{موضوع}}</div>
+    </figure>
+    <div class="sec-head"><span class="eyebrow">نمونه‌کار</span><h2>سابقهٔ کاری مرتبط</h2></div>
+    <p class="lead">{{فقط نمونه‌کارهای واقعی. اگر نداری، این بخش را حذف کن.}}</p>
+  </div>
+</section>
+
+<!-- ========== TIMELINE / COMMERCIALS ========== -->
+<section class="sec alt">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">زمان‌بندی و شرایط</span><h2>مراحل و سرمایه‌گذاری</h2></div>
+    <table>
+      <thead><tr><th>مرحله</th><th>شرح</th><th>مدت</th><th>مبلغ (ریال)</th></tr></thead>
+      <tbody>
+        <tr><td>{{شناخت و طراحی}}</td><td>{{شرح}}</td><td>{{… روز}}</td><td>{{…}}</td></tr>
+        <tr><td>{{اجرا}}</td><td>{{شرح}}</td><td>{{… روز}}</td><td>{{…}}</td></tr>
+        <tr><td>{{پشتیبانی}}</td><td>{{شرح}}</td><td>{{دوره}}</td><td>{{…}}</td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--ink-faint);font-size:.9rem;margin-top:1rem">{{یادداشت شرایط پرداخت، اعتبار پیشنهاد و موارد خارج از محدوده.}}</p>
+  </div>
+</section>
+
+<!-- ========== CLOSE / CTA ========== -->
+<section class="sec">
+  <div class="wrap reveal">
+    <div class="cta">
+      <span class="eyebrow" style="color:#cfe0f2">قدم بعدی</span>
+      <h2 style="margin-top:.6rem">{{یک گفتگوی کوتاه، شروع کار درست است.}}</h2>
+      <p>{{دعوت به اقدام — روشن و مطمئن.}}</p>
+      <a class="btn btn-light" href="tel:+982188964116">تماس بگیرید</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="brand" style="color:#fff">Daran<span style="color:var(--steel-soft)">X</span></div>
+    <div class="ph-row"><a href="tel:+982188964116">۰۲۱-۸۸۹۶۴۱۱۶</a> · <a href="tel:+982188966904">۸۸۹۶۶۹۰۴</a> · <a href="tel:+989359370910">۰۹۳۵-۹۳۷۰۹۱۰</a></div>
+    <div>تهران، میدان فاطمی، نبش چهلستون، ساختمان چهلستون، طبقه ۲، واحد ۲۰۲</div>
+    <div><a href="https://www.daranx.com">www.DaranX.com</a> — همه چیز سرِ جای درستش.</div>
+  </div>
+</footer>
+
+<script>
+  // optional light/dark toggle (document still respects prefers-color-scheme by default)
+  (function(){var r=document.documentElement,b=document.getElementById('tt');if(!b)return;
+    try{var s=localStorage.getItem('dx-doc-theme');if(s)r.setAttribute('data-theme',s);}catch(e){}
+    b.addEventListener('click',function(){var cur=r.getAttribute('data-theme');
+      var dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+      var next=dark?'light':'dark';r.setAttribute('data-theme',next);
+      try{localStorage.setItem('dx-doc-theme',next)}catch(e){}});
+  })();
+</script>
+</body>
+</html>
