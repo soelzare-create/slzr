@@ -18,7 +18,6 @@ from apps.core.services import log_action
 
 from .models import Account, JournalEntry, JournalLine
 
-
 # --- Well-known chart-of-accounts codes (seeded in management.seed) ---------
 CASH = "1100"                # صندوق/بانک
 ACCOUNTS_RECEIVABLE = "1200"  # حساب‌های دریافتنی (مشتری بدهکار)
@@ -63,8 +62,8 @@ def post_entry(
     on_date: date | None = None,
 ) -> JournalEntry:
     """Create a balanced :class:`JournalEntry`. Atomic; rejects if unbalanced."""
-    total_debit = sum((l.debit for l in lines), Decimal("0"))
-    total_credit = sum((l.credit for l in lines), Decimal("0"))
+    total_debit = sum((line.debit for line in lines), Decimal("0"))
+    total_credit = sum((line.credit for line in lines), Decimal("0"))
     if total_debit != total_credit or total_debit == 0:
         raise UnbalancedEntry(
             f"سند متوازن نیست: بدهکار {total_debit} ≠ بستانکار {total_credit}"
@@ -78,16 +77,16 @@ def post_entry(
         created_by=actor if getattr(actor, "is_authenticated", False) else None,
     )
     accounts = {a.code: a for a in Account.objects.filter(
-        code__in={l.account_code for l in lines}
+        code__in={line.account_code for line in lines}
     )}
-    for l in lines:
+    for line in lines:
         JournalLine.objects.create(
             entry=entry,
-            account=accounts[l.account_code],
-            party=l.party,
-            debit=l.debit,
-            credit=l.credit,
-            description=l.description,
+            account=accounts[line.account_code],
+            party=line.party,
+            debit=line.debit,
+            credit=line.credit,
+            description=line.description,
         )
     log_action(actor, "accounting.post_entry", f"accounting.journalentry:{entry.id}",
                source_ref=source_ref, amount=str(total_debit))

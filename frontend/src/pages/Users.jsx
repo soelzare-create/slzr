@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, rows } from "../api";
 import { useAuth } from "../auth.jsx";
 import { Modal, useOptions } from "../components.jsx";
+import { Avatar, Icon, Menu } from "../ui.jsx";
 
 // User (account) administration — creating employees/managers and assigning
 // their roles. System-admin only (Section 3, decision #8).
@@ -48,41 +49,38 @@ export default function Users() {
         <button className="btn primary" onClick={() => setEditing({})}>+ کاربر جدید</button>
       </div>
       {error && <div className="error">{error}</div>}
-      <div className="card">
-        {loading ? <div className="empty">در حال بارگذاری…</div> : (
-          <table>
-            <thead><tr><th>نام</th><th>شماره تماس</th><th>نقش‌ها</th><th>وضعیت</th><th></th></tr></thead>
-            <tbody>
-              {list.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.full_name}{u.is_system_admin && <span className="badge blue" style={{ marginInlineStart: 6 }}>ادمین سیستم</span>}</td>
-                  <td dir="ltr" style={{ textAlign: "right" }}>{u.phone}</td>
-                  <td>
-                    <div className="flex" style={{ gap: 5, flexWrap: "wrap" }}>
-                      {(u.role_codes || []).map((c) => <span key={c} className="badge gray">{roleName(c)}</span>)}
-                      {(u.role_codes || []).length === 0 && !u.is_system_admin && <span className="muted">—</span>}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`badge ${u.is_active ? "green" : "red"}`}>{u.is_active ? "فعال" : "غیرفعال"}</span>
-                  </td>
-                  <td style={{ textAlign: "left" }}>
-                    <div className="flex" style={{ gap: 6, justifyContent: "flex-end" }}>
-                      <button className="btn sm" onClick={() => setEditing(u)}>ویرایش</button>
-                      {u.id !== user.id && (
-                        <button className="btn sm" onClick={() => toggleActive(u)}>
-                          {u.is_active ? "غیرفعال‌سازی" : "فعال‌سازی"}
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {list.length === 0 && <tr><td colSpan={5} className="empty">هنوز کاربری ثبت نشده.</td></tr>}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {loading ? <div className="empty">در حال بارگذاری…</div> : (
+        <div className="cards-grid">
+          {list.map((u) => {
+            const menu = [{ label: "ویرایش", icon: "edit", onClick: () => setEditing(u) }];
+            if (u.id !== user.id) {
+              menu.push({ label: u.is_active ? "غیرفعال‌سازی" : "فعال‌سازی",
+                icon: "alert", color: u.is_active ? "#e0483d" : "#10a86b", onClick: () => toggleActive(u) });
+            }
+            return (
+              <div className="pcard" key={u.id}>
+                <div className="flex" style={{ alignItems: "flex-start", gap: 12 }}>
+                  <Avatar name={u.full_name} size={46} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>{u.full_name}</div>
+                    <div className="metaline" style={{ marginTop: 3 }}><Icon name="phone" size={14} /><span dir="ltr">{u.phone}</span></div>
+                  </div>
+                  <Menu title="اقدامات با این کاربر" items={menu} />
+                </div>
+                <div className="flex" style={{ gap: 5, flexWrap: "wrap", margin: "13px 0 0" }}>
+                  {u.is_system_admin && <span className="badge blue">ادمین سیستم</span>}
+                  {(u.role_codes || []).map((c) => <span key={c} className="badge gray">{roleName(c)}</span>)}
+                  {(u.role_codes || []).length === 0 && !u.is_system_admin && <span className="muted" style={{ fontSize: 12.5 }}>بدون نقش</span>}
+                </div>
+                <div className="foot" style={{ justifyContent: "flex-end" }}>
+                  <span className={`badge ${u.is_active ? "green" : "red"}`}>{u.is_active ? "فعال" : "غیرفعال"}</span>
+                </div>
+              </div>
+            );
+          })}
+          {list.length === 0 && <div className="empty">هنوز کاربری ثبت نشده.</div>}
+        </div>
+      )}
 
       {editing && (
         <UserModal user={editing} roles={roles}

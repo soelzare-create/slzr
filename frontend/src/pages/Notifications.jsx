@@ -21,31 +21,33 @@ export default function Notifications() {
   return (
     <div>
       <div className="toolbar">
-        <h1 className="page-title">اعلان‌ها</h1>
+        <div>
+          <h1 className="page-title">اعلان‌ها</h1>
+          <div className="page-sub">{data.length} اعلان</div>
+        </div>
         <button className="btn sm" onClick={readAll}>خواندن همه</button>
       </div>
       {error && <div className="error">{error}</div>}
-      <div className="card">
-        {loading ? <div className="empty">در حال بارگذاری…</div> : (
-          <table>
-            <tbody>
-              {data.map((n) => (
-                <tr key={n.id} style={n.is_read ? { opacity: 0.55 } : undefined}>
-                  <td style={{ width: 40 }}>{ICON[n.kind] || "📌"}</td>
-                  <td>
-                    <div>{n.message}</div>
-                    <div className="muted" style={{ fontSize: 12 }}>{n.kind_display}</div>
-                  </td>
-                  <td style={{ width: 110 }}>
-                    {!n.is_read && <button className="btn sm" onClick={() => markRead(n.id)}>خواندم</button>}
-                  </td>
-                </tr>
-              ))}
-              {data.length === 0 && <tr><td className="empty">اعلانی وجود ندارد.</td></tr>}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {loading ? <div className="empty">در حال بارگذاری…</div> : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {data.map((n) => (
+            <div className="pcard" key={n.id} style={n.is_read ? { opacity: 0.55 } : undefined}>
+              <div className="flex" style={{ alignItems: "flex-start", gap: 12 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 12, background: "#eef1f7",
+                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0,
+                }}>{ICON[n.kind] || "📌"}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14 }}>{n.message}</div>
+                  <div className="muted" style={{ fontSize: 12, marginTop: 3 }}>{n.kind_display}</div>
+                </div>
+                {!n.is_read && <button className="btn sm" onClick={() => markRead(n.id)}>خواندم</button>}
+              </div>
+            </div>
+          ))}
+          {data.length === 0 && <div className="empty">اعلانی وجود ندارد.</div>}
+        </div>
+      )}
     </div>
   );
 }

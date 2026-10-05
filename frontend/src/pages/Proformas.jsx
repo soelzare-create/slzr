@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, rows, toman } from "../api";
+import { api, rows, toman, jalali } from "../api";
 import { Modal, StatusBadge, useList, useOptions, useItems, ItemPicker } from "../components.jsx";
+import { Avatar, Icon, Menu } from "../ui.jsx";
 
 export default function Proformas() {
   const { data, loading, error, reload, setError } = useList("/proformas");
@@ -72,42 +73,55 @@ export default function Proformas() {
     window.open(`${location.origin}${location.pathname}#/print/proforma/${pid}`, "_blank");
   }
 
+  function menuFor(p) {
+    const items = [{ label: "چاپ", icon: "doc", onClick: () => openPrint(p.id) }];
+    if (p.status === "DRAFT") {
+      items.push({ label: "ویرایش", icon: "edit", onClick: () => startEdit(p) });
+      items.push({ label: "تبدیل به فاکتور", icon: "invoice", color: "#10a86b", onClick: () => act(p.id, "convert") });
+      items.push({ sep: true });
+      items.push({ label: "ابطال", icon: "close", color: "#e0483d", onClick: () => act(p.id, "cancel") });
+    }
+    return items;
+  }
+
   return (
     <div>
       <div className="toolbar">
-        <h1 className="page-title">پیش‌فاکتورها</h1>
+        <div>
+          <h1 className="page-title">پیش‌فاکتورها</h1>
+          <div className="page-sub">{data.length} پیش‌فاکتور</div>
+        </div>
         <button className="btn primary" onClick={openNew}>+ پیش‌فاکتور جدید</button>
       </div>
       {error && <div className="error">{error}</div>}
-      <div className="card">
-        {loading ? <div className="empty">در حال بارگذاری…</div> : (
-          <table>
-            <thead><tr><th>شماره</th><th>مشتری</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
-            <tbody>
-              {data.map((p) => (
-                <tr key={p.id}>
-                  <td className="mono">{p.number}</td>
-                  <td>{p.customer_name}</td>
-                  <td className="mono">
-                    {toman(p.total)}
-                    <KindSplit goods={p.goods_total} service={p.service_total} />
-                  </td>
-                  <td><StatusBadge status={p.status} display={p.status_display} /></td>
-                  <td className="flex" style={{ flexWrap: "wrap" }}>
-                    <button className="btn sm" onClick={() => openPrint(p.id)}>چاپ</button>
-                    {p.status === "DRAFT" && <button className="btn sm" onClick={() => startEdit(p)}>ویرایش</button>}
-                    {p.status === "DRAFT" &&
-                      <button className="btn success sm" onClick={() => act(p.id, "convert")}>تبدیل به فاکتور</button>}
-                    {p.status === "DRAFT" &&
-                      <button className="btn danger sm" onClick={() => act(p.id, "cancel")}>ابطال</button>}
-                  </td>
-                </tr>
-              ))}
-              {data.length === 0 && <tr><td colSpan={5} className="empty">هنوز پیش‌فاکتوری ثبت نشده.</td></tr>}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {loading ? <div className="empty">در حال بارگذاری…</div> : (
+        <div className="cards-grid">
+          {data.map((p) => (
+            <div className="pcard" key={p.id}>
+              <div className="flex" style={{ alignItems: "flex-start", gap: 12 }}>
+                <Avatar name={p.customer_name} size={46} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="mono" style={{ fontWeight: 600, fontSize: 15 }}>{p.number}</div>
+                  <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>{p.customer_name}</div>
+                </div>
+                <Menu title="اقدامات با این پیش‌فاکتور" items={menuFor(p)} />
+              </div>
+              <div style={{ margin: "13px 0 0" }}>
+                <div className="metaline"><Icon name="calendar" size={14} />{jalali(p.created_at)}</div>
+              </div>
+              <div className="foot">
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--muted-2)" }}>مبلغ کل</div>
+                  <div className="num" style={{ fontWeight: 700, fontSize: 14 }}>{toman(p.total)}</div>
+                  <KindSplit goods={p.goods_total} service={p.service_total} />
+                </div>
+                <StatusBadge status={p.status} display={p.status_display} />
+              </div>
+            </div>
+          ))}
+          {data.length === 0 && <div className="empty">هنوز پیش‌فاکتوری ثبت نشده.</div>}
+        </div>
+      )}
 
       {open && (
         <Modal title={editId ? "ویرایش پیش‌فاکتور" : "پیش‌فاکتور جدید"} onClose={closeModal} wide>

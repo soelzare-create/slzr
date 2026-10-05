@@ -9,9 +9,9 @@ from rest_framework import serializers, views
 from rest_framework.response import Response
 
 from apps.accounts.permissions import HasPermissionCode
+from apps.sales import services as sales_services
 from apps.sales.models import Invoice
 from apps.sales.serializers import InvoiceSerializer
-from apps.sales import services as sales_services
 
 
 class _LineIn(serializers.Serializer):
@@ -47,7 +47,7 @@ class DirectInvoiceView(views.APIView):
             invoice_type=v["type"],
             customer=Party.objects.get(pk=v["customer"]),
             owner=request.user,
-            lines_data=[dict(l) for l in v["lines"]],
+            lines_data=[dict(line) for line in v["lines"]],
             actor=request.user,
             period_start=v.get("period_start"),
             period_end=v.get("period_end"),

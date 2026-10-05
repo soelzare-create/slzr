@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from rest_framework import serializers
 
-from .models import Permission, Role, System, User, UserRole
+from .models import Role, System, User, UserRole
 
 
 class SystemSerializer(serializers.ModelSerializer):

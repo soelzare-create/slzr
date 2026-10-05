@@ -12,8 +12,8 @@ from django.db import transaction
 
 from apps.accounting import services as acc
 from apps.accounting.services import Line
-from apps.core.services import log_action, notify
 from apps.core.models import Notification
+from apps.core.services import log_action, notify
 
 from .models import Purchase
 

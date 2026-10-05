@@ -13,10 +13,10 @@ import pytest
 
 from apps.accounting.models import JournalEntry, JournalLine
 from apps.core.models import Item, Party
-from apps.procurement.models import Purchase, PurchaseLine
 from apps.procurement import services as proc
-from apps.sales.models import Invoice, Proforma, ProformaLine, ProformaStatus
+from apps.procurement.models import Purchase, PurchaseLine
 from apps.sales import services as sales
+from apps.sales.models import Invoice, Proforma, ProformaLine, ProformaStatus
 
 pytestmark = pytest.mark.django_db
 

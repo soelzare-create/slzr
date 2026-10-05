@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, toman } from "../api";
+import { api, toman, jalali } from "../api";
 import { Modal, StatusBadge, useList, useOptions, useItems, ItemPicker } from "../components.jsx";
-import { JalaliDatePicker } from "../ui.jsx";
+import { Avatar, Icon, Menu, JalaliDatePicker } from "../ui.jsx";
 import { useAuth } from "../auth.jsx";
 import { KindSplit } from "./Proformas.jsx";
 
@@ -62,52 +62,63 @@ export default function Invoices() {
     catch (err) { setError(err.message); }
   }
 
+  function menuFor(inv) {
+    const items = [{ label: "چاپ", icon: "doc", onClick: () => openPrint("invoice", inv.id) }];
+    if (inv.type === "GOODS") {
+      items.push({ label: "حواله تحویل", icon: "cart", onClick: () => openPrint("delivery", inv.id) });
+    }
+    if (can("sales.edit")) {
+      items.push({ label: "ویرایش", icon: "edit", onClick: () => setEditingMeta(inv) });
+    }
+    if (inv.status === "ISSUED") {
+      items.push({ sep: true });
+      items.push({ label: "مرجوعی", icon: "receive", color: "#e0912f", onClick: () => reverse(inv.id, true) });
+      items.push({ label: "ابطال", icon: "close", color: "#e0483d", onClick: () => reverse(inv.id, false) });
+    }
+    return items;
+  }
+
   return (
     <div>
       <div className="toolbar">
-        <h1 className="page-title">فاکتورها</h1>
+        <div>
+          <h1 className="page-title">فاکتورها</h1>
+          <div className="page-sub">{data.length} فاکتور</div>
+        </div>
         {can("technical.edit") && (
           <button className="btn primary" onClick={() => setOpen(true)}>+ فاکتور جدید</button>
         )}
       </div>
       {error && <div className="error">{error}</div>}
-      <div className="card">
-        {loading ? <div className="empty">در حال بارگذاری…</div> : (
-          <table>
-            <thead><tr><th>شماره</th><th>نوع</th><th>مشتری</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead>
-            <tbody>
-              {data.map((inv) => (
-                <tr key={inv.id}>
-                  <td className="mono">{inv.number}</td>
-                  <td><span className="badge gray">{inv.type_display}</span></td>
-                  <td>{inv.customer_name}</td>
-                  <td className="mono">
-                    {toman(inv.total)}
-                    <KindSplit goods={inv.goods_total} service={inv.service_total} />
-                  </td>
-                  <td><StatusBadge status={inv.status} display={inv.status_display} kind="invoice" /></td>
-                  <td className="flex">
-                    <button className="btn sm" onClick={() => openPrint("invoice", inv.id)}>چاپ</button>
-                    {inv.type === "GOODS" && (
-                      <button className="btn sm" onClick={() => openPrint("delivery", inv.id)}>حواله تحویل</button>
-                    )}
-                    {can("sales.edit") && (
-                      <button className="btn sm" onClick={() => setEditingMeta(inv)}>ویرایش</button>
-                    )}
-                    {inv.status === "ISSUED" && (
-                      <>
-                        <button className="btn sm" onClick={() => reverse(inv.id, true)}>مرجوعی</button>
-                        <button className="btn danger sm" onClick={() => reverse(inv.id, false)}>ابطال</button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {data.length === 0 && <tr><td colSpan={6} className="empty">هنوز فاکتوری صادر نشده.</td></tr>}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {loading ? <div className="empty">در حال بارگذاری…</div> : (
+        <div className="cards-grid">
+          {data.map((inv) => (
+            <div className="pcard" key={inv.id}>
+              <div className="flex" style={{ alignItems: "flex-start", gap: 12 }}>
+                <Avatar name={inv.customer_name} size={46} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="mono" style={{ fontWeight: 600, fontSize: 15 }}>{inv.number}</div>
+                  <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>{inv.customer_name}</div>
+                  <span className="badge gray" style={{ marginTop: 5, display: "inline-block" }}>{inv.type_display}</span>
+                </div>
+                <Menu title="اقدامات با این فاکتور" items={menuFor(inv)} />
+              </div>
+              <div style={{ margin: "13px 0 0" }}>
+                <div className="metaline"><Icon name="calendar" size={14} />{jalali(inv.date || inv.created_at)}</div>
+              </div>
+              <div className="foot">
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--muted-2)" }}>مبلغ کل</div>
+                  <div className="num" style={{ fontWeight: 700, fontSize: 14 }}>{toman(inv.total)}</div>
+                  <KindSplit goods={inv.goods_total} service={inv.service_total} />
+                </div>
+                <StatusBadge status={inv.status} display={inv.status_display} kind="invoice" />
+              </div>
+            </div>
+          ))}
+          {data.length === 0 && <div className="empty">هنوز فاکتوری صادر نشده.</div>}
+        </div>
+      )}
       <p className="muted" style={{ fontSize: 13 }}>
         فاکتور فروش کالا با کنترل قانون ۵٪ و ثبت بهای‌تمام‌شده از مسیر «پیش‌فاکتور → تبدیل به فاکتور» ساخته می‌شود.
         فاکتور مستقیم اینجا (خدمات، پشتیبانی، یا فروش کالای بدون خرید مبدأ) فقط درآمد را ثبت می‌کند و بهای‌تمام‌شده ندارد.
@@ -190,7 +201,7 @@ function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
   const [lines, setLines] = useState(
     (invoice.lines || []).map((l) => ({
       id: l.id, item_name: l.item_name, item_kind_display: l.item_kind_display,
-      quantity: l.quantity, unit_price: l.unit_price, serials: l.serials || [],
+      quantity: l.quantity, unit_price: l.unit_price,
     }))
   );
   const [error, setError] = useState(null);
@@ -240,7 +251,7 @@ function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
             <label className="field" style={{ marginBottom: 6 }}>مبلغ و اقلام</label>
             <div className="card" style={{ background: "#fafbfc", marginBottom: 14 }}>
               <table className="line-items">
-                <thead><tr><th>کالا/خدمت</th><th>دسته</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th><th>سریال‌ها</th></tr></thead>
+                <thead><tr><th>کالا/خدمت</th><th>دسته</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead>
                 <tbody>
                   {lines.map((l, i) => (
                     <tr key={l.id}>
@@ -251,11 +262,6 @@ function InvoiceMetaModal({ invoice, onClose, onSaved, onError }) {
                       <td style={{ width: 150 }}><input type="number" min="0" value={l.unit_price}
                         onChange={(e) => setLine(i, { unit_price: e.target.value })} /></td>
                       <td className="mono">{toman(Number(l.quantity || 0) * Number(l.unit_price || 0))}</td>
-                      <td style={{ fontSize: 11.5 }}>
-                        {(l.serials || []).length
-                          ? (l.serials || []).map((s) => <span key={s} className="badge blue" style={{ fontSize: 10, marginInlineEnd: 3 }} dir="ltr">{s}</span>)
-                          : <span className="muted">—</span>}
-                      </td>
                     </tr>
                   ))}
                 </tbody>

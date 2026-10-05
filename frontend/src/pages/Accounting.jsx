@@ -96,32 +96,32 @@ function FinanceDocs({ reloadKey }) {
     };
   }
 
+  if (docs.length === 0) {
+    return <div className="empty">هنوز سند مالی‌ای ثبت نشده. با «سند مالی جدید» شروع کنید.</div>;
+  }
   return (
-    <div className="card" style={{ padding: "6px 20px 10px" }}>
-      {docs.length === 0 ? <div className="empty">هنوز سند مالی‌ای ثبت نشده. با «سند مالی جدید» شروع کنید.</div> : (
-        <table>
-          <tbody>
-            {docs.map((d) => {
-              const m = meta(d);
-              const cancelled = d.status === "CANCELLED";
-              return (
-                <tr key={d._t + d.id} style={cancelled ? { opacity: .5 } : undefined}>
-                  <td style={{ width: 46, border: docs[0] === d ? "none" : undefined }}>
-                    <div className="avatar" style={{ width: 34, height: 34, borderRadius: 10, background: m.bg }}>
-                      <Icon name={m.icon} size={16} color={m.color} />
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600, fontSize: 13.5 }}>{m.title}{cancelled && <span className="badge red" style={{ marginInlineStart: 8 }}>ابطال</span>}</div>
-                    <div className="muted" style={{ fontSize: 11.5 }}>{m.sub} · {jalali(d.date)}</div>
-                  </td>
-                  <td className="num" style={{ textAlign: "left", fontWeight: 700, color: m.color, width: 160 }}>{m.sign} {toman(d.amount)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+    <div className="cards-grid">
+      {docs.map((d) => {
+        const m = meta(d);
+        const cancelled = d.status === "CANCELLED";
+        return (
+          <div className="pcard" key={d._t + d.id} style={cancelled ? { opacity: .5 } : undefined}>
+            <div className="flex" style={{ alignItems: "flex-start", gap: 12 }}>
+              <div className="avatar" style={{ width: 40, height: 40, borderRadius: 12, background: m.bg }}>
+                <Icon name={m.icon} size={18} color={m.color} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{m.title}{cancelled && <span className="badge red" style={{ marginInlineStart: 8 }}>ابطال</span>}</div>
+                <div className="muted" style={{ fontSize: 11.5, marginTop: 2 }}>{m.sub}</div>
+              </div>
+            </div>
+            <div className="foot">
+              <div className="metaline"><Icon name="calendar" size={14} />{jalali(d.date)}</div>
+              <div className="num" style={{ fontWeight: 700, color: m.color }}>{m.sign} {toman(d.amount)}</div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
