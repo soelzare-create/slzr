@@ -2,10 +2,11 @@
 Fixture boxes come from the client DXF (dxf_tools.py inserts / grid); every shelf face and refrigerated unit gets one category.
 
 NOTE ON END CAPS & PROMOTIONS (سرلاین‌ها و پیشنهادات):
-All end caps and promotional items (A1N, A2N, A1S, A2S) must be assigned TEMPORARILY to specific items
+All end caps and promotional items (A1N, A2N, A1S, A2S, F1, X1) must be assigned TEMPORARILY to specific items
 within their category line. They rotate with promotions and are NOT permanent category slots.
 Preferably assign to items that fit naturally within the category of their line.
-E.g., A1N (end cap on A1 gondola, north) should feature promotional snacks, not pasta."""
+E.g., A1N (end cap on A1 gondola, north) should feature promotional snacks, not pasta.
+F1 (entrance pallet) carries rotating tempting offers / special discounts, never a fixed SKU."""
 from layout_common import FAM, R, label_fit
 
 Z = []  # (code, family, polygon, fa, en, fixture)
@@ -14,7 +15,7 @@ def z(code, fam, poly, fa, en, fix): Z.append((code, fam, poly, fa, en, fix))
 # ---- 1. entrance (bottom right) and fresh
 z("C1", "stap", R(30.49, 10.21, 31.42, 12.19), "انواع روغن", "Oils", "۲ ماژول قفسهٔ نیمه‌سنگین")
 z("C2", "stap", R(30.49, 12.15, 31.42, 15.10), "برنج و روغن (کیسه و گالن)", "Rice & oil", "۳ ماژول قفسهٔ نیمه‌سنگین")
-z("F1", "frsh", R(26.50, 13.40, 28.90, 13.95), "میوه و سبزی (پالت)", "Produce on pallets", "پالت‌چینی ۵ ردیفه")
+z("F1", "promo", R(26.50, 13.40, 28.90, 13.95), "پیشنهاد وسوسه‌انگیز و تخفیفات ویژه", "Tempting offers & special discounts", "پالت‌چینی ۵ ردیفه")
 # ---- 2. right pocket: service counter and wall rack
 z("S1", "bfst", R(26.50, 14.50, 29.20, 15.70), "آجیل و خشکبار (سرو وزنی)", "Nuts & dried fruit (served)", "پیشخوان آجیل با فروشنده")
 z("W1", "bfst", R(27.20, 16.10, 30.85, 16.50), "آجیل، حبوبات و ادویه جات فله", "Bulk nuts, pulses & spices", "استند آجیل ۵ طبقه")
@@ -39,7 +40,7 @@ z("A2S", "promo", R(23.96, 13.51, 24.97, 14.45), "پیشنهاد سلولزی", 
 # ---- 5. left wall: ice cream and snacks
 z("L1", "snack", R(18.80, 16.70, 19.35, 18.70), "بیسکویت، کیک، تنقلات، پفک، چیپس و انواع آلوچه", "Biscuits, cakes, snacks, chips & dried fruit", "قفسهٔ دیواری ۲ ماژول")
 z("L2", "cold", R(18.85, 12.40, 19.95, 15.40), "بستنی", "Ice cream", "۲ فریزر بستنی ۱٫۵ متر")
-z("L3", "snack", R(18.80, 11.30, 19.35, 12.40), "شکلات و آدامس (اندازه خاص)", "Chocolate & gum (special size)", "قفسهٔ دیواری ۱ ماژول")
+z("L3", "snack", R(18.80, 9.90, 19.35, 12.40), "شکلات و آدامس (اندازه خاص، طبق خط‌کشی مشتری)", "Chocolate & gum (special size, per client markup)", "قفسهٔ دیواری ۲ ماژول")
 # ---- 6. bottom: serve-over cold counter, drinks chiller, till impulse
 z("D2", "cold", R(20.60, 10.73, 24.30, 11.75), "گوشت و مرغ سرد شده، پنیر وزنی و لبنیات سنتی", "Chilled meat & poultry, loose cheese, traditional dairy", "یخچال ویترینی روباز ۳٫۷۵ متر + میز ترازو")
 z("D1", "cold", R(23.23, 9.10, 24.79, 9.97), "نوشابه و آب معدنی سرد", "Cold drinks & mineral water", "یخچال ایستاده ۲ در")
@@ -49,7 +50,7 @@ z("K2", "snack", R(28.26, 10.20, 28.88, 12.77), "باتری و آدامس", "Til
 CODES = {c[0] for c in Z}
 assert len(CODES) == len(Z), "duplicate code"
 
-SHORT = {"C1": "روغن", "C2": "برنج", "F1": "میوه و سبزی", "S1": "آجیل و خشکبار", "W1": "آجیل فله", "T1": "چای و صبحانه",
+SHORT = {"C1": "روغن", "C2": "برنج", "F1": "پیشنهاد ویژه", "S1": "آجیل و خشکبار", "W1": "آجیل فله", "T1": "چای و صبحانه",
          "M1": "لبنیات و تخم‌مرغ", "Z1": "منجمد", "X1": "پیشنهاد هفته", "A1W": "ماکارانی و ادویه", "A1E": "کنسرو و رب", "A2W": "شوینده",
          "A2E": "بهداشتی و کاغذی", "A1S": "رب", "L1": "بیسکویت و تنقلات", "L2": "بستنی", "L3": "شکلات", "D2": "گوشت و مرغ سرد", "D1": "نوشابه سرد",
          "K1": "شکلات", "K2": "باتری"}
@@ -84,17 +85,17 @@ META = dict(
     crop=(18.35, 8.2, 13.5, 14.3),
     stats=[("جایگاه دسته‌کالا", "{zones}"), ("گروه کالایی", 7), ("متر یخچال و فریزر", 14), ("گوندولا", 2)],
     decisions=[
-        "ورودی: پالت میوه و سبزی؛ روغن و برنج روی قفسهٔ نیمه‌سنگین دیوار راست. [[F1]] [[C1]] [[C2]]",
+        "ورودی: پالت پیشنهاد ویژه و تخفیف؛ روغن و برنج روی قفسهٔ نیمه‌سنگین دیوار راست. [[F1]] [[C1]] [[C2]]",
         "آجیل و خشکبار در پیشخوان سرو گوشهٔ راست، درست روی مسیر. [[S1]]",
         "صبحانه و چای روی دیوار بالا، کنار لبنیات و منجمد. [[T1]] [[M1]]",
         "گوندولای چپ: چیپس (قفسهٔ سبدی) و خوراکی خشک؛ گوندولای راست: بهداشتی و نظافت، جدا از خوراکی. [[A1W]] [[A2W]]",
     ],
-    route=[("frsh", "ورود ← پالت میوه و سبزی، آب، برنج و روغن"), ("bfst", "آجیل و خشکبار (پیشخوان)"), ("cold", "صبحانه ← لبنیات ← منجمد (دیوار بالا)"),
+    route=[("frsh", "ورود ← پالت پیشنهاد ویژه، روغن و برنج"), ("bfst", "آجیل و خشکبار (پیشخوان)"), ("cold", "صبحانه ← لبنیات ← منجمد (دیوار بالا)"),
            ("snack", "چیپس و خوراکی خشک (گوندولای چپ)"), ("nonf", "بهداشتی و نظافت (گوندولای راست)"),
            ("stap", "بستنی و شیرینی (دیوار چپ)"), ("drnk", "پنیر وزنی و نوشابهٔ سرد ← صندوق ← خروج")],
     pro="قوت نقشه: ورود و خروج جدا · مسیر پادساعتگرد · راهروی اصلی ۱٫۵۹ تا ۱٫۷۰ متر · یخچال بلند لبنیات روی دیوار بالا",
     stations=[
-        ("ورودی: پالت میوه و قفسهٔ نیمه‌سنگین", ["F1", "C1", "C2"]),
+        ("ورودی: پالت پیشنهاد ویژه و قفسهٔ نیمه‌سنگین", ["F1", "C1", "C2"]),
         ("پیشخوان آجیل و خشکبار", ["S1", "W1"]),
         ("دیوار بالا: صبحانه، لبنیات و منجمد", ["T1", "M1", "Z1"]),
         ("گوندولای چپ و پالت: تنقلات و خوراکی خشک", ["X1", "A1W", "A1E", "A1N", "A1S"]),
