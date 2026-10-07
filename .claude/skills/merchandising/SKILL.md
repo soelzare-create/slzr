@@ -16,7 +16,7 @@ description: Domain knowledge, working method and DaranX branding for the «Merc
 
 | عدسی | نشانه‌ها در درخواست | بخوان |
 |---|---|---|
-| **چیدمان کل فروشگاه (پلان)** | نقشه/پلان فروشگاه، جای دپارتمان‌ها، مسیر مشتری، ورودی، صندوق، گوندولا، نقد یا مقایسهٔ طرح چیدمان | `references/store-layout.md` (+ `planning-and-category.md` §۵ برای تخصیص فضا) |
+| **چیدمان کل فروشگاه (پلان)** | نقشه/پلان فروشگاه، جای دپارتمان‌ها، مسیر مشتری، ورودی، صندوق، گوندولا، نقد یا مقایسهٔ طرح چیدمان، DXF | `references/store-layout.md`؛ اگر فایل DXF داده‌اند `references/layout-from-dxf.md` (+ `planning-and-category.md` §۵ برای تخصیص فضا) |
 | **اجرای میدانی / خرده‌فروشی** | مرچندایزر، ویزیت، چیدمان، قفسه، فیسینگ، پلانوگرام، OSA، POSM، فروشگاه زنجیره‌ای، مسیر، عکس، ممیزی | `references/field-execution.md` + `references/kpis-and-formulas.md` |
 | **مرچندایزینگ بصری** | ویترین، دیسپلی، سرقفسه، نور، مسیر مشتری | `references/field-execution.md` §۶ |
 | **برنامه‌ریزی کالا و طبقهٔ کالا** | سبد کالا، OTB، خرید فصل، قیمت‌گذاری، تخفیف، sell-through، GMROI | `references/planning-and-category.md` + `references/kpis-and-formulas.md` |
@@ -108,6 +108,9 @@ python .claude/skills/merchandising/scripts/merch_calc.py perfect-store \
 رسمی خواستند، ساختار خلاصه‌اول §۵ را با قالب DaranX بساز. در پاسخ گفتگو هم همین
 ترتیب: حکم ← اقدام‌های فوری ← مقایسه ← جزئیات کوتاه.
 
+اگر مشتری **فایل DXF** داد و «چیدمان دسته‌کالا بر پایهٔ همین تجهیزات» خواست، `references/layout-from-dxf.md` را دنبال کن
+(خواندن نقشه ← spec ← DXF با لایه‌های طرح ← گزارش تعاملی با گروه‌های کالایی).
+
 ## ۸. صداقت در دامنه
 
 - ارقام بازار، تعرفهٔ زنجیره‌ها، نرخ قرارداد و حقوق نیرو را حدس نزن؛ بپرس یا جای خالی بگذار.
@@ -122,6 +125,7 @@ python .claude/skills/merchandising/scripts/merch_calc.py perfect-store \
 |---|---|
 | `references/glossary.md` | نام‌گذاری مدل/فیلد/برچسب UI، ترجمهٔ اصطلاح |
 | `references/store-layout.md` | نقد یا طراحی پلان کل فروشگاه: اصول با منبع، چک‌لیست، مقیاس شدت، ساختار گزارش |
+| `references/layout-from-dxf.md` | مشتری فایل DXF نقشه داد و چیدمان دسته‌کالا خواست: خواندن نقشه، spec، ساخت DXF و گزارش (`scripts/layout/`) |
 | `references/kpis-and-formulas.md` | هر شاخص، فرمول، دانه‌بندی، تله‌های تجمیع |
 | `references/field-execution.md` | ویزیت، مسیر، پلانوگرام، POSM، بصری، طرح دادهٔ پیشنهادی |
 | `references/planning-and-category.md` | سبد کالا، طبقهٔ کالا، OTB، قیمت و تخفیف، فضای قفسه |

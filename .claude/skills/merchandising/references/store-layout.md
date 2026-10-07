@@ -165,6 +165,7 @@
 
 کدها: مشترک C-01…، طرح ۱ A-01…، طرح ۲ B-01…؛ شدت طبق §۴. قالب بصری: `branding.md`.
 نمونه: `docs/merchandising/store-layout-review.html`.
+برای ساخت طرح از روی DXF: `layout-from-dxf.md`.
 
 ## ۶. تله‌ها
 
