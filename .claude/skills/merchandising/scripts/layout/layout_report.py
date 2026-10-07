@@ -70,7 +70,7 @@ grs = []
 for gi, (gid, fam, gfa, gen, polys, (lx, ly), grot, members) in enumerate(M.GROUPS):
     rot = f' transform="rotate(-90 {lx:.2f} {-ly:.2f})"' if grot else ""
     label_svg = (f'<text class="glab" x="{lx:.2f}" y="{-ly:.2f}"{rot}><tspan class="gtag" x="{lx:.2f}" dy="-.22">گروه کالایی {gid.translate(FA_D)}</tspan>'
-                 f'<tspan class="gname" x="{lx:.2f}" dy=".42">{gfa}</tspan></text>') if gfa else ""
+                 f'<tspan class="gname" x="{lx:.2f}" dy=".42">{gfa}</tspan></text>') if (gfa and META.get("group_floor_labels", True)) else ""
     grs.append(f'<g class="gr f-{fam}" data-g="{gid}" style="--i:{gi};--t:{VIS[gid]:.3f}">'
                + "".join(f'<polygon points="{" ".join(P(*q) for q in poly)}"/>' for poly in polys)
                + label_svg + "</g>")

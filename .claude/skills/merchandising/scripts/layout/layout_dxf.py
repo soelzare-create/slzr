@@ -65,8 +65,9 @@ for gid, fam, gfa, gen, polys, (lx, ly), grot, members in M.GROUPS:
         hh = msp.add_hatch(dxfattribs={"layer": "DX-GROUP"}); hh.paths.add_polyline_path(poly, is_closed=True)
         hh.rgb = col; hh.transparency = 0.82
         msp.add_lwpolyline(poly, close=True, dxfattribs={"layer": "DX-GROUP", "true_color": colors.rgb2int(col), "linetype": "DASHED", "ltscale": 0.3})
-    msp.add_mtext(f"گروه کالایی {gid.translate(FA_DIG)}: {gfa}\\P{gen}", dxfattribs={"layer": "DX-GROUP", "char_height": 0.2, "style": "DX-FA",
-                  "insert": (lx, ly), "attachment_point": 5, "rotation": grot, "true_color": colors.rgb2int(tuple(int(c * .55) for c in col))})
+    if gfa and META.get("group_floor_labels", True):
+        msp.add_mtext(f"گروه کالایی {gid.translate(FA_DIG)}: {gfa}\\P{gen}", dxfattribs={"layer": "DX-GROUP", "char_height": 0.2, "style": "DX-FA",
+                      "insert": (lx, ly), "attachment_point": 5, "rotation": grot, "true_color": colors.rgb2int(tuple(int(c * .55) for c in col))})
 
 # ---- category zones + codes
 for code, fam, poly, fa, en, fix in M.Z:
