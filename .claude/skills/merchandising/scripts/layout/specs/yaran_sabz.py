@@ -40,7 +40,7 @@ z("A2S", "promo", R(23.96, 13.51, 24.97, 14.45), "پیشنهاد سلولزی", 
 # ---- 5. left wall: ice cream and snacks
 z("L1", "snack", R(18.80, 16.70, 19.35, 18.70), "بیسکویت، کیک، تنقلات، پفک، چیپس و انواع آلوچه", "Biscuits, cakes, snacks, chips & dried fruit", "قفسهٔ دیواری ۲ ماژول")
 z("L2", "cold", R(18.85, 12.40, 19.95, 15.40), "بستنی", "Ice cream", "۲ فریزر بستنی ۱٫۵ متر")
-z("L3", "snack", R(18.80, 9.90, 19.35, 12.40), "پفک، چیپس و تنقلات (اندازه خاص، طبق خط‌کشی مشتری)", "Puffs, chips & snacks (special size, per client markup)", "قفسهٔ دیواری ۲ ماژول")
+z("L3", "snack", R(18.95, 9.90, 19.75, 13.10), "پفک، چیپس و تنقلات (اندازه خاص، طبق خط‌کشی مشتری)", "Puffs, chips & snacks (special size, per client markup)", "قفسهٔ دیواری ۲ ماژول")
 # ---- 6. bottom: serve-over cold counter, drinks chiller, till impulse
 z("D2", "cold", R(20.60, 10.73, 24.30, 11.75), "گوشت و مرغ سرد شده، پنیر وزنی و لبنیات سنتی", "Chilled meat & poultry, loose cheese, traditional dairy", "یخچال ویترینی روباز ۳٫۷۵ متر + میز ترازو")
 z("D1", "cold", R(23.23, 9.10, 24.79, 9.97), "نوشابه و آب معدنی سرد", "Cold drinks & mineral water", "یخچال ایستاده ۲ در")
