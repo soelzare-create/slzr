@@ -2,7 +2,7 @@
 Fixture boxes come from the client DXF (dxf_tools.py inserts / grid); every shelf face and refrigerated unit gets one category.
 
 NOTE ON END CAPS & PROMOTIONS (سرلاین‌ها و پیشنهادات):
-All end caps and promotional items (A1N, A2N, A1S, A2S, F1, X1) must be assigned TEMPORARILY to specific items
+All end caps and promotional items (A1N, A2N, A1S, A2S, F1, X1, K2E) must be assigned TEMPORARILY to specific items
 within their category line. They rotate with promotions and are NOT permanent category slots.
 Preferably assign to items that fit naturally within the category of their line.
 E.g., A1N (end cap on A1 gondola, north) should feature promotional snacks, not pasta.
@@ -20,16 +20,16 @@ z("F1", "promo", R(26.50, 13.40, 28.90, 13.95), "پیشنهاد ویژه", "Spec
 z("S1", "snack", R(26.50, 14.50, 29.20, 15.70), "آجیل و خشکبار", "Nuts & dried fruit", "پیشخوان آجیل با فروشنده")
 z("W1", "snack", R(27.20, 16.10, 30.85, 16.50), "آجیل فله", "Bulk nuts", "استند آجیل ۵ طبقه")
 # ---- 3. top wall: cleaning/hygiene, dairy, frozen
-z("T1", "nonf", R(26.12, 16.70, 26.62, 20.56), "شوینده و بهداشتی", "Cleaning & hygiene", "قفسهٔ دیواری ۵ ماژول")
+z("T1", "bfst", R(26.12, 16.70, 26.62, 20.56), "چای، قهوه، قند و شکر", "Tea, coffee & sugar", "قفسهٔ دیواری ۵ ماژول")
 z("M1", "cold", R(22.70, 20.55, 26.40, 21.60), "شیر، ماست، پنیر، کره، تخم‌مرغ و نوشیدنی", "Dairy, eggs & drinks", "یخچال ایستاده روباز ۳٫۷۵ متر")
 z("Z1", "cold", R(20.60, 20.80, 22.60, 21.60), "منجمد", "Frozen food", "فریزر دیواری ۲ متر")
 # ---- 4. left gondola A1 (+ stand): grocery, breakfast, personal care
 z("X1", "promo", R(20.30, 13.50, 20.90, 19.35), "پیشنهاد هفته", "Weekly offers", "پالت‌چینی ۱۰ ردیفه")
 FACE = {  # code: (family, fa, en, polygon)
-    "A1W": ("stap", "کنسرو و پودر کیک و ادویه", "Cans, cake flour & spices", R(21.86, 14.45, 22.37, 18.44)),
-    "A1E": ("stap", "ماکارونی، پاستا، رب و سس", "Pasta, paste & sauces", R(22.37, 14.45, 22.87, 18.44)),
-    "A2W": ("bfst", "چای، قهوه و صبحانه", "Tea, coffee & breakfast", R(23.96, 14.45, 24.46, 18.44)),
-    "A2E": ("nonf", "بهداشتی و کاغذی", "Personal care & paper", R(24.46, 14.45, 24.97, 18.44)),
+    "A1W": ("stap", "کنسرو، ادویه و سس", "Cans, spices & sauces", R(21.86, 14.45, 22.37, 18.44)),
+    "A1E": ("nonf", "بهداشت شخصی", "Personal care", R(22.37, 14.45, 22.87, 18.44)),
+    "A2W": ("nonf", "شوینده و بهداشتی", "Cleaning & hygiene", R(23.96, 14.45, 24.46, 18.44)),
+    "A2E": ("stap", "ماکارونی، رب و پاستا", "Pasta & tomato paste", R(24.46, 14.45, 24.97, 18.44)),
 }
 for code, (fam, fa, en, poly) in FACE.items():
     z(code, fam, poly, fa, en, "گوندولای دوطرفه — ۴ ماژول")
@@ -38,7 +38,7 @@ z("A1S", "stap", R(21.86, 13.51, 22.87, 14.45), "رب", "Paste", "سرقفسهٔ
 z("A2N", "promo", R(23.96, 18.44, 24.97, 19.39), "پیشنهاد", "End cap", "سرقفسهٔ ۲۲۸")
 z("A2S", "promo", R(23.96, 13.51, 24.97, 14.45), "پیشنهاد", "End cap", "سرقفسهٔ ۲۲۸")
 # ---- 5. left wall: ice cream and snacks
-z("L1", "snack", R(18.80, 16.70, 19.35, 18.70), "بیسکویت، کیک و تنقلات", "Biscuits, cakes & snacks", "قفسهٔ دیواری ۲ ماژول")
+z("L1", "nonf", R(18.80, 16.70, 19.35, 18.70), "ظروف یکبار مصرف و پلیمری", "Disposable & plastic ware", "قفسهٔ دیواری ۲ ماژول")
 # L3 is the wall shelving mounted above the L2 freezers, running the full length between the two columns
 # (y 11.32 -> 16.00); in plan it is drawn as a strip along the wall with L2 in front of it.
 z("L2", "cold", R(19.25, 12.40, 19.95, 15.40), "بستنی", "Ice cream", "۲ فریزر بستنی ۱٫۵ متر")
@@ -47,14 +47,17 @@ z("L3", "snack", R(18.80, 11.32, 19.25, 16.00), "پفک، چیپس و تنقلا
 z("D2", "cold", R(20.60, 10.73, 24.30, 11.75), "گوشت و مرغ سرد", "Chilled meat & poultry", "یخچال ویترینی روباز ۳٫۷۵ متر + میز ترازو")
 z("D1", "cold", R(23.23, 9.10, 24.79, 9.97), "مرغ و گوشت", "Meat & poultry", "یخچال ایستاده ۲ در")
 z("K1", "snack", R(24.35, 10.85, 24.75, 12.24), "شکلات", "Chocolate", "رک کنار صندوق")
-z("K2", "nonf", R(28.26, 10.20, 28.88, 12.77), "باتری و کالای ریز", "Batteries & small goods", "رک کنار صندوق ۳ ماژول")
+# K2 is a double-sided rack: west (left) face keeps small goods, east face (toward the entrance) is a staples offer
+z("K2W", "nonf", R(28.26, 10.20, 28.57, 12.77), "باتری و کالای ریز", "Batteries & small goods", "رک دوطرفهٔ کنار صندوق — وجه چپ")
+z("K2E", "promo", R(28.57, 10.20, 28.88, 12.77), "پیشنهاد ویژهٔ کالای اساسی", "Staples special offer", "رک دوطرفهٔ کنار صندوق — وجه راست")
 
 CODES = {c[0] for c in Z}
 assert len(CODES) == len(Z), "duplicate code"
 
 SHORT = {c: fa for c, fam, poly, fa, en, fix in Z}  # on-plan label = the category name itself …
 SHORT.update({  # …except on narrow faces, where a shorter label keeps the plan readable (full name stays in the list)
-    "A1W": "کنسرو و ادویه", "A1E": "ماکارونی و رب", "A2W": "چای و قهوه", "A2E": "بهداشتی", "T1": "شوینده",
+    "A1W": "کنسرو و ادویه", "A1E": "بهداشت شخصی", "A2W": "شوینده", "A2E": "ماکارونی و رب", "T1": "چای و قند",
+    "L1": "یکبار مصرف", "K2W": "باتری", "K2E": "کالای اساسی",
     "X1": "پیشنهاد", "A1S": "رب", "C1": "روغن", "C2": "برنج",
 })
 
@@ -103,21 +106,21 @@ META = dict(
     group_floor_labels=False,  # grouping shown by colour tint + legend, not big floor text
     decisions=[
         "دسته‌بندی بر پایهٔ رنگ: هر خانوادهٔ کالایی یک رنگ دارد و همهٔ قفسه‌های آن رنگ یک گروه‌اند. [[C1]] [[A1W]]",
-        "خواربار و پخت‌وپز (سبز): روغن، برنج، کنسرو، ماکارونی و رب. [[C1]] [[A1E]]",
+        "خواربار و پخت‌وپز (سبز): روغن، برنج، کنسرو، ادویه، ماکارونی و رب. [[C1]] [[A2E]]",
         "یخچالی، لبنی و منجمد (آبی): لبنیات، بستنی، منجمد و گوشت و مرغ سرد. [[M1]] [[D2]]",
-        "غیرغذایی و بهداشتی (بنفش): شوینده و بهداشتی روی دیوار بالا و گوندولای راست، جدا از خوراکی. [[T1]] [[A2E]]",
+        "غیرغذایی و بهداشتی (بنفش): راهروی بین دو گوندولا یکپارچه بهداشتی است؛ بهداشت شخصی رو‌به‌روی شوینده. [[A1E]] [[A2W]]",
     ],
-    route=[("stap", "خواربار: روغن، برنج، کنسرو، ماکارونی و رب"), ("snack", "آجیل، خشکبار، تنقلات و شیرینی"),
-           ("cold", "لبنیات، منجمد، بستنی و گوشت و مرغ سرد"), ("bfst", "چای، قهوه و صبحانه"),
-           ("nonf", "شوینده، بهداشتی و کاغذی"), ("promo", "پیشنهادها و پروموشن (ورودی و پالت‌ها)")],
+    route=[("stap", "خواربار: روغن، برنج، کنسرو، ادویه، ماکارونی و رب"), ("snack", "آجیل، خشکبار، تنقلات و شیرینی"),
+           ("cold", "لبنیات، منجمد، بستنی و گوشت و مرغ سرد"), ("bfst", "چای، قهوه، قند و شکر"),
+           ("nonf", "شوینده، بهداشت شخصی و ظروف یکبار مصرف"), ("promo", "پیشنهادها و پروموشن (ورودی، پالت‌ها، سرقفسه‌ها)")],
     pro="قوت نقشه: دسته‌بندی رنگ‌محور · هر خانواده یک رنگ · ورود و خروج جدا · مسیر پادساعتگرد · راهروی اصلی ۱٫۵۹ تا ۱٫۷۰ متر",
     stations=[
-        ("خواربار و پخت‌وپز", ["C1", "C2", "A1W", "A1E", "A1S"]),
-        ("تنقلات، آجیل و شیرینی", ["S1", "W1", "L1", "L3", "K1"]),
+        ("خواربار و پخت‌وپز", ["C1", "C2", "A1W", "A2E", "A1S"]),
+        ("تنقلات، آجیل و شیرینی", ["S1", "W1", "L3", "K1"]),
         ("یخچالی، لبنی و منجمد", ["M1", "Z1", "L2", "D2", "D1"]),
-        ("صبحانه و نوشیدنی گرم", ["A2W"]),
-        ("غیرغذایی و بهداشتی", ["T1", "A2E", "K2"]),
-        ("پیشنهاد و پروموشن", ["F1", "X1", "A1N", "A2N", "A2S"]),
+        ("صبحانه و نوشیدنی گرم", ["T1"]),
+        ("غیرغذایی و بهداشتی", ["A1E", "A2W", "L1", "K2W"]),
+        ("پیشنهاد و پروموشن", ["F1", "X1", "A1N", "A2N", "A2S", "K2E"]),
     ],
     doors=[("ورود", 30.0, 8.65, False), ("خروج", 26.5, 8.65, False)],
     ghosts=[], moves=[],
