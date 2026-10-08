@@ -1,0 +1,20 @@
+{
+  "enabledPlugins": {
+    "linkedin-skills@linkedin-skills": true,
+    "claude-seo@agricidaniel-claude-seo": true
+  },
+  "extraKnownMarketplaces": {
+    "linkedin-skills": {
+      "source": {
+        "source": "github",
+        "repo": "sergebulaev/linkedin-skills"
+      }
+    },
+    "agricidaniel-claude-seo": {
+      "source": {
+        "source": "github",
+        "repo": "AgriciDaniel/claude-seo"
+      }
+    }
+  }
+}
