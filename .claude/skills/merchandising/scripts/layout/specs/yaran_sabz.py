@@ -39,8 +39,10 @@ z("A2N", "promo", R(23.96, 18.44, 24.97, 19.39), "پیشنهاد", "End cap", "�
 z("A2S", "promo", R(23.96, 13.51, 24.97, 14.45), "پیشنهاد", "End cap", "سرقفسهٔ ۲۲۸")
 # ---- 5. left wall: ice cream and snacks
 z("L1", "snack", R(18.80, 16.70, 19.35, 18.70), "بیسکویت، کیک و تنقلات", "Biscuits, cakes & snacks", "قفسهٔ دیواری ۲ ماژول")
-z("L2", "cold", R(18.85, 12.40, 19.95, 15.40), "بستنی", "Ice cream", "۲ فریزر بستنی ۱٫۵ متر")
-z("L3", "snack", R(18.95, 9.90, 19.75, 13.10), "پفک، چیپس و تنقلات", "Puffs, chips & snacks", "قفسهٔ دیواری ۲ ماژول")
+# L3 is the wall shelving mounted above the L2 freezers, running the full length between the two columns
+# (y 11.32 -> 16.00); in plan it is drawn as a strip along the wall with L2 in front of it.
+z("L2", "cold", R(19.25, 12.40, 19.95, 15.40), "بستنی", "Ice cream", "۲ فریزر بستنی ۱٫۵ متر")
+z("L3", "snack", R(18.80, 11.32, 19.25, 16.00), "پفک، چیپس و تنقلات", "Puffs, chips & snacks", "قفسهٔ دیواری سرتاسری بالای فریزر بستنی (۵ ماژول، بین دو ستون)")
 # ---- 6. bottom: serve-over meat counter, meat chiller, till impulse
 z("D2", "cold", R(20.60, 10.73, 24.30, 11.75), "گوشت و مرغ سرد", "Chilled meat & poultry", "یخچال ویترینی روباز ۳٫۷۵ متر + میز ترازو")
 z("D1", "cold", R(23.23, 9.10, 24.79, 9.97), "مرغ و گوشت", "Meat & poultry", "یخچال ایستاده ۲ در")
@@ -87,7 +89,8 @@ for _i, _fam in enumerate(_ORDER, start=1):
 _cov = sorted(c for g in GROUPS for c in g[7])
 assert _cov == sorted(CODES), set(CODES) ^ set(_cov)
 
-FLOW = [(30.0, 9.3), (30.0, 13.1), (25.85, 13.1), (25.85, 19.65), (21.35, 19.65), (21.35, 12.65), (26.5, 12.65), (26.5, 9.3)]
+# entrance: straight up, then left through the aisle between F1 and S1
+FLOW = [(30.0, 9.3), (30.0, 14.22), (25.85, 14.22), (25.85, 19.65), (21.35, 19.65), (21.35, 12.65), (26.5, 12.65), (26.5, 9.3)]
 SPINE = [(29.4, 9.6), (29.4, 13.0), (27.0, 12.75), (27.0, 12.4)]
 
 META = dict(
