@@ -32,5 +32,8 @@ def label_fit(code, poly, short):
         fs = min(0.30, L * 0.92 / (len(txt) * 0.52), T * 0.78)
         if fs >= 0.17:
             return txt, fs, vert
+        fs = min(0.26, L * 0.92 / (max(len(code), len(sh)) * 0.52), T * 0.78 / 2.3)   # two lines: code / name
+        if fs >= 0.13:
+            return f"{code}\n{sh}", fs, vert
     fs = 0.26 if diagonal else (0.30 if (w > 0.9 or vert) else 0.24)
     return code, fs, vert

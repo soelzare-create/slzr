@@ -5,7 +5,7 @@ NOTE ON END CAPS & PROMOTIONS (سرلاین‌ها و پیشنهادات):
 All end caps and promotional items (A1N, A2N, A1S, A2S, F1, X1, K2E) must be assigned TEMPORARILY to specific items
 within their category line. They rotate with promotions and are NOT permanent category slots.
 Preferably assign to items that fit naturally within the category of their line.
-E.g., A1N (end cap on A1 gondola, north) should feature promotional snacks, not pasta.
+The four end caps (A1N, A1S, A2N, A2S) are for near-expiry or high-margin items, each on a dated promotion plan.
 F1 (entrance pallet) carries rotating tempting offers / special discounts, never a fixed SKU."""
 from layout_common import FAM, R, label_fit
 
@@ -33,10 +33,10 @@ FACE = {  # code: (family, fa, en, polygon)
 }
 for code, (fam, fa, en, poly) in FACE.items():
     z(code, fam, poly, fa, en, "گوندولای دوطرفه — ۴ ماژول")
-z("A1N", "promo", R(21.86, 18.44, 22.87, 19.39), "پیشنهاد", "End cap", "سرقفسهٔ ۲۲۸")
-z("A1S", "stap", R(21.86, 13.51, 22.87, 14.45), "رب", "Paste", "سرقفسهٔ ۲۲۸")
-z("A2N", "promo", R(23.96, 18.44, 24.97, 19.39), "پیشنهاد", "End cap", "سرقفسهٔ ۲۲۸")
-z("A2S", "promo", R(23.96, 13.51, 24.97, 14.45), "پیشنهاد", "End cap", "سرقفسهٔ ۲۲۸")
+z("A1N", "promo", R(21.86, 18.44, 22.87, 19.39), "سرلاین: کالای نزدیک به انقضا یا کالای پرسود", "End cap: near-expiry or high-margin items", "سرقفسهٔ ۲۲۸ (برنامهٔ مدت‌دار)")
+z("A1S", "promo", R(21.86, 13.51, 22.87, 14.45), "سرلاین: کالای نزدیک به انقضا یا کالای پرسود", "End cap: near-expiry or high-margin items", "سرقفسهٔ ۲۲۸ (برنامهٔ مدت‌دار)")
+z("A2N", "promo", R(23.96, 18.44, 24.97, 19.39), "سرلاین: کالای نزدیک به انقضا یا کالای پرسود", "End cap: near-expiry or high-margin items", "سرقفسهٔ ۲۲۸ (برنامهٔ مدت‌دار)")
+z("A2S", "promo", R(23.96, 13.51, 24.97, 14.45), "سرلاین: کالای نزدیک به انقضا یا کالای پرسود", "End cap: near-expiry or high-margin items", "سرقفسهٔ ۲۲۸ (برنامهٔ مدت‌دار)")
 # ---- 5. left wall: ice cream and snacks
 z("L1", "nonf", R(18.80, 16.70, 19.35, 18.70), "ظروف یکبار مصرف و پلیمری", "Disposable & plastic ware", "قفسهٔ دیواری ۲ ماژول")
 # L3 is the wall shelving mounted above the L2 freezers, running the full length between the two columns
@@ -58,7 +58,7 @@ SHORT = {c: fa for c, fam, poly, fa, en, fix in Z}  # on-plan label = the catego
 SHORT.update({  # …except on narrow faces, where a shorter label keeps the plan readable (full name stays in the list)
     "A1W": "کنسرو و ادویه", "A1E": "بهداشت شخصی", "A2W": "شوینده", "A2E": "ماکارونی و رب", "T1": "چای و قند",
     "L1": "یکبار مصرف", "K2W": "باتری", "K2E": "کالای اساسی",
-    "X1": "پیشنهاد", "A1S": "رب", "C1": "روغن", "C2": "برنج",
+    "X1": "پیشنهاد", "A1N": "انقضا · پرسود", "A1S": "انقضا · پرسود", "A2N": "انقضا · پرسود", "A2S": "انقضا · پرسود", "C1": "روغن", "C2": "برنج",
 })
 
 # ---- colour-based grouping: one group per family, tint drawn over every shelf of that colour.
@@ -103,7 +103,11 @@ META = dict(
     sub="بر پایهٔ همین قفسه‌ها و یخچال‌ها · مسیر پادساعتگرد از ورود تا صندوق",
     crop=(18.35, 8.2, 13.5, 14.3),
     stats=[("جایگاه دسته‌کالا", "{zones}"), ("گروه رنگی", 6), ("متر یخچال و فریزر", 14), ("گوندولا", 2)],
-    group_floor_labels=False,  # grouping shown by colour tint + legend, not big floor text
+    group_floor_labels=False,
+    note=("سرلاین‌ها: برنامهٔ مدت‌دار و پروموشنی",
+          "سرلاین‌ها (A1N، A1S، A2N، A2S) جای ثابت هیچ کالایی نیستند. هر سرلاین برای فروش کالای نزدیک به انقضا یا کالای پرسود است "
+          "و باید برنامه‌ای با تاریخ شروع و پایان و پروموشن مشخص (تخفیف، هدیه یا بستهٔ ترکیبی) داشته باشد؛ در پایان هر دوره کالا عوض می‌شود. "
+          "ترجیحاً کالایی انتخاب شود که با دستهٔ کالای همان راهرو هم‌خوان باشد."),  # grouping shown by colour tint + legend, not big floor text
     decisions=[
         "دسته‌بندی بر پایهٔ رنگ: هر خانوادهٔ کالایی یک رنگ دارد و همهٔ قفسه‌های آن رنگ یک گروه‌اند. [[C1]] [[A1W]]",
         "خواربار و پخت‌وپز (سبز): روغن، برنج، کنسرو، ادویه، ماکارونی و رب. [[C1]] [[A2E]]",
@@ -115,12 +119,12 @@ META = dict(
            ("nonf", "شوینده، بهداشت شخصی و ظروف یکبار مصرف"), ("promo", "پیشنهادها و پروموشن (ورودی، پالت‌ها، سرقفسه‌ها)")],
     pro="قوت نقشه: دسته‌بندی رنگ‌محور · هر خانواده یک رنگ · ورود و خروج جدا · مسیر پادساعتگرد · راهروی اصلی ۱٫۵۹ تا ۱٫۷۰ متر",
     stations=[
-        ("خواربار و پخت‌وپز", ["C1", "C2", "A1W", "A2E", "A1S"]),
+        ("خواربار و پخت‌وپز", ["C1", "C2", "A1W", "A2E"]),
         ("تنقلات، آجیل و شیرینی", ["S1", "W1", "L3", "K1"]),
         ("یخچالی، لبنی و منجمد", ["M1", "Z1", "L2", "D2", "D1"]),
         ("صبحانه و نوشیدنی گرم", ["T1"]),
         ("غیرغذایی و بهداشتی", ["A1E", "A2W", "L1", "K2W"]),
-        ("پیشنهاد و پروموشن", ["F1", "X1", "A1N", "A2N", "A2S", "K2E"]),
+        ("پیشنهاد و پروموشن", ["F1", "X1", "K2E", "A1N", "A1S", "A2N", "A2S"]),
     ],
     doors=[("ورود", 30.0, 8.65, False), ("خروج", 26.5, 8.65, False)],
     ghosts=[], moves=[],

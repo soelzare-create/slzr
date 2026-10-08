@@ -53,6 +53,12 @@ for g in M.GROUPS:
 FLOW_D = "M" + " L".join(P(*p) for p in M.FLOW)
 DUR = 22
 # ---------- plan SVG
+def _lines(txt, x):
+    parts = txt.split("\n")
+    if len(parts) == 1:
+        return html.escape(txt)
+    return "".join(f'<tspan x="{x:.2f}" dy="{"-0.55em" if i == 0 else "1.15em"}">{html.escape(t)}</tspan>' for i, t in enumerate(parts))
+
 zones = []
 for zi, (code, fam, poly, name, en, fix) in enumerate(M.Z):
     xs = [p[0] for p in poly]; ys = [p[1] for p in poly]
@@ -63,7 +69,7 @@ for zi, (code, fam, poly, name, en, fix) in enumerate(M.Z):
     zones.append(
         f'<g class="zn f-{fam}" data-c="{code}" data-g="{ZG[code]}" style="--i:{zi}" tabindex="0" role="button" aria-label="{label}">'
         f'<title>{label}</title><polygon points="{" ".join(P(*p) for p in poly)}"/>'
-        f'<text x="{cx:.2f}" y="{-cy:.2f}" font-size="{fs:.3f}"{rot}>{html.escape(txt)}</text></g>')
+        f'<text x="{cx:.2f}" y="{-cy:.2f}" font-size="{fs:.3f}"{rot}>{_lines(txt, cx)}</text></g>')
 
 FA_D = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
 grs = []
@@ -116,6 +122,8 @@ for title, codes in STATIONS:
 
 def lk(c): return f'<button type="button" class="mini loc" data-loc="{c}">{c}</button>'
 def _dec(t): return re.sub(r"\[\[([A-Za-z0-9]+)\]\]", lambda m: lk(m.group(1)), t)
+_note = META.get("note")
+NOTE = (f'<aside class="note"><b>{_note[0]}</b><p>{_note[1]}</p></aside>' if _note else "")
 DECISIONS = "\n      ".join(f"<li>{_dec(t)}</li>" for t in META["decisions"])
 ROUTE = "\n      ".join(f'<li><i class="lg f-{f}"></i>{t}</li>' for f, t in META["route"])
 def _stat(i, lab, v):
@@ -150,6 +158,7 @@ BODY = f'''<body>
     </ol>
     <p class="pro">{META["pro"]}</p></div>
   </div>
+  {NOTE}
 </div></section>
 
 <section class="planbox" id="plan"><div class="wrap">
@@ -268,6 +277,8 @@ CSS = '''
 .acts li{margin:.15rem 0}.acts li::marker{color:var(--steel);font-weight:900}
 .route{list-style:none;margin:0;padding:0;line-height:2;color:var(--ink-soft)}
 .route li{display:flex;align-items:center;gap:.5rem}
+.note{margin-top:.9rem;background:color-mix(in srgb,#eda100 10%,var(--surface));border:1px solid color-mix(in srgb,#eda100 45%,var(--line));border-inline-start:5px solid #eda100;border-radius:var(--r-md);padding:.85rem 1.2rem}
+.note b{color:var(--ink);font-size:1.02rem}.note p{margin:.3rem 0 0;color:var(--ink-soft);line-height:1.95}
 .pro{margin:.5rem 0 0;color:var(--steel);font-size:.88rem;font-weight:700;line-height:1.8}
 .lg{display:inline-block;width:14px;height:11px;border-radius:3px;background:var(--c);flex:none;opacity:.85}
 .lg.flow{height:0;border-top:3px solid var(--steel);border-radius:0;background:none}

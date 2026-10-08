@@ -82,7 +82,7 @@ for code, fam, poly, fa, en, fix in M.Z:
     w, hgt = max(xs) - min(xs), max(ys) - min(ys)
     txt, fsz, vert = label_fit(code, poly, M.SHORT)
     rot = 90 if vert else 0
-    msp.add_mtext(txt, dxfattribs={"layer": "DX-CODE", "char_height": fsz * 0.62,
+    msp.add_mtext(txt.replace("\n", "\\P"), dxfattribs={"layer": "DX-CODE", "char_height": fsz * 0.62,
                   "style": "DX-FA", "insert": (cxz, cyz), "attachment_point": 5, "rotation": rot})
 
 # ---- customer path
