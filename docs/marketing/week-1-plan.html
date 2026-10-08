@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>برنامهٔ هفتهٔ اول پروموت — DaranX</title>
+<style id="fontface">
+@font-face{font-family:"Vazirmatn";src:url("assets/Vazirmatn-VF.woff2") format("woff2");
+  font-weight:100 900;font-style:normal;font-display:swap}
+</style>
+<style>
+:root{
+  --navy:#153A62; --navy-deep:#0E2749;
+  --steel:#3E7BB6; --steel-soft:#6FA3D2; --silver:#D9D9D9;
+  --ground:#F3F6FA; --surface:#FFFFFF; --surface-2:#EAF0F7;
+  --ink:#12233A; --ink-soft:#43566E; --ink-faint:#5E6E86;
+  --line:#DCE4EE; --line-strong:#C2D0E0;
+  --on-navy:#EAF1F8; --on-navy-soft:#AEC4DB; --on-navy-faint:#6E89A6;
+  --accent-solid:#153A62; --on-accent:#FFFFFF;
+  --grad:linear-gradient(120deg,#153A62 0%,#2E6098 55%,#3E7BB6 100%);
+  --grad-soft:linear-gradient(120deg,#153A62,#3E7BB6);
+  --shadow:0 1px 2px rgba(21,58,98,.06), 0 10px 30px rgba(21,58,98,.08);
+  --shadow-lift:0 2px 8px rgba(21,58,98,.09), 0 22px 60px rgba(21,58,98,.16);
+  --r-sm:10px; --r-md:16px; --r-lg:26px;
+  --maxw:1160px; --gutter:clamp(1rem,4vw,2.5rem); --sp:clamp(3.5rem,7vw,6rem);
+  --font:"Vazirmatn",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --navy:#0C2036; --navy-deep:#081627;
+  --steel:#5B95CE; --steel-soft:#7FB0DF; --silver:#31465D;
+  --ground:#081320; --surface:#0F2338; --surface-2:#142B45;
+  --ink:#E9F0F8; --ink-soft:#A6BACF; --ink-faint:#8398AF;
+  --line:#1E3450; --line-strong:#2A4666;
+  --accent-solid:#5B95CE; --on-accent:#08151f;
+  --grad:linear-gradient(120deg,#1B4C7A 0%,#3E7BB6 55%,#7FB0DF 100%);
+  --grad-soft:linear-gradient(120deg,#2E6098,#7FB0DF);
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 12px 34px rgba(0,0,0,.4);
+  --shadow-lift:0 2px 8px rgba(0,0,0,.45), 0 26px 64px rgba(0,0,0,.55);
+}}
+:root[data-theme="dark"]{
+  --navy:#0C2036; --navy-deep:#081627; --steel:#5B95CE; --steel-soft:#7FB0DF; --silver:#31465D;
+  --ground:#081320; --surface:#0F2338; --surface-2:#142B45; --ink:#E9F0F8; --ink-soft:#A6BACF;
+  --ink-faint:#8398AF; --line:#1E3450; --line-strong:#2A4666; --accent-solid:#5B95CE; --on-accent:#08151f;
+  --grad:linear-gradient(120deg,#1B4C7A 0%,#3E7BB6 55%,#7FB0DF 100%);
+  --grad-soft:linear-gradient(120deg,#2E6098,#7FB0DF);
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 12px 34px rgba(0,0,0,.4);
+  --shadow-lift:0 2px 8px rgba(0,0,0,.45), 0 26px 64px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--ground);color:var(--ink-soft);line-height:1.9;
+  -webkit-font-smoothing:antialiased}
+img{max-width:100%}
+h1,h2,h3,h4{color:var(--ink);line-height:1.3;margin:0}
+h1{font-size:clamp(2.1rem,2.4vw+1.3rem,3.5rem);font-weight:900}
+h2{font-size:clamp(1.5rem,1.25rem+1.3vw,2.25rem);font-weight:800}
+h3{font-size:1.2rem;font-weight:800}
+h4{font-size:1rem;font-weight:800}
+a{color:var(--steel);text-decoration:none}
+.wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:var(--gutter)}
+.sec{padding-block:var(--sp)}
+.sec.alt{background:var(--surface-2)}
+
+.topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--ground) 88%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:64px}
+.brand{display:flex;align-items:center;gap:.6rem;font-weight:900;font-size:1.25rem;color:var(--ink)}
+.brand .x{color:var(--steel)}
+.brand img{height:30px;width:auto}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .topbar .brand img{filter:brightness(0) invert(1)}}
+:root[data-theme="dark"] .topbar .brand img{filter:brightness(0) invert(1)}
+.nav{display:flex;gap:.2rem;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{white-space:nowrap;font-size:.88rem;font-weight:700;color:var(--ink-faint);padding:.35rem .7rem;border-radius:999px}
+.nav a:hover{background:var(--surface-2);color:var(--ink)}
+@media(max-width:820px){.nav{display:none}}
+.theme-toggle{background:transparent;border:1px solid var(--line-strong);color:var(--ink-soft);
+  border-radius:999px;width:40px;height:40px;cursor:pointer;font-size:1.1rem;flex:none}
+
+.eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-size:.85rem;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
+.eyebrow::before{content:"";width:26px;height:2px;background:var(--steel-soft);border-radius:2px}
+.sec-head{margin-bottom:1.6rem}
+.sec-head h2{margin-top:.6rem}
+.lead{color:var(--ink-soft);font-size:1.06rem;line-height:1.95;max-width:68ch;margin-top:1rem}
+.longcopy{color:var(--ink-soft);line-height:2.05;font-size:1.02rem;max-width:860px}
+.longcopy p{margin:0 0 1rem}
+
+.btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;font-weight:800;
+  font-family:inherit;font-size:1rem;padding:.85rem 1.9rem;cursor:pointer;transition:transform .2s,box-shadow .2s;border:0}
+.btn-light{background:#fff;color:var(--navy)}
+.btn-light:hover{transform:translateY(-2px)}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line-strong)}
+
+.chip{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;padding:.2rem .75rem;
+  font-weight:700;font-size:.8rem;color:var(--steel);background:var(--surface-2);border:1px solid var(--line);
+  direction:ltr;unicode-bidi:isolate}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+
+.cover{position:relative;min-height:92vh;display:grid;place-items:center;text-align:center;
+  overflow:hidden;isolation:isolate;color:#fff;padding:var(--gutter)}
+.cover::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:radial-gradient(120% 95% at 72% 8%,var(--steel),var(--navy) 62%)}
+.cover .cbrand{height:44px;margin-bottom:2rem;filter:brightness(0) invert(1)}
+.cover h1{color:#fff;max-width:22ch;margin-inline:auto;text-wrap:balance}
+.cover .csub{color:var(--on-navy);font-size:1.12rem;margin:1.2rem auto 0;max-width:54ch}
+.cover .cmeta{margin-top:2.2rem;color:var(--on-navy-soft);font-weight:700;letter-spacing:.04em}
+.cover .langs{display:flex;gap:.5rem;justify-content:center;margin-top:1.4rem;flex-wrap:wrap}
+.cover .langs span{border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:.25rem .9rem;font-weight:700;font-size:.9rem;color:var(--on-navy)}
+
+/* summary tiles */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1.6rem}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:1.1rem 1.2rem}
+.tile b{display:block;font-size:1.8rem;font-weight:900;color:var(--ink);line-height:1.2}
+.tile span{font-size:.92rem;color:var(--ink-faint)}
+@media(max-width:760px){.tiles{grid-template-columns:repeat(2,1fr)}}
+
+.mstrip{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:1.5rem}
+.mstep{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:1.3rem}
+.mstep .n{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
+  background:var(--grad-soft);color:#fff;font-weight:800;margin-bottom:.7rem}
+.mstep h3{font-size:1.08rem}
+.mstep p{margin:.4rem 0 0;font-size:.94rem;color:var(--ink-faint)}
+@media(max-width:760px){.mstrip{grid-template-columns:1fr 1fr}}
+
+.outcomes{display:flex;flex-wrap:wrap;gap:.7rem 1.6rem;margin-top:1.4rem}
+.outcomes span{display:inline-flex;align-items:center;gap:.5rem;color:var(--ink-soft);font-weight:600}
+.outcomes svg{width:20px;height:20px;color:var(--steel);flex:none}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.1rem;margin-top:1.5rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.5rem;box-shadow:var(--shadow)}
+.card h3{margin-bottom:.4rem}
+.card .en{color:var(--steel);font-size:.8rem;font-weight:700;letter-spacing:.06em;direction:ltr;text-align:right}
+.card p{margin:.6rem 0 0;color:var(--ink-faint);font-size:.96rem}
+.card ul{margin:.6rem 0 0;padding-inline-start:1.1rem;color:var(--ink-faint);font-size:.95rem}
+
+.tablewrap{overflow-x:auto;margin-top:1.4rem;border-radius:var(--r-md);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;background:var(--surface);min-width:560px}
+th,td{padding:.8rem 1rem;text-align:start;border-bottom:1px solid var(--line);vertical-align:top;font-size:.95rem}
+th{background:var(--surface-2);color:var(--ink);font-weight:800}
+tr:last-child td{border-bottom:0}
+td b{color:var(--ink)}
+
+/* day blocks */
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);
+  margin-top:1.6rem;overflow:hidden;scroll-margin-top:80px}
+.day-head{display:flex;gap:1rem;align-items:center;padding:1.3rem 1.5rem;background:var(--grad);color:#fff}
+.day-head .num{width:52px;height:52px;flex:none;border-radius:16px;background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.25);display:grid;place-items:center;font-weight:900;font-size:1.4rem}
+.day-head h3{color:#fff;font-size:1.25rem}
+.day-head p{margin:.15rem 0 0;color:var(--on-navy);font-size:.95rem}
+.day-body{padding:1.4rem 1.5rem 1.6rem}
+.day-goal{font-weight:700;color:var(--ink);margin:0 0 1rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.box{border:1px solid var(--line);border-radius:var(--r-md);padding:1rem 1.15rem;background:var(--ground)}
+.box h4{display:flex;align-items:center;gap:.45rem;margin-bottom:.5rem}
+.box h4 .dot{width:9px;height:9px;border-radius:999px;background:var(--steel)}
+.box.you h4 .dot{background:var(--steel-soft);outline:2px solid var(--steel);outline-offset:1px}
+.box ul,.box ol{margin:0;padding-inline-start:1.2rem;font-size:.95rem}
+.box ol{list-style-type:persian}
+.box li{margin-bottom:.35rem}
+code{direction:ltr;unicode-bidi:isolate;font-size:.88em;background:var(--surface-2);padding:.05rem .35rem;border-radius:6px}
+.box li:last-child{margin-bottom:0}
+.meta-row{display:flex;flex-wrap:wrap;gap:.8rem 1.6rem;margin-top:1.1rem;font-size:.93rem}
+.meta-row b{color:var(--ink)}
+.done{margin-top:1rem;padding:.85rem 1rem;border-radius:var(--r-sm);background:var(--surface-2);
+  border-inline-start:4px solid var(--steel);font-size:.95rem}
+.done b{color:var(--ink)}
+.sched{margin-top:1.1rem}
+.sched table{min-width:480px}
+.sched td:first-child{white-space:nowrap;color:var(--ink);font-weight:700;width:1%}
+
+.note{margin-top:1.4rem;padding:1.1rem 1.25rem;border-radius:var(--r-md);background:var(--surface);
+  border:1px solid var(--line-strong);border-inline-start:5px solid var(--navy)}
+.note b{color:var(--ink)}
+
+/* checklist */
+.checklist{list-style:none;margin:1.4rem 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:.6rem 1.4rem}
+@media(max-width:760px){.checklist{grid-template-columns:1fr}}
+.checklist label{display:flex;gap:.65rem;align-items:flex-start;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:.7rem .9rem;cursor:pointer;font-size:.96rem}
+.checklist input{margin-top:.45rem;accent-color:var(--steel);width:17px;height:17px;flex:none}
+.checklist input:checked + span{text-decoration:line-through;color:var(--ink-faint)}
+.progress{margin-top:1rem;font-weight:700;color:var(--ink)}
+.bar{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:.4rem;max-width:420px}
+.bar i{display:block;height:100%;width:0;background:var(--grad-soft);transition:width .3s}
+
+.cta{background:var(--grad);color:#fff;border-radius:var(--r-lg);padding:clamp(2rem,5vw,3.2rem);text-align:center}
+.cta h2{color:#fff}
+.cta p{color:var(--on-navy);max-width:56ch;margin:.8rem auto 1.4rem}
+.cta ul{list-style:none;padding:0;margin:0 auto 1.6rem;max-width:560px;text-align:start;color:var(--on-navy)}
+.cta li{padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.14)}
+
+.foot{background:var(--navy-deep);color:var(--on-navy-soft);padding-block:2.2rem}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:center}
+.foot a{color:var(--on-navy)}
+.foot .ph-row{direction:ltr}
+
+.reveal{opacity:0;transform:translateY(16px);animation:rise .7s ease forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none}html{scroll-behavior:auto}}
+@media print{
+  .topbar,.theme-toggle{display:none}
+  .cover{min-height:auto;padding-block:4rem}
+  .day{break-inside:avoid;box-shadow:none}
+  .reveal{animation:none;opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/daranx-logo.svg" alt="DaranX" onerror="this.style.display='none';this.nextElementSibling.hidden=false"><span hidden>Daran<span class="x">X</span></span></a>
+    <nav class="nav" aria-label="بخش‌ها">
+      <a href="#summary">خلاصه</a><a href="#context">شناخت</a><a href="#deliverables">خروجی‌ها</a>
+      <a href="#days">برنامهٔ روزانه</a><a href="#channels">کانال‌ها</a><a href="#risks">ریسک‌ها</a><a href="#check">چک‌لیست</a>
+    </nav>
+    <button class="theme-toggle" id="tt" aria-label="روشن/تیره">◐</button>
+  </div>
+</header>
+
+<!-- ========== COVER ========== -->
+<section class="cover" id="top">
+  <div>
+    <img class="cbrand" src="assets/daranx-logo.svg" alt="DaranX" onerror="this.style.display='none'">
+    <div><span class="eyebrow" style="color:#cfe0f2">برنامهٔ اجرایی بازاریابی</span></div>
+    <h1 style="margin-top:1rem">هفت روز تا زیرساخت کامل پروموت نرم‌افزار پلانوگرام</h1>
+    <p class="csub">از صفر تا سایت، پیام، بستهٔ فروش، حضور در شبکه‌های اجتماعی و آمادگی تماس مستقیم با زنجیره‌ای‌ها و برندهای FMCG.</p>
+    <div class="langs"><span>ایران · فارسی</span><span>عراق · العربية</span><span>منطقه · English</span></div>
+    <div class="cmeta">۱۶ مهر ۱۴۰۵ · <bdi>DaranX</bdi></div>
+  </div>
+</section>
+
+<!-- ========== SUMMARY ========== -->
+<section class="sec" id="summary">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">خلاصهٔ اجرایی</span><h2>در یک هفته، آمادهٔ جذب مشتری</h2></div>
+    <p class="lead">نرم‌افزار کامل است ولی هنوز هیچ دارایی بازاریابی نداریم. این برنامه در هفت روز کاری، با یک نفر تمام‌وقت و کمک اسکیل‌های بازاریابی Claude، هشت خروجی می‌سازد که از هفتهٔ دوم جذب مشتری را ممکن می‌کند. هدف این هفته «فروش» نیست؛ هدف این است که هر مخاطبی که فردا با محصول روبه‌رو شود، پیام روشن، سایت معتبر و راه سادهٔ درخواست دمو ببیند.</p>
+    <div class="tiles">
+      <div class="tile"><b>۷</b><span>روز کاری</span></div>
+      <div class="tile"><b>۸</b><span>خروجی قابل‌تحویل</span></div>
+      <div class="tile"><b>۳</b><span>زبان: فارسی، عربی، انگلیسی</span></div>
+      <div class="tile"><b>۵۰</b><span>حساب هدف آماده برای تماس</span></div>
+    </div>
+    <div class="note"><b>کار فوری امروز:</b> خرید یک دامنهٔ جدا برای ایمیل‌های تماس مستقیم و شروع گرم‌کردن آن. این تنها کار هفته است که با تلاش بیشتر سریع‌تر نمی‌شود (۲ تا ۴ هفته طول می‌کشد). اگر امروز شروع نشود، در هفتهٔ دوم ایمیلی به مقصد نمی‌رسد.</div>
+  </div>
+</section>
+
+<!-- ========== CONTEXT ========== -->
+<section class="sec alt" id="context">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">شناخت</span><h2>از کجا شروع می‌کنیم</h2></div>
+    <div class="longcopy">
+      <p><b>محصول:</b> اپلیکیشن طراحی و مدیریت چیدمان برای FMCG و فروشگاه‌های زنجیره‌ای بزرگ: زون‌بندی فروشگاه و چیدمان دقیق کالا در قفسه. محصول آماده است؛ کار این هفته معرفی آن است، نه ساختنش.</p>
+      <p><b>وضعیت فعلی:</b> سایت، صفحهٔ شبکه‌های اجتماعی، مشتری مرجع و لیست مخاطب نداریم. پس هر چیزی که این هفته ساخته می‌شود باید بدون اتکا به سابقه، با روشن‌کردن مسئله و نشان‌دادن تخصص اعتماد بسازد.</p>
+      <p><b>مشتریان هدف (فرضیه، روز ۱ تأیید می‌شود):</b></p>
+    </div>
+    <div class="cards">
+      <div class="card"><h3>فروشگاه‌های زنجیره‌ای</h3><div class="en">RETAIL CHAINS</div>
+        <p>تصمیم‌گیرنده: مدیر بازرگانی، مدیر طبقهٔ کالا، مدیر عملیات شعب. درد: چیدمان ناهمسان بین شعب، فضای قفسه‌ای که متناسب با فروش تقسیم نشده، اجرای کند تغییرات.</p></div>
+      <div class="card"><h3>برندهای FMCG</h3><div class="en">FMCG BRANDS</div>
+        <p>تصمیم‌گیرنده: مدیر ترید مارکتینگ، مدیر فروش کانال مدرن. درد: نبود کنترل روی سهم قفسه و اجرای پلانوگرام توافق‌شده با فروشگاه.</p></div>
+      <div class="card"><h3>شرکت‌های پخش و خدمات مرچندایزینگ</h3><div class="en">DISTRIBUTORS &amp; AGENCIES</div>
+        <p>تصمیم‌گیرنده: مدیرعامل، مدیر عملیات میدانی. درد: گزارش‌دهی به چند برند هم‌زمان و اثبات کیفیت اجرا.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== METHOD ========== -->
+<section class="sec">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">روش کار</span><h2>همان مسیر همیشگی DaranX، این بار برای بازاریابی</h2></div>
+    <div class="mstrip">
+      <div class="mstep"><div class="n">۱</div><h3>شناخت</h3><p>روز ۱: مشتری هدف، مسئله، رقبا و جایگاه محصول.</p></div>
+      <div class="mstep"><div class="n">۲</div><h3>طراحی</h3><p>روز ۲ و ۴: پیام، متن سه‌زبانه و بستهٔ فروش.</p></div>
+      <div class="mstep"><div class="n">۳</div><h3>اجرا</h3><p>روز ۳، ۵ و ۶: سایت، شبکه‌های اجتماعی و زیرساخت تماس.</p></div>
+      <div class="mstep"><div class="n">۴</div><h3>پشتیبانی</h3><p>روز ۷: کنترل کیفیت، انتشار و برنامهٔ هفتهٔ دوم.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== DELIVERABLES ========== -->
+<section class="sec alt" id="deliverables">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">محدوده</span><h2>هشت خروجی پایان هفته</h2></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>خروجی</th><th>جزئیات</th><th>روز</th><th>اسکیل</th></tr></thead>
+      <tbody>
+        <tr><td>۱</td><td><b>سند جایگاه محصول</b></td><td>مشتری هدف، پرسوناها، مسئله، رقبا، تمایز، اعتراض‌ها، زبان مشتری، لحن برند</td><td>۱</td><td><span class="chip">product-marketing</span></td></tr>
+        <tr><td>۲</td><td><b>پیام و متن سه‌زبانه</b></td><td>ارزش پیشنهادی، شعار، متن کامل لندینگ، واژه‌نامهٔ اصطلاحات در سه زبان</td><td>۲</td><td><span class="chip">copywriting</span></td></tr>
+        <tr><td>۳</td><td><b>لندینگ سه‌زبانه</b></td><td>یک صفحه، فرم درخواست دمو، سئوی پایه، نسخهٔ موبایل</td><td>۳</td><td><span class="chip">cro</span> <span class="chip">claude-seo</span></td></tr>
+        <tr><td>۴</td><td><b>بستهٔ فروش</b></td><td>وان‌پیجر، دک ۱۰ اسلایدی، سناریوی دمو، کتابچهٔ پاسخ به اعتراض‌ها</td><td>۴</td><td><span class="chip">sales-enablement</span></td></tr>
+        <tr><td>۵</td><td><b>حضور در شبکه‌های اجتماعی</b></td><td>صفحهٔ لینکدین شرکت، پروفایل بنیان‌گذار، اینستاگرام</td><td>۵</td><td><span class="chip">linkedin-profile-optimizer</span></td></tr>
+        <tr><td>۶</td><td><b>محتوای دو هفته</b></td><td>تقویم محتوا + ۵ پست اول نوشته و زمان‌بندی‌شده</td><td>۵</td><td><span class="chip">content-strategy</span> <span class="chip">linkedin-post-writer</span></td></tr>
+        <tr><td>۷</td><td><b>زیرساخت تماس مستقیم</b></td><td>لیست ۵۰ حساب هدف، توالی ایمیل و پیام لینکدین در سه زبان، متن تماس تلفنی</td><td>۶</td><td><span class="chip">cold-email</span></td></tr>
+        <tr><td>۸</td><td><b>ردیابی و پیگیری</b></td><td>آنالیتیکس سایت، تست فرم، جدول پیگیری لیدها</td><td>۳ و ۷</td><td><span class="chip">launch</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ========== DAYS ========== -->
+<section class="sec" id="days">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">برنامهٔ روزبه‌روز</span><h2>هر روز: هدف، کار من، کار شما، معیار پایان</h2>
+      <p class="lead">«کار من» یعنی کاری که Claude با اسکیل‌ها انجام می‌دهد؛ «کار شما» تصمیم‌ها، ورودی‌ها و کارهایی است که فقط شما می‌توانید انجام دهید. زمان‌بندی برای یک روز کاری حدود ۸ ساعته است.</p></div>
+
+    <!-- DAY 1 -->
+    <article class="day" id="d1">
+      <div class="day-head"><div class="num">۱</div><div><h3>شناخت و جایگاه محصول</h3><p>پایهٔ همهٔ کارهای بعدی؛ بدون این سند، متن‌ها کلی و بی‌اثر می‌شوند.</p></div></div>
+      <div class="day-body">
+        <p class="day-goal">هدف: بدانیم به چه کسی، چه مسئله‌ای را، چرا بهتر از جایگزین‌ها حل می‌کنیم.</p>
+        <div class="grid2">
+          <div class="box"><h4><span class="dot"></span>کار من</h4><ol>
+            <li>مصاحبهٔ ساخت‌یافته با شما با اسکیل <b>product-marketing</b>: محصول، مشتری، مسئله، رقیب، تمایز.</li>
+            <li>تعریف مشتری ایدئال برای هر سه گروه (زنجیره، برند، پخش) و برای هر کشور.</li>
+            <li>نقشهٔ رقبا: نرم‌افزارهای بین‌المللی پلانوگرام، راه‌حل‌های داخلی، و «جایگزین واقعی» یعنی اکسل، عکس و تجربهٔ شخصی.</li>
+            <li>فهرست اعتراض‌های محتمل و پاسخ اولیه.</li>
+            <li>نوشتن سند <code>.agents/product-marketing.md</code> که همهٔ اسکیل‌ها از آن می‌خوانند.</li>
+          </ol></div>
+          <div class="box you"><h4><span class="dot"></span>کار شما</h4><ol>
+            <li>نام نهایی محصول و دامنهٔ سایت.</li>
+            <li>فهرست قابلیت‌ها و ۸ تا ۱۰ اسکرین‌شات واضح از نرم‌افزار.</li>
+            <li>مدل قیمت‌گذاری (اشتراک ماهانه/سالانه، به‌ازای شعبه، پروژه‌ای) یا بازهٔ مدنظر.</li>
+            <li>هر نتیجهٔ واقعی از استفادهٔ آزمایشی، حتی کوچک.</li>
+            <li><b>خرید دامنهٔ دوم برای ایمیل</b>، ساخت ۲ صندوق ایمیل روی آن، تنظیم SPF، DKIM و DMARC و روشن‌کردن گرم‌کردن.</li>
+          </ol></div>
+        </div>
+        <div class="sched"><div class="tablewrap"><table>
+          <tbody>
+            <tr><td>۹ تا ۱۱</td><td>مصاحبهٔ جایگاه (محصول، مشتری، مسئله)</td></tr>
+            <tr><td>۱۱ تا ۱۳</td><td>رقبا، تمایز، اعتراض‌ها</td></tr>
+            <tr><td>۱۴ تا ۱۶</td><td>خرید دامنه‌ها، ساخت صندوق‌ها، تنظیمات DNS ایمیل</td></tr>
+            <tr><td>۱۶ تا ۱۷</td><td>بازبینی و تأیید سند جایگاه</td></tr>
+          </tbody>
+        </table></div></div>
+        <div class="meta-row"><span><b>اسکیل‌ها:</b></span><div class="chips"><span class="chip">product-marketing</span><span class="chip">sales-enablement</span></div></div>
+        <div class="done"><b>تمام‌شده وقتی:</b> سند جایگاه را تأیید کرده‌اید و گرم‌کردن دامنهٔ ایمیل شروع شده است.</div>
+      </div>
+    </article>
+
+    <!-- DAY 2 -->
+    <article class="day" id="d2">
+      <div class="day-head"><div class="num">۲</div><div><h3>پیام اصلی و متن سه‌زبانه</h3><p>یک پیام، سه زبان، همه‌جا یکسان.</p></div></div>
+      <div class="day-body">
+        <p class="day-goal">هدف: مخاطب در ۵ ثانیهٔ اول بفهمد محصول چیست، برای کیست و چه نتیجه‌ای می‌دهد.</p>
+        <div class="grid2">
+          <div class="box"><h4><span class="dot"></span>کار من</h4><ol>
+            <li>ارزش پیشنهادی در یک جمله، شعار، و سه پیام پشتیبان (هر کدام برای یک گروه مشتری).</li>
+            <li>متن کامل لندینگ به فارسی با اسکیل <b>copywriting</b>: تیتر اصلی، زیرتیتر، مسئله، راه‌حل، نحوهٔ کار در سه قدم، قابلیت‌ها با زبان نتیجه، پرسش‌های متداول، دعوت به دمو.</li>
+            <li>بومی‌سازی به انگلیسی و عربی؛ بازنویسی برای هر بازار، نه ترجمهٔ کلمه‌به‌کلمه.</li>
+            <li>واژه‌نامهٔ سه‌زبانهٔ اصطلاحات: پلانوگرام، فیسینگ، سهم قفسه، زون‌بندی، سرقفسه و…</li>
+            <li>حذف نشانه‌های متن ماشینی از همهٔ نسخه‌ها.</li>
+          </ol></div>
+          <div class="box you"><h4><span class="dot"></span>کار شما</h4><ol>
+            <li>انتخاب بین ۲ یا ۳ گزینهٔ تیتر و شعار.</li>
+            <li>بازبینی لحن فارسی: رسمی ولی صمیمی، با زبان کسب‌وکار.</li>
+            <li>پیداکردن یک بازبین بومی عراقی برای متن عربی (حتی یک همکار یا آشنا).</li>
+          </ol></div>
+        </div>
+        <div class="sched"><div class="tablewrap"><table>
+          <tbody>
+            <tr><td>۹ تا ۱۱</td><td>ارزش پیشنهادی، شعار، پیام‌های پشتیبان</td></tr>
+            <tr><td>۱۱ تا ۱۴</td><td>متن کامل لندینگ فارسی و بازبینی شما</td></tr>
+            <tr><td>۱۵ تا ۱۷</td><td>نسخهٔ انگلیسی و عربی، واژه‌نامه، ارسال برای بازبین عربی</td></tr>
+          </tbody>
+        </table></div></div>
+        <div class="meta-row"><span><b>اسکیل‌ها:</b></span><div class="chips"><span class="chip">copywriting</span><span class="chip">product-marketing</span></div></div>
+        <div class="done"><b>تمام‌شده وقتی:</b> متن لندینگ در هر سه زبان نهایی است و واژه‌نامه ثبت شده است.</div>
+      </div>
+    </article>
+
+    <!-- DAY 3 -->
+    <article class="day" id="d3">
+      <div class="day-head"><div class="num">۳</div><div><h3>لندینگ سه‌زبانه و سئوی پایه</h3><p>خانهٔ اصلی همهٔ کانال‌ها؛ هر پست و ایمیل به این‌جا ختم می‌شود.</p></div></div>
+      <div class="day-body">
+        <p class="day-goal">هدف: سایتی روی دامنهٔ اصلی که سریع، معتبر و با یک اقدام روشن «درخواست دمو» باشد.</p>
+        <div class="grid2">
+          <div class="box"><h4><span class="dot"></span>کار من</h4><ol>
+            <li>ساخت لندینگ یک‌صفحه‌ای با هویت DaranX؛ راست‌به‌چپ برای فارسی و عربی، چپ‌به‌راست برای انگلیسی.</li>
+            <li>فرم دمو با کمترین فیلد: نام، شرکت، سمت، شماره تماس یا ایمیل، کشور.</li>
+            <li>بازبینی نرخ تبدیل با <b>cro</b>: یک دعوت اصلی، تکرار آن در طول صفحه، نشانه‌های اعتماد بدون ادعای ساختگی.</li>
+            <li>سئوی پایه با <b>claude-seo</b>: hreflang برای سه زبان، schema نرم‌افزار و سازمان، عنوان و توضیح متا برای هر زبان، sitemap و robots.</li>
+            <li>چک‌لیست کنترل قبل از انتشار از اسکیل <b>launch</b>: نسخهٔ موبایل، سرعت، فرم، لینک‌ها.</li>
+          </ol></div>
+          <div class="box you"><h4><span class="dot"></span>کار شما</h4><ol>
+            <li>تهیهٔ هاست و اتصال دامنه.</li>
+            <li>انتخاب ابزار آنالیتیکس و مقصد فرم (ایمیل، تلگرام یا جدول)، با توجه به امکان دسترسی و پرداخت از ایران.</li>
+            <li>ثبت سایت در Google Search Console.</li>
+            <li>یک بار پرکردن فرم از موبایل و دسکتاپ برای تست.</li>
+          </ol></div>
+        </div>
+        <div class="sched"><div class="tablewrap"><table>
+          <tbody>
+            <tr><td>۹ تا ۱۳</td><td>ساخت صفحه و نسخهٔ سه‌زبانه</td></tr>
+            <tr><td>۱۴ تا ۱۵</td><td>فرم، آنالیتیکس، اتصال دامنه</td></tr>
+            <tr><td>۱۵ تا ۱۷</td><td>سئوی پایه، کنترل کیفیت، انتشار</td></tr>
+          </tbody>
+        </table></div></div>
+        <div class="meta-row"><span><b>اسکیل‌ها:</b></span><div class="chips"><span class="chip">cro</span><span class="chip">claude-seo</span><span class="chip">launch</span><span class="chip">design-taste-frontend</span></div></div>
+        <div class="done"><b>تمام‌شده وقتی:</b> سایت روی دامنه بالاست، فرم دمو از موبایل و دسکتاپ تست شده و درخواست‌ها به مقصد می‌رسد.</div>
+      </div>
+    </article>
+
+    <!-- DAY 4 -->
+    <article class="day" id="d4">
+      <div class="day-head"><div class="num">۴</div><div><h3>بستهٔ فروش</h3><p>هر چیزی که در جلسهٔ اول با مشتری لازم است.</p></div></div>
+      <div class="day-body">
+        <p class="day-goal">هدف: اگر فردا کسی گفت «یک چیزی بفرستید ببینیم»، چیزی حرفه‌ای برای فرستادن داشته باشیم.</p>
+        <div class="grid2">
+          <div class="box"><h4><span class="dot"></span>کار من</h4><ol>
+            <li><b>وان‌پیجر</b>: مسئله، راه‌حل، سه نتیجه، نحوهٔ شروع، تماس.</li>
+            <li><b>دک ۱۰ اسلایدی</b>: مسئله، هزینهٔ وضع موجود، راه‌حل، نحوهٔ کار، تصاویر نرم‌افزار، نتایج، چرا ما، اجرا و راه‌اندازی، مدل همکاری، قدم بعدی.</li>
+            <li><b>سناریوی دمو ۲۰ دقیقه‌ای</b>: سؤال‌های شناخت در ۵ دقیقهٔ اول، نمایش بر اساس درد همان مشتری، جمع‌بندی و قدم بعدی.</li>
+            <li><b>کتابچهٔ پاسخ به اعتراض‌ها</b>، مثلاً «با اکسل کار می‌کنیم»، «گران است»، «نیروی میدانی ما استفاده نمی‌کند»، «امنیت داده‌ها»، «پشتیبانی عربی دارید؟».</li>
+            <li>نسخهٔ فارسی کامل با قالب DaranX، و خلاصهٔ انگلیسی و عربی.</li>
+          </ol></div>
+          <div class="box you"><h4><span class="dot"></span>کار شما</h4><ol>
+            <li>تأیید مدل همکاری و قیمت پیشنهادی (در اسناد، قیمت تا تأیید شما خالی می‌ماند).</li>
+            <li>دو بار تمرین سناریوی دمو روی نرم‌افزار واقعی، یک بار با ضبط صدا.</li>
+            <li>آماده‌کردن یک نسخهٔ نمایشی نرم‌افزار با دادهٔ نمونهٔ واقعی‌نما.</li>
+          </ol></div>
+        </div>
+        <div class="sched"><div class="tablewrap"><table>
+          <tbody>
+            <tr><td>۹ تا ۱۱</td><td>وان‌پیجر و ساختار دک</td></tr>
+            <tr><td>۱۱ تا ۱۴</td><td>محتوای دک و سناریوی دمو</td></tr>
+            <tr><td>۱۵ تا ۱۷</td><td>اعتراض‌ها، نسخهٔ انگلیسی و عربی، تمرین دمو</td></tr>
+          </tbody>
+        </table></div></div>
+        <div class="meta-row"><span><b>اسکیل‌ها:</b></span><div class="chips"><span class="chip">sales-enablement</span><span class="chip">daranx-proposal-kit</span></div></div>
+        <div class="done"><b>تمام‌شده وقتی:</b> وان‌پیجر و دک قابل ارسال‌اند و یک دمو کامل تمرین شده است.</div>
+      </div>
+    </article>
+
+    <!-- DAY 5 -->
+    <article class="day" id="d5">
+      <div class="day-head"><div class="num">۵</div><div><h3>شبکه‌های اجتماعی و محتوا</h3><p>جایی که تصمیم‌گیرنده‌ها شما را پیش از جلسه چک می‌کنند.</p></div></div>
+      <div class="day-body">
+        <p class="day-goal">هدف: صفحه‌هایی که با سایت هم‌خوان‌اند، و محتوای دو هفته که بدون فکر روزانه منتشر شود.</p>
+        <div class="grid2">
+          <div class="box"><h4><span class="dot"></span>کار من</h4><ol>
+            <li>متن صفحهٔ لینکدین شرکت: توضیح، شعار، دکمهٔ دعوت به اقدام.</li>
+            <li>بازنویسی پروفایل لینکدین شما با <b>linkedin-profile-optimizer</b>: تیتر، بخش About، Featured، متن بنر.</li>
+            <li>بیو و هایلایت‌های اینستاگرام.</li>
+            <li>برنامهٔ محتوای دو هفته با <b>content-strategy</b> و <b>linkedin-content-planner</b> روی چهار محور: آموزش مسئله (چیدمان، سهم قفسه، کمبود کالا)، دانش پلانوگرام، پشت صحنهٔ ساخت محصول، بازار خرده‌فروشی ایران و عراق.</li>
+            <li>نوشتن ۵ پست اول با <b>linkedin-post-writer</b> و پاک‌کردن لحن ماشینی با <b>linkedin-humanizer</b>.</li>
+          </ol></div>
+          <div class="box you"><h4><span class="dot"></span>کار شما</h4><ol>
+            <li>ساخت صفحهٔ لینکدین شرکت و پیج اینستاگرام.</li>
+            <li>عکس پروفایل حرفه‌ای و بنر (طراحی بنر با هویت DaranX را من آماده می‌کنم).</li>
+            <li>پاسخ به چند سؤال کوتاه دربارهٔ تجربه‌تان برای پست‌ها (اسکیل <b>linkedin-interviewer</b>).</li>
+            <li>تأیید و زمان‌بندی ۵ پست.</li>
+          </ol></div>
+        </div>
+        <div class="sched"><div class="tablewrap"><table>
+          <tbody>
+            <tr><td>۹ تا ۱۱</td><td>صفحه‌ها و پروفایل‌ها</td></tr>
+            <tr><td>۱۱ تا ۱۳</td><td>تقویم محتوای دو هفته</td></tr>
+            <tr><td>۱۴ تا ۱۷</td><td>مصاحبهٔ کوتاه، نوشتن و تأیید ۵ پست</td></tr>
+          </tbody>
+        </table></div></div>
+        <div class="meta-row"><span><b>اسکیل‌ها:</b></span><div class="chips"><span class="chip">linkedin-profile-optimizer</span><span class="chip">content-strategy</span><span class="chip">linkedin-content-planner</span><span class="chip">linkedin-post-writer</span><span class="chip">linkedin-humanizer</span></div></div>
+        <div class="done"><b>تمام‌شده وقتی:</b> صفحه‌ها کامل‌اند، لینک سایت روی همه هست و ۵ پست تأیید و زمان‌بندی شده‌اند.</div>
+      </div>
+    </article>
+
+    <!-- DAY 6 -->
+    <article class="day" id="d6">
+      <div class="day-head"><div class="num">۶</div><div><h3>زیرساخت تماس مستقیم</h3><p>در فروش سازمانی، اولین مشتری‌ها معمولاً از تماس مستقیم می‌آیند، نه از تبلیغ.</p></div></div>
+      <div class="day-body">
+        <p class="day-goal">هدف: بدانیم دقیقاً با چه کسانی، با چه پیامی و با چه ترتیبی تماس می‌گیریم.</p>
+        <div class="grid2">
+          <div class="box"><h4><span class="dot"></span>کار من</h4><ol>
+            <li>معیار انتخاب حساب هدف: تعداد شعب، کانال مدرن، حضور برند در زنجیره‌ها.</li>
+            <li>قالب جدول لیست: شرکت، کشور، گروه، تصمیم‌گیرنده، سمت، کانال تماس، وضعیت.</li>
+            <li>توالی ۴ مرحله‌ای با اسکیل <b>cold-email</b> در سه زبان: ایمیل کوتاه و شخصی، پیگیری با یک نکتهٔ مفید، پیگیری با نمونهٔ مرتبط، پیام پایانی محترمانه.</li>
+            <li>پیام درخواست اتصال و پیام دوم در لینکدین.</li>
+            <li>متن تماس تلفنی کوتاه با <b>sales-enablement</b>.</li>
+          </ol></div>
+          <div class="box you"><h4><span class="dot"></span>کار شما</h4><ol>
+            <li>پرکردن لیست: ۳۰ حساب در ایران و ۲۰ در عراق، با نام و سمت تصمیم‌گیرنده.</li>
+            <li>بررسی درستی ایمیل‌ها پیش از ارسال.</li>
+            <li>انتخاب ابزار ارسال و پیگیری (یا یک جدول ساده برای شروع).</li>
+          </ol></div>
+        </div>
+        <div class="sched"><div class="tablewrap"><table>
+          <tbody>
+            <tr><td>۹ تا ۱۰</td><td>معیار و قالب لیست</td></tr>
+            <tr><td>۱۰ تا ۱۳</td><td>پرکردن لیست حساب‌ها</td></tr>
+            <tr><td>۱۴ تا ۱۷</td><td>توالی ایمیل، پیام لینکدین، متن تماس در سه زبان</td></tr>
+          </tbody>
+        </table></div></div>
+        <div class="meta-row"><span><b>اسکیل‌ها:</b></span><div class="chips"><span class="chip">cold-email</span><span class="chip">sales-enablement</span></div></div>
+        <div class="done"><b>تمام‌شده وقتی:</b> لیست ۵۰ حساب کامل است و همهٔ متن‌های تماس تأیید شده‌اند. ارسال ایمیل بعد از گرم‌شدن دامنه شروع می‌شود؛ پیام لینکدین و تماس تلفنی از هفتهٔ دوم آزاد است.</div>
+      </div>
+    </article>
+
+    <!-- DAY 7 -->
+    <article class="day" id="d7">
+      <div class="day-head"><div class="num">۷</div><div><h3>کنترل کیفیت، انتشار و برنامهٔ هفتهٔ دوم</h3><p>همه‌چیز سرِ جای درستش، پیش از اولین تماس.</p></div></div>
+      <div class="day-body">
+        <p class="day-goal">هدف: هر هشت خروجی تحویل شده باشد و هفتهٔ دوم با اقدام شروع شود، نه با برنامه‌ریزی.</p>
+        <div class="grid2">
+          <div class="box"><h4><span class="dot"></span>کار من</h4><ol>
+            <li>بازبینی نهایی همهٔ متن‌ها در سه زبان برای یکسانی پیام و واژه‌ها.</li>
+            <li>ممیزی سریع سایت با <b>claude-seo</b> و <b>cro</b>.</li>
+            <li>جدول پیگیری لیدها: منبع، تاریخ، وضعیت، قدم بعدی.</li>
+            <li>برنامهٔ هفتهٔ دوم: شروع تماس‌ها، هدف یک پایلوت رایگان، محتوای هفتهٔ دوم.</li>
+          </ol></div>
+          <div class="box you"><h4><span class="dot"></span>کار شما</h4><ol>
+            <li>انتشار پست اول و اعلام راه‌اندازی در شبکهٔ شخصی.</li>
+            <li>ارسال پیام شخصی به ۱۰ تا ۲۰ آشنای مرتبط با خرده‌فروشی و درخواست معرفی.</li>
+            <li>شروع درخواست‌های اتصال در لینکدین به تصمیم‌گیرنده‌های لیست.</li>
+          </ol></div>
+        </div>
+        <div class="meta-row"><span><b>اسکیل‌ها:</b></span><div class="chips"><span class="chip">launch</span><span class="chip">claude-seo</span><span class="chip">cro</span></div></div>
+        <div class="done"><b>تمام‌شده وقتی:</b> همهٔ موارد چک‌لیست پایین این سند تیک خورده‌اند.</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ========== CHANNELS ========== -->
+<section class="sec alt" id="channels">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">کانال‌ها</span><h2>هر بازار، کانال خودش</h2>
+      <p class="lead">این جدول فرضیهٔ اولیه است و در روز ۱ با شناخت بازار بازبینی می‌شود. قاعدهٔ کلی: شبکه‌های اجتماعی برای دیده‌شدن، سایت و فهرست تماس برای ماندگاری؛ همهٔ مسیرها به فرم درخواست دمو ختم می‌شوند.</p></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>کانال</th><th>ایران</th><th>عراق</th><th>نقش</th></tr></thead>
+      <tbody>
+        <tr><td><b>سایت</b></td><td>فارسی</td><td>عربی</td><td>مقصد همهٔ کانال‌ها؛ درخواست دمو</td></tr>
+        <tr><td><b>لینکدین</b></td><td>فارسی و انگلیسی</td><td>انگلیسی و عربی</td><td>اعتبار نزد تصمیم‌گیرنده‌ها، پیام مستقیم</td></tr>
+        <tr><td><b>اینستاگرام</b></td><td>فارسی</td><td>عربی</td><td>دیده‌شدن و نمایش بصری محصول</td></tr>
+        <tr><td><b>فیسبوک</b></td><td>—</td><td>عربی</td><td>فرضیه: برای عراق بررسی شود</td></tr>
+        <tr><td><b>ایمیل</b></td><td>فارسی</td><td>عربی و انگلیسی</td><td>تماس مستقیم پس از گرم‌شدن دامنه</td></tr>
+        <tr><td><b>تلفن و واتس‌اپ</b></td><td>تلفن</td><td>واتس‌اپ</td><td>پیگیری و هماهنگی جلسه</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ========== RISKS ========== -->
+<section class="sec" id="risks">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">ریسک‌ها</span><h2>آنچه ممکن است برنامه را عقب بیندازد</h2></div>
+    <div class="cards">
+      <div class="card"><h3>گرم‌شدن دامنهٔ ایمیل</h3><div class="en">EMAIL DELIVERABILITY</div>
+        <p>۲ تا ۴ هفته زمان می‌برد و سریع‌تر نمی‌شود. روز ۱ شروع شود. هرگز از دامنهٔ اصلی ایمیل تماس مستقیم نفرستید؛ یک کمپین بد می‌تواند ایمیل‌های عادی شرکت را هم به اسپم بفرستد.</p></div>
+      <div class="card"><h3>دسترسی به ابزارها</h3><div class="en">TOOL ACCESS</div>
+        <p>پرداخت و دسترسی بعضی سرویس‌های خارجی (تبلیغات، ارسال ایمیل، آنالیتیکس) از ایران محدود است. پیش از انتخاب هر ابزار، امکان پرداخت و دسترسی بررسی شود.</p></div>
+      <div class="card"><h3>کیفیت متن عربی</h3><div class="en">LOCALISATION</div>
+        <p>متن عربی بدون بازبین بومی عراقی ممکن است رسمی یا نامأنوس به نظر برسد و اعتماد را کم کند. یک بازبین بومی شرط انتشار است.</p></div>
+      <div class="card"><h3>نبود اثبات اجتماعی</h3><div class="en">NO SOCIAL PROOF YET</div>
+        <p>مشتری مرجع نداریم و هیچ نام یا عددی ساخته نمی‌شود. محتوای این هفته روی مسئله و تخصص تکیه می‌کند. هدف هفتهٔ دوم: یک پایلوت رایگان با یک زنجیره یا برند.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CHECKLIST ========== -->
+<section class="sec alt" id="check">
+  <div class="wrap reveal">
+    <div class="sec-head"><span class="eyebrow">چک‌لیست پایان هفته</span><h2>همه تیک خورد؟ هفتهٔ دوم شروع می‌شود</h2>
+      <p class="lead">تیک‌ها فقط در همین مرورگر ذخیره می‌شوند.</p></div>
+    <ul class="checklist" id="cl">
+      <li><label><input type="checkbox"><span>سند جایگاه محصول تأیید شد</span></label></li>
+      <li><label><input type="checkbox"><span>دامنهٔ دوم ایمیل خریده و گرم‌کردن شروع شد</span></label></li>
+      <li><label><input type="checkbox"><span>متن لندینگ در سه زبان نهایی شد</span></label></li>
+      <li><label><input type="checkbox"><span>متن عربی را بازبین بومی تأیید کرد</span></label></li>
+      <li><label><input type="checkbox"><span>سایت روی دامنه منتشر شد</span></label></li>
+      <li><label><input type="checkbox"><span>فرم دمو از موبایل و دسکتاپ تست شد</span></label></li>
+      <li><label><input type="checkbox"><span>آنالیتیکس و Search Console فعال شد</span></label></li>
+      <li><label><input type="checkbox"><span>وان‌پیجر و دک آماده ارسال‌اند</span></label></li>
+      <li><label><input type="checkbox"><span>سناریوی دمو دو بار تمرین شد</span></label></li>
+      <li><label><input type="checkbox"><span>صفحهٔ لینکدین شرکت و پروفایل شما کامل شد</span></label></li>
+      <li><label><input type="checkbox"><span>پیج اینستاگرام کامل شد</span></label></li>
+      <li><label><input type="checkbox"><span>تقویم محتوای دو هفته آماده است</span></label></li>
+      <li><label><input type="checkbox"><span>۵ پست تأیید و زمان‌بندی شد</span></label></li>
+      <li><label><input type="checkbox"><span>لیست ۵۰ حساب هدف کامل شد</span></label></li>
+      <li><label><input type="checkbox"><span>توالی ایمیل، پیام لینکدین و متن تماس تأیید شد</span></label></li>
+      <li><label><input type="checkbox"><span>جدول پیگیری لیدها و برنامهٔ هفتهٔ دوم آماده است</span></label></li>
+    </ul>
+    <div class="progress"><span id="pc">۰ از ۱۶</span><div class="bar"><i id="pb"></i></div></div>
+  </div>
+</section>
+
+<!-- ========== CTA ========== -->
+<section class="sec">
+  <div class="wrap reveal">
+    <div class="cta">
+      <span class="eyebrow" style="color:#cfe0f2">قدم بعدی</span>
+      <h2 style="margin-top:.6rem">روز ۱ با چهار ورودی شروع می‌شود</h2>
+      <p>این‌ها را بفرستید تا مصاحبهٔ جایگاه محصول شروع شود:</p>
+      <ul>
+        <li>نام نهایی محصول</li>
+        <li>فهرست قابلیت‌ها</li>
+        <li>۸ تا ۱۰ اسکرین‌شات از نرم‌افزار</li>
+        <li>مدل قیمت‌گذاری یا بازهٔ مدنظر</li>
+      </ul>
+      <a class="btn btn-light" href="#d1">برنامهٔ روز ۱</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="brand" style="color:#fff">Daran<span style="color:var(--steel-soft)">X</span></div>
+    <div class="ph-row"><a href="tel:+982188964116">۰۲۱-۸۸۹۶۴۱۱۶</a> · <a href="tel:+982188966904">۸۸۹۶۶۹۰۴</a> · <a href="tel:+989359370910">۰۹۳۵-۹۳۷۰۹۱۰</a></div>
+    <div>تهران، میدان فاطمی، نبش چهلستون، ساختمان چهلستون، طبقه ۲، واحد ۲۰۲</div>
+    <div><a href="https://www.daranx.com">www.DaranX.com</a> — همه چیز سرِ جای درستش.</div>
+  </div>
+</footer>
+
+<script>
+  (function(){var r=document.documentElement,b=document.getElementById('tt');if(!b)return;
+    try{var s=localStorage.getItem('dx-doc-theme');if(s)r.setAttribute('data-theme',s);}catch(e){}
+    b.addEventListener('click',function(){var cur=r.getAttribute('data-theme');
+      var dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+      var next=dark?'light':'dark';r.setAttribute('data-theme',next);
+      try{localStorage.setItem('dx-doc-theme',next)}catch(e){}});
+  })();
+  // checklist with per-browser persistence
+  (function(){var boxes=[].slice.call(document.querySelectorAll('#cl input')),K='dx-week1-check',st=[];
+    try{st=JSON.parse(localStorage.getItem(K)||'[]')}catch(e){}
+    var fa=function(n){return String(n).replace(/\d/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d]})};
+    function upd(){var n=boxes.filter(function(b){return b.checked}).length;
+      document.getElementById('pc').textContent=fa(n)+' از '+fa(boxes.length);
+      document.getElementById('pb').style.width=(n/boxes.length*100)+'%';}
+    boxes.forEach(function(b,i){b.checked=!!st[i];b.addEventListener('change',function(){
+      try{localStorage.setItem(K,JSON.stringify(boxes.map(function(x){return x.checked})))}catch(e){}upd();});});
+    upd();
+  })();
+</script>
+</body>
+</html>
