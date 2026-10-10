@@ -1,0 +1,12 @@
+# ActivePlano
+
+> ActivePlano (اکتیو پلانو) is planogram and store-layout software from Behsarma and DaranX, the first planogram software for retail stores in Iran. It covers layout design, per-shelf execution sheets with QR codes, comparison of the real shelf with the planned layout, and monthly sales analysis. Built for retail stores, chains and franchisors. Language: Persian.
+
+## Pages
+- [Home](https://www.activeplano.com/): what ActivePlano is, how it works, cooperation models, FAQ and demo request form.
+
+## Key facts
+- Category: planogram software, store layout management, retail execution control.
+- Audience: store managers and sales staff, retail chains, franchisors with a central warehouse.
+- Four cooperation models: panel without dataset, panel with dataset, layout deployment and planogram delivery, franchisor model.
+- Website: https://www.activeplano.com/
