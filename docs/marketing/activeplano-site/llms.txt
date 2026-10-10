@@ -8,5 +8,5 @@
 ## Key facts
 - Category: planogram software, store layout management, retail execution control.
 - Audience: store managers and sales staff, retail chains, franchisors with a central warehouse.
-- Four cooperation models: panel without dataset, panel with dataset, layout deployment and planogram delivery, franchisor model.
+- Four plans: Basic (software, 6 months, 199M toman), Pro (+ product data, 399M toman), VIP (+ sales analysis and merchandising consultancy, 1.2B toman), Franchise (+ one layout standard for all branches; price on request).
 - Website: https://www.activeplano.com/
