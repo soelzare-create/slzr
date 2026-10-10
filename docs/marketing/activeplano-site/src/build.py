@@ -63,7 +63,9 @@ graph = [
      "featureList": ["طراحی چیدمان فروشگاه و زون‌بندی", "برگهٔ اجرای هر قفسه با QR", "مقایسهٔ چیدمان واقعی با طرح", "تحلیل فروش ماهانه و اصلاح چیدمان", "برآورد شارژ اول شعبهٔ جدید"],
      "publisher": {"@id": SITE + "#org"}},
     {"@type": "WebPage", "@id": SITE + "#page", "url": SITE, "name": title, "description": desc, "inLanguage": "fa-IR",
-     "isPartOf": {"@id": SITE + "#site"}, "about": {"@id": SITE + "#app"}, "primaryImageOfPage": {"@type": "ImageObject", "url": SITE + "assets/og.png", "width": 1200, "height": 630}},
+     "isPartOf": {"@id": SITE + "#site"}, "about": {"@id": SITE + "#app"}, "mainEntity": {"@id": SITE + "#app"},
+     "dateModified": __import__("datetime").date.today().isoformat(),
+     "speakable": {"@type": "SpeakableSpecification", "cssSelector": ["#h-what", "#what .prose p"]}, "primaryImageOfPage": {"@type": "ImageObject", "url": SITE + "assets/og.png", "width": 1200, "height": 630}},
 ]
 if faq:
     graph.append({"@type": "FAQPage", "@id": SITE + "#faq", "mainEntity": faq, "inLanguage": "fa-IR"})

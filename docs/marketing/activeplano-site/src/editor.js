@@ -24,6 +24,7 @@
     ['cam', 'cdot'].forEach(function (id) { var e = root.querySelector('#' + id); if (e) e.removeAttribute('transform'); });
     var qb = root.querySelector('#qrBeam'); if (qb && cfg.qr) qb.setAttribute('y', cfg.qr.qy);
     root.querySelectorAll('#aisleInner,#aisleOuter').forEach(function (e) { e.removeAttribute('style'); });
+    root.querySelectorAll('.steps').forEach(function (e) { e.remove(); });
     var pc = root.querySelector('#needCount'); if (pc) { pc.textContent = ''; pc.className = 'need-count'; }
     return root;
   }

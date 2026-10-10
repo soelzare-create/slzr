@@ -1,7 +1,7 @@
 /* Scroll story controller.
    One pinned "stage" per section (CSS position:sticky). GSAP ScrollTrigger reports progress,
    a short tween smooths it, and each scene only toggles classes or sets transform/opacity.
-   No window scroll listeners. Reduced motion and edit mode switch the whole story to a static layout. */
+   No scroll listeners; wheel/touch are only intercepted to turn one gesture into one step. Reduced motion and edit mode switch the whole story to a static layout. */
 (function () {
   'use strict';
   var doc = document, body = doc.body;
@@ -19,31 +19,36 @@
   var acts = [], pageTriggers = [], statik = false, started = false;
 
   /* ---------- act factory ---------- */
-  function Act(id, bounds, h) {
+  function Act(id, bounds, h, stops) {
     var sec = $(id); if (!sec) return;
     var stage = sec.querySelector('.stage'), caps = [].slice.call(sec.querySelectorAll('.cap')), last = -1, st = { p: 0 }, trig;
+    var rail = doc.createElement('div'); rail.className = 'steps'; rail.setAttribute('aria-hidden', 'true');
+    for (var k = 0; k <= bounds.length; k++) rail.appendChild(doc.createElement('i'));
+    var dots = [].slice.call(rail.children);
     function sceneOf(p) { var s = 0; for (var i = 0; i < bounds.length; i++) if (p >= bounds[i]) s = i + 1; return s; }
     function render() {
       var sc = sceneOf(st.p);
       if (sc !== last) {
         caps.forEach(function (c) { c.classList.toggle('on', +c.getAttribute('data-s') === sc); });
         if (h.scene) h.scene(sc);
+        dots.forEach(function (d, i) { d.classList.toggle('on', i === sc); });
         last = sc;
       }
       if (h.frame) h.frame(st.p, sc);
     }
     var a = {
-      id: id, sec: sec,
+      id: id, sec: sec, stops: stops || [0, 1],
       start: function () {
+        if (!rail.parentNode) stage.appendChild(rail);
         trig = ScrollTrigger.create({
           trigger: sec, start: 'top top', end: 'bottom bottom', invalidateOnRefresh: true,
-          onUpdate: function (self) { gsap.to(st, { p: self.progress, duration: .45, ease: 'power3.out', overwrite: true, onUpdate: render }); },
+          onUpdate: function (self) { gsap.to(st, { p: self.progress, duration: .22, ease: 'power2.out', overwrite: true, onUpdate: render }); },
           onRefresh: function (self) { st.p = self.progress; last = -1; if (h.layout) h.layout(stage.clientWidth, stage.clientHeight); render(); }
         });
       },
       jump: function (p) { st.p = p; last = -1; render(); },
       stop: function () {
-        if (trig) trig.kill(); trig = null; gsap.killTweensOf(st); last = -1; st.p = 0;
+        if (trig) trig.kill(); trig = null; gsap.killTweensOf(st); last = -1; st.p = 0; if (rail.parentNode) rail.remove();
         caps.forEach(function (c) { c.classList.remove('on'); });
         if (h.reset) h.reset();
       }
@@ -121,7 +126,7 @@
       zones.forEach(function (z) { z.removeAttribute('style'); z.querySelector('.zlabel').removeAttribute('style'); z.querySelector('.zicon').removeAttribute('style'); });
       [ao, ai, shelfSvg].forEach(function (e) { e.removeAttribute('style'); }); cdot.removeAttribute('transform'); hud.classList.remove('show'); lastCrumb = -1;
     }
-    Act('top', [.16, .30, .46, .74, .90], { layout: layout, frame: frame, scene: scene, reset: reset });
+    Act('top', [.16, .30, .46, .74, .90], { layout: layout, frame: frame, scene: scene, reset: reset }, [0, .27, .45, .66, .86, 1]);
   })();
 
   /* ---------- act: problem (pins on the plan) ---------- */
@@ -142,7 +147,7 @@
         dets.forEach(function (d) { d.classList.toggle('on', +d.getAttribute('data-k') === sc); });
       },
       reset: function () { svg.setAttribute('viewBox', '40 40 1520 960'); cam.removeAttribute('style'); pins.forEach(function (p) { p.classList.remove('act'); p.classList.add('show'); }); dets.forEach(function (d) { d.classList.remove('on'); }); }
-    });
+    }, [0, .18, .34, .5, .66, .81, 1]);
   })();
 
   /* ---------- act: how it works (editor, sheet, compare, analysis) ---------- */
@@ -151,7 +156,7 @@
     Act('how', [.12, .32, .54, .76], {
       scene: function (sc) { avis.setAttribute('data-sc', sc); ovs.forEach(function (o) { o.classList.toggle('on', +o.getAttribute('data-s') === sc); }); },
       reset: function () { avis.setAttribute('data-sc', 1); ovs.forEach(function (o) { o.classList.remove('on'); }); }
-    });
+    }, [0, .22, .43, .65, 1]);
   })();
 
   /* ---------- act: opening a new store ---------- */
@@ -161,7 +166,7 @@
       layout: function () { var aw = avis.clientWidth, ah = avis.clientHeight; svg.setAttribute('viewBox', '0 0 ' + aw + ' ' + ah); var b = Math.min(aw * .94 / 1400, ah * .9 / 860); cam.style.transform = 'translate(' + aw / 2 + 'px,' + ah / 2 + 'px) scale(' + b + ') translate(-800px,-500px)'; },
       scene: function (sc) { avis.setAttribute('data-sc', sc); ovs.forEach(function (o) { o.classList.toggle('on', +o.getAttribute('data-s') === sc); }); },
       reset: function () { svg.setAttribute('viewBox', '40 40 1520 960'); cam.removeAttribute('style'); avis.setAttribute('data-sc', 1); }
-    });
+    }, [0, .28, .57, 1]);
   })();
 
   /* ---------- act: who (store -> chain -> franchise network) ---------- */
@@ -178,7 +183,7 @@
       pos(hub, 800, 450, sc >= 3 ? 1.05 : .4, sc >= 3 ? 1 : 0);
       row.classList.toggle('on', sc === 2); rad.forEach(function (l) { l.classList.toggle('on', sc >= 3); });
     }
-    Act('who', [.14, .4, .7], { scene: lay, reset: function () { lay(3); } });
+    Act('who', [.14, .4, .7], { scene: lay, reset: function () { lay(3); } }, [0, .27, .55, 1]);
   })();
 
   /* ---------- page-level triggers (progress bar, nav state, dark/light top bar) ---------- */
@@ -194,13 +199,107 @@
     });
   }
 
+  /* ---------- one scroll = one step ----------
+     Every scene of every act is a stop; after the story, sections are stops too (long sections are paged so
+     nothing is skipped). A scroll gesture moves to the next stop in its direction and the scene in between
+     plays as motion. Native scrolling, scrollbar, keyboard and anchors keep working. */
+  var stopsPx = [];
+  function buildStops() {
+    var vh = innerHeight, max = ScrollTrigger.maxScroll(window), pts = [0];
+    acts.forEach(function (a) { var top = a.sec.offsetTop, run = a.sec.offsetHeight - vh; a.stops.forEach(function (q) { pts.push(top + run * q); }); });
+    var last = acts[acts.length - 1], after = last ? last.sec.offsetTop + last.sec.offsetHeight : 0;
+    [].slice.call(doc.querySelectorAll('main > section, .foot')).forEach(function (el) {
+      var top = el.offsetTop, h = el.offsetHeight; if (top < after - 2) return;
+      pts.push(top);
+      if (h > vh * 1.05) { for (var y = top + vh * .8; y < top + h - vh; y += vh * .8) pts.push(y); pts.push(top + h - vh); }
+    });
+    pts.push(max);
+    stopsPx = pts.map(function (y) { return clamp(Math.round(y), 0, max); }).sort(function (a, b) { return a - b; })
+      .filter(function (y, i, arr) { return i === 0 || y - arr[i - 1] > vh * .1; });
+    if (stopsPx[stopsPx.length - 1] !== max) { if (max - stopsPx[stopsPx.length - 1] < vh * .1) stopsPx[stopsPx.length - 1] = max; else stopsPx.push(max); }
+  }
+  function nearStop(y) { for (var i = 0; i < stopsPx.length; i++) if (Math.abs(stopsPx[i] - y) < 6) return true; return false; }
+  function nextStop(cur, d) {
+    var i; if (d > 0) { for (i = 0; i < stopsPx.length; i++) if (stopsPx[i] > cur + 6) return stopsPx[i]; }
+    else { for (i = stopsPx.length - 1; i >= 0; i--) if (stopsPx[i] < cur - 6) return stopsPx[i]; }
+    return null;
+  }
+  /* fallback for keyboard, scrollbar and anchor jumps: settle on the next stop in the scroll direction */
+  function stepTo(v, self) {
+    var max = ScrollTrigger.maxScroll(window), cur = self.scroll(); if (!max || !stopsPx.length || busy || nearStop(cur)) return cur / max;
+    var t = nextStop(cur, self.direction); return t === null ? v : t / max;
+  }
+  /* wheel / swipe: one gesture = one step, played as a tween so the scene between two stops reads as motion */
+  var busy = false, tw = null, proxy = { y: 0 };
+  function glide(t, dur) {
+    busy = true; proxy.y = scrollY; if (tw) tw.kill();
+    tw = gsap.to(proxy, { y: t, duration: dur, ease: 'power2.inOut', onUpdate: function () { scrollTo(0, proxy.y); },
+      onComplete: function () { tw = null; setTimeout(function () { busy = false; }, 140); } });
+  }
+  function step(d) {
+    if (busy || statik) return;
+    var cur = scrollY, t = nextStop(cur, d); if (t === null) return;
+    var dist = Math.abs(t - cur) / innerHeight;
+    glide(t, clamp(.55 + dist * .35, .7, 1.25));
+  }
+  function onWheel(e) { if (!started || e.ctrlKey || body.classList.contains('editing')) return; e.preventDefault(); if (Math.abs(e.deltaY) < 3) return; step(e.deltaY > 0 ? 1 : -1); }
+  var ty0 = null;
+  function onTouchStart(e) { ty0 = e.touches.length === 1 ? e.touches[0].clientY : null; }
+  function onTouchMove(e) { if (!started || ty0 === null || e.touches.length > 1) return; if (e.cancelable) e.preventDefault(); var dy = ty0 - e.touches[0].clientY; if (Math.abs(dy) > 28) { step(dy > 0 ? 1 : -1); ty0 = null; } }
+  function onFocus(e) {
+    var cap = e.target.closest && e.target.closest('.cap'); if (!cap || cap.classList.contains('on') || !started) return;
+    var a = acts.filter(function (x) { return x.sec.contains(cap); })[0]; if (!a) return;
+    var q = a.stops[+cap.getAttribute('data-s')]; if (q === undefined) return;
+    busy = false; glide(a.sec.offsetTop + (a.sec.offsetHeight - innerHeight) * q, .8);
+  }
+  function onAnchor(e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a || !started || body.classList.contains('editing')) return;
+    var el = doc.querySelector(a.getAttribute('href')); if (!el) return;
+    e.preventDefault();
+    var y = el.classList.contains('story') ? el.offsetTop : Math.max(0, el.offsetTop - (el.id === 'demo' ? 96 : 0));
+    glide(Math.min(y, ScrollTrigger.maxScroll(window)), .9 + Math.min(1, Math.abs(y - scrollY) / innerHeight / 12) * .6);
+    if (history.pushState) history.pushState(null, '', a.getAttribute('href'));
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1'); el.focus({ preventScroll: true });
+  }
+  function transitionsStart() {
+    var vh = innerHeight;
+    pageTriggers.push(ScrollTrigger.create({
+      start: 0, end: 'max', onRefresh: buildStops,
+      snap: { snapTo: stepTo, delay: .12, duration: { min: .5, max: 1.1 }, ease: 'power2.inOut', inertia: false }
+    }));
+    ScrollTrigger.addEventListener('refreshInit', buildStops);
+    addEventListener('wheel', onWheel, { passive: false });
+    addEventListener('touchstart', onTouchStart, { passive: true }); addEventListener('touchmove', onTouchMove, { passive: false });
+    doc.addEventListener('click', onAnchor); doc.addEventListener('focusin', onFocus);
+    /* outgoing act: its stage recedes while the next act rises over it */
+    acts.forEach(function (a) {
+      var stage = a.sec.querySelector('.stage');
+      fx.push(gsap.fromTo(stage, { opacity: 1, scale: 1 }, { opacity: .15, scale: .93, ease: 'none', immediateRender: false,
+        scrollTrigger: { trigger: a.sec, start: 'bottom bottom', end: 'bottom top', scrub: .3 } }));
+    });
+    /* regular sections: blocks leave upward and fade as the next ones arrive */
+    [].slice.call(doc.querySelectorAll('.interlude [data-reveal], #what [data-reveal], #benefits [data-reveal], #models [data-reveal], #proof [data-reveal]')).forEach(function (el) {
+      fx.push(gsap.fromTo(el, { opacity: 1, y: 0 }, { opacity: 0, y: -36, ease: 'none', immediateRender: false,
+        scrollTrigger: { trigger: el, start: 'bottom 42%', end: 'bottom 4%', scrub: .3, onToggle: function (s) { if (s.isActive) el.style.transition = 'none'; } } }));
+    });
+    doc.querySelectorAll('.faq details').forEach(function (d) { d.addEventListener('toggle', refreshSoon); });
+  }
+  var fx = [], rT = 0;
+  function refreshSoon() { clearTimeout(rT); rT = setTimeout(function () { ScrollTrigger.refresh(); }, 120); }
+  function transitionsStop() {
+    ScrollTrigger.removeEventListener('refreshInit', buildStops);
+    removeEventListener('wheel', onWheel); removeEventListener('touchstart', onTouchStart); removeEventListener('touchmove', onTouchMove);
+    doc.removeEventListener('click', onAnchor); doc.removeEventListener('focusin', onFocus); if (tw) tw.kill(); tw = null; busy = false;
+    fx.forEach(function (t) { if (t.scrollTrigger) t.scrollTrigger.kill(); t.kill(); gsap.set(t.targets(), { clearProps: 'opacity,transform,transition,scale' }); }); fx = [];
+  }
+
   /* ---------- lifecycle ---------- */
   function start() {
     if (started) return; started = true; statik = false; body.classList.remove('no-story');
-    acts.forEach(function (a) { a.start(); }); pageStart(); ScrollTrigger.refresh();
+    acts.forEach(function (a) { a.start(); }); pageStart(); transitionsStart(); ScrollTrigger.refresh();
   }
   function stop() {
-    started = false; acts.forEach(function (a) { a.stop(); });
+    started = false; acts.forEach(function (a) { a.stop(); }); transitionsStop();
     pageTriggers.forEach(function (t) { t.kill(); }); pageTriggers = []; ScrollTrigger.refresh();
     body.classList.add('no-story'); statik = true;
   }
