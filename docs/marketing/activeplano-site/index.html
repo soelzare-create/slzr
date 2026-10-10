@@ -358,7 +358,7 @@ body.no-story .steps,html:not(.js) .steps{display:none}
 .errsum.on{display:block}.errsum a{color:#FFD9D1;text-decoration:underline}.errsum h3{font-size:1rem;color:#FFD9D1;margin-bottom:.3rem}
 .hp{position:absolute;inset-inline-start:-9999px;width:1px;height:1px;opacity:0}
 .form .btn[aria-busy="true"]{opacity:.7;pointer-events:none}
-.form-ok{display:none;text-align:center;padding:1.5rem}.form-ok h3{color:var(--st-ink);margin-top:.6rem}.form-ok .ic{width:44px;height:44px;color:var(--mint)}
+.form-ok{display:none;text-align:center;padding:1.5rem}.form-ok p{margin-top:.8rem}.form-ok h3{color:var(--st-ink);margin-top:.6rem}.form-ok .ic{width:44px;height:44px;color:var(--mint)}
 .fields{display:contents}.form.sent .fields{display:none}.form.sent .form-ok{display:block}
 .form-msg{min-height:1.4em;font-size:.9rem;color:var(--st-ink-2)}
 @media(max-width:860px){.demo{grid-template-columns:1fr}}
@@ -614,9 +614,9 @@ body.no-story .gapempty{opacity:1}
   <div class="wrap">
     <div class="demo" data-reveal="">
       <div>
-        <h2 id="h-demo">ActivePlano را روی فروشگاه خودتان ببینید</h2>
-        <p>فرم را پر کنید تا برای یک جلسهٔ نمایش (دمو) با شما تماس بگیریم. <span class="need">[NEED: زمان پاسخ‌دهی]</span></p>
-        <p><span class="need">[NEED: مدت و قالب جلسهٔ دمو؛ مثلاً «جلسهٔ ۲۰ دقیقه‌ای، آنلاین یا حضوری»]</span></p>
+        <h2 id="h-demo">دموی ActivePlano را همین حالا بگیرید</h2>
+        <p>فرم را پر کنید و فایل دمو را همان لحظه دریافت کنید: مراحل کار پلانوگرام، قدم‌به‌قدم، از نقشهٔ فروشگاه تا کنترل قفسه با QR.</p>
+        <p>اگر برای همکاری آماده بودید، یک جلسهٔ حضوری یا آنلاین با هم می‌گذاریم.</p>
       </div>
       <form class="form" id="demoForm" data-endpoint="" novalidate="">
         <div class="errsum" id="errsum" role="alert" tabindex="-1" aria-labelledby="errtitle"><h3 id="errtitle">برای ارسال، این موارد را اصلاح کنید</h3><ul id="errlist"></ul></div>
@@ -627,10 +627,10 @@ body.no-story .gapempty{opacity:1}
           <div class="field"><label for="f-phone">شمارهٔ تماس</label><input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" required="" aria-describedby="err-phone"><p class="err" id="err-phone"></p></div>
           <div class="field"><label for="f-branches">تعداد شعبه (اختیاری)</label><input id="f-branches" name="branches" inputmode="numeric" aria-describedby="err-branches"><p class="err" id="err-branches"></p></div>
           <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <button class="btn btn-mint" id="demoBtn" type="submit">درخواست دمو</button>
+          <button class="btn btn-mint" id="demoBtn" type="submit">دریافت فایل دمو</button>
           <p class="form-msg" id="formMsg" role="status" aria-live="polite"></p>
         </div>
-        <div class="form-ok" role="status"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"></use></svg><h3 id="okTitle">درخواست شما ثبت شد</h3><p>به‌زودی با شما تماس می‌گیریم.</p></div>
+        <div class="form-ok" role="status"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"></use></svg><h3 id="okTitle">فایل دمو آماده است</h3><p><a class="btn btn-mint" href="assets/activeplano-demo.pdf" download="">دانلود فایل دمو</a></p><p>برای هماهنگی جلسهٔ حضوری یا آنلاین، به‌زودی با شما تماس می‌گیریم.</p></div>
       </form>
     </div>
   </div>
