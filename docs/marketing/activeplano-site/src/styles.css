@@ -140,7 +140,7 @@ a{color:var(--accent-text);text-decoration:none}
 .hud.show{opacity:1}
 .hud i{font-style:normal;opacity:.45}
 .crumb{white-space:nowrap;transition:color var(--t-card) ease}.crumb.done{color:var(--st-ink-2)}.crumb.on{color:var(--mint)}
-@media(max-width:600px){.hud{font-size:.72rem;gap:.3rem;padding:.25rem .7rem}.hud .crumb[data-c="1"],.hud i:nth-of-type(1){display:none}}
+@media(max-width:600px){.hud{font-size:.66rem;gap:.25rem;padding:.25rem .6rem}}
 
 /* copy: hero + captions */
 .story{--cx:clamp(1.2rem,5vw,4.5rem)}
@@ -297,7 +297,9 @@ a{color:var(--accent-text);text-decoration:none}
 /* demo */
 .demo{background:var(--st-surface);border-radius:28px;padding:clamp(1.5rem,5vw,3.2rem);display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.5rem,4vw,3rem);align-items:start;color:var(--st-ink-2);border:1px solid var(--st-line)}
 .demo h2{color:var(--st-ink)}.demo p{margin-top:.8rem}
-.form{display:grid;gap:1rem}
+.form{display:grid;gap:1rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+.form>.errsum,.form>.form-ok,.form .btn,.form .form-msg{grid-column:1/-1}
+@media(max-width:520px){.form{grid-template-columns:1fr}}
 .field{display:grid;gap:.4rem}
 .field label{font-weight:800;font-size:.92rem;color:var(--st-ink)}
 .field input{font:600 1rem var(--font);min-height:48px;border:1px solid var(--st-line-2);background:#F3F8F5;color:#0E2A23;border-radius:var(--r-input);padding:.6rem .9rem;width:100%;transition:border-color var(--t-ui) ease,box-shadow var(--t-ui) ease}
@@ -310,7 +312,7 @@ a{color:var(--accent-text);text-decoration:none}
 .hp{position:absolute;inset-inline-start:-9999px;width:1px;height:1px;opacity:0}
 .form .btn[aria-busy="true"]{opacity:.7;pointer-events:none}
 .form-ok{display:none;text-align:center;padding:1.5rem}.form-ok h3{color:var(--st-ink);margin-top:.6rem}.form-ok .ic{width:44px;height:44px;color:var(--mint)}
-.form.sent .fields{display:none}.form.sent .form-ok{display:block}
+.fields{display:contents}.form.sent .fields{display:none}.form.sent .form-ok{display:block}
 .form-msg{min-height:1.4em;font-size:.9rem;color:var(--st-ink-2)}
 @media(max-width:860px){.demo{grid-template-columns:1fr}}
 .foot{padding-block:2.4rem;border-top:1px solid var(--line);margin-top:var(--sp)}
