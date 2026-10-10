@@ -111,10 +111,10 @@ def pins_layer():
     o = ['<g id="pinsP" class="pins">']
     o.append('<g class="pdet" data-k="1"><rect class="pd-box" x="1074" y="462" width="76" height="76" rx="10"/><text x="1112" y="446" text-anchor="middle" class="pd-t">جای خالی</text></g>')
     o.append('<g class="pdet" data-k="2">' + ic("user-minus", 196, 452, 72, "pd-ic") + '<text x="232" y="560" text-anchor="middle" class="pd-t">با رفتن یک نفر</text></g>')
-    o.append('<g class="pdet" data-k="3"><path class="pd-route" d="M466 312H876V706H466Z"/>' + ic("footprints", 650, 470, 44, "pd-ic") + '<text x="671" y="760" text-anchor="middle" class="pd-t">گشت‌زنی چشمی و دستی</text></g>')
-    o.append('<g class="pdet" data-k="4"><circle class="pd-box" cx="680" cy="772" r="62"/>' + ic("question", 646, 738, 68, "pd-ic") + '<text x="680" y="690" text-anchor="middle" class="pd-t">حجم خرید اولیه</text></g>')
-    o.append('<g class="pdet" data-k="5">' + ic("clipboard-text", 820, 150, 76, "pd-ic") + '<text x="858" y="130" text-anchor="middle" class="pd-t">بدون سند واحد</text></g>')
-    o.append('<g class="pdet" data-k="6">' + ic("trend-down", 1346, 456, 68, "pd-ic") + '<text x="1380" y="580" text-anchor="middle" class="pd-t">نقطهٔ کم‌فروش</text></g>')
+    o.append('<g class="pdet" data-k="3"><path class="pd-route" d="M466 312H876V706H466Z"/>' + ic("footprints", 650, 470, 44, "pd-ic") + '<text x="671" y="760" text-anchor="middle" class="pd-t">سرکشی هر روزه</text></g>')
+    o.append('<g class="pdet" data-k="4"><circle class="pd-box" cx="680" cy="772" r="62"/>' + ic("question", 646, 738, 68, "pd-ic") + '<text x="680" y="690" text-anchor="middle" class="pd-t">خرید حدسی</text></g>')
+    o.append('<g class="pdet" data-k="5">' + ic("clipboard-text", 820, 150, 76, "pd-ic") + '<text x="858" y="130" text-anchor="middle" class="pd-t">بدون سند</text></g>')
+    o.append('<g class="pdet" data-k="6">' + ic("trend-down", 1346, 456, 68, "pd-ic") + '<text x="1380" y="580" text-anchor="middle" class="pd-t">جای کم‌دید</text></g>')
     for k, x, y in PINS:
         o.append(f'<g class="pin" data-k="{k}" transform="translate({x} {y})"><circle class="pring" r="44"/><circle class="pdot" r="24"/><text class="pnum" y="9" text-anchor="middle">{k}</text></g>')
     o.append("</g>")

@@ -37,7 +37,7 @@ rd = lambda p: (HERE / p).read_text()
 import html as H
 SITE = "https://www.activeplano.com/"
 title = "ActivePlano | نرم‌افزار پلانوگرام و چیدمان فروشگاه"
-desc = "ActivePlano نرم‌افزار پلانوگرام فروشگاهی است: طراحی چیدمان، برگهٔ اجرای هر قفسه با QR، کنترل چیدمان واقعی و تحلیل فروش. محصول به‌سرما و داران ایکس."
+desc = "ActivePlano نرم‌افزار پلانوگرام فروشگاه است: چیدمان قفسه‌ها را طراحی کنید، با یک اسکن QR کنترل کنید و با فروش هر ماه بهترش کنید. محصول به‌سرما و داران ایکس."
 plain = lambda t: re.sub(r"\s+", " ", H.unescape(re.sub(r"<[^>]+>", " ", t))).strip()
 
 # FAQPage schema only from answers that are final (no open [NEED] marker), so it always matches visible text
@@ -59,8 +59,8 @@ graph = [
     {"@type": "SoftwareApplication", "@id": SITE + "#app", "name": "ActivePlano", "alternateName": ["اکتیو پلانو", "Active Plano"],
      "applicationCategory": "BusinessApplication", "applicationSubCategory": "Planogram software", "operatingSystem": "Web",
      "inLanguage": "fa-IR", "description": desc, "url": SITE, "image": SITE + "assets/og.png",
-     "audience": {"@type": "BusinessAudience", "audienceType": "فروشگاه‌های خرده‌فروشی، زنجیره‌های فروشگاهی و فرانچایزرها"},
-     "featureList": ["طراحی چیدمان فروشگاه و زون‌بندی", "برگهٔ اجرای هر قفسه با QR", "مقایسهٔ چیدمان واقعی با طرح", "تحلیل فروش ماهانه و اصلاح چیدمان", "برآورد شارژ اول شعبهٔ جدید"],
+     "audience": {"@type": "BusinessAudience", "audienceType": "فروشگاه‌ها، زنجیره‌های فروشگاهی و فرانچایزرها"},
+     "featureList": ["طراحی چیدمان فروشگاه و بخش‌بندی", "برگهٔ چیدمان هر قفسه با کد QR", "مقایسهٔ قفسهٔ واقعی با طرح", "بررسی فروش ماهانه و بهتر کردن چیدمان", "حساب خرید اول شعبهٔ جدید"],
      "publisher": {"@id": SITE + "#org"}},
     {"@type": "WebPage", "@id": SITE + "#page", "url": SITE, "name": title, "description": desc, "inLanguage": "fa-IR",
      "isPartOf": {"@id": SITE + "#site"}, "about": {"@id": SITE + "#app"}, "mainEntity": {"@id": SITE + "#app"},

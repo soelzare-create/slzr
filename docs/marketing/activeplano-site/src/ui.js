@@ -31,8 +31,8 @@
   var RULES = {
     name: function (v) { return v.length < 3 ? 'نام و نام خانوادگی را وارد کنید.' : ''; },
     company: function (v) { return v.length < 2 ? 'نام فروشگاه یا شرکت را وارد کنید.' : ''; },
-    phone: function (v) { var d = latin(v).replace(/[\s\-()+]/g, ''); return !d ? 'شمارهٔ تماس را وارد کنید.' : (!/^\d{7,15}$/.test(d) ? 'شمارهٔ تماس معتبر نیست.' : ''); },
-    branches: function (v) { return v && !/^\d{1,5}$/.test(latin(v).trim()) ? 'تعداد شعبه را با عدد وارد کنید.' : ''; }
+    phone: function (v) { var d = latin(v).replace(/[\s\-()+]/g, ''); return !d ? 'شمارهٔ تماس را وارد کنید.' : (!/^\d{7,15}$/.test(d) ? 'شمارهٔ تماس درست نیست؛ فقط عدد وارد کنید.' : ''); },
+    branches: function (v) { return v && !/^\d{1,5}$/.test(latin(v).trim()) ? 'تعداد شعبه را فقط با عدد بنویسید.' : ''; }
   };
   function check(input) {
     var r = RULES[input.name]; if (!r) return true;

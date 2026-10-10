@@ -31,7 +31,7 @@
       if (sc !== last) {
         caps.forEach(function (c) { c.classList.toggle('on', +c.getAttribute('data-s') === sc); });
         if (h.scene) h.scene(sc);
-        dots.forEach(function (d, i) { d.classList.toggle('on', i === sc); });
+        dots.forEach(function (d, i) { d.classList.toggle('on', i === sc); }); rail.style.opacity = id === 'top' && sc === 0 ? 0 : '';
         last = sc;
       }
       if (h.frame) h.frame(st.p, sc);
