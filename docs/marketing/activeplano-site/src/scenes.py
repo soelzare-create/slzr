@@ -70,10 +70,12 @@ def plan_svg(sfx="", extra=""):
     o.append(f'<g id="zones{s}" class="zones">')
     for z in ZONES:
         cx = z["x"] + z["w"] / 2
-        ly = z["y"] + (112 if z["i"] == 1 else 62 if z["i"] != 6 else 82)
-        iy = z["y"] + (52 if z["i"] == 1 else 6 if z["i"] != 6 else 20)
+        ly = z["y"] + (110 if z["i"] == 1 else 62 if z["i"] != 6 else 52)
+        iy = z["y"] + (46 if z["i"] == 1 else 6 if z["i"] != 6 else 24)
+        # zone 1: label sits right of the fixture rows; zone 6: label above the counters, icon beside it
+        lx, ix, isz = (1280, 1263, 34) if z["i"] == 1 else (1190, 1306, 30) if z["i"] == 6 else (cx, cx - 17, 34)
         o.append(f'<g class="zone {z["k"]}" data-z="{z["i"]}" style="--zi:{z["i"]}"><rect class="zfill" x="{z["x"]}" y="{z["y"]}" width="{z["w"]}" height="{z["h"]}" rx="12"/>'
-                 f'{ic(z["icon"], cx - 17, iy, 34, "zicon")}<text class="zlabel" x="{cx}" y="{ly}" text-anchor="middle">{z["name"]}</text></g>')
+                 f'{ic(z["icon"], ix, iy, isz, "zicon")}<text class="zlabel" x="{lx}" y="{ly}" text-anchor="middle">{z["name"]}</text></g>')
     o.append("</g>")
     o.append(f'<g id="fixtures{s}" class="fixtures">')
     o.append('<rect class="fx fxc" x="150" y="128" width="1300" height="26" rx="4"/>')
@@ -84,7 +86,7 @@ def plan_svg(sfx="", extra=""):
     for x in GOND:
         o.append(f'<rect class="fx fxt" x="{x}" y="372" width="22" height="318" rx="3" fill="url(#strip{s})"/>')
     for x in (1000, 1120, 1240, 1360):
-        o.append(f'<rect class="fx fxk" x="{x}" y="810" width="80" height="30" rx="5"/>')
+        o.append(f'<rect class="fx fxk" x="{x}" y="834" width="80" height="24" rx="5"/>')
     o.append("</g>")
     o.append('<path class="wall" d="M100 80H1500V920H760M600 920H100Z"/>')
     o.append('<path class="door" d="M600 920V862A58 58 0 0 1 658 920"/>')
@@ -104,17 +106,17 @@ def plan_svg(sfx="", extra=""):
 
 
 # ======================================================================= PROBLEM PINS (on the plan)
-PINS = [(1, 1101, 500), (2, 280, 520), (3, 872, 706), (4, 680, 884), (5, 858, 152), (6, 1380, 520)]
+PINS = [(1, 1101, 500), (2, 280, 520), (3, 872, 706), (4, 680, 884), (5, 650, 192), (6, 1380, 520)]
 
 
 def pins_layer():
     o = ['<g id="pinsP" class="pins">']
     o.append('<g class="pdet" data-k="1"><rect class="pd-box" x="1074" y="462" width="76" height="76" rx="10"/><text x="1112" y="446" text-anchor="middle" class="pd-t">جای خالی</text></g>')
-    o.append('<g class="pdet" data-k="2">' + ic("user-minus", 196, 452, 72, "pd-ic") + '<text x="232" y="560" text-anchor="middle" class="pd-t">با رفتن یک نفر</text></g>')
+    o.append('<g class="pdet" data-k="2">' + ic("user-minus", 248, 400, 64, "pd-ic") + '<text x="280" y="610" text-anchor="middle" class="pd-t">با رفتن یک نفر</text></g>')
     o.append('<g class="pdet" data-k="3"><path class="pd-route" d="M466 312H876V706H466Z"/>' + ic("footprints", 650, 470, 44, "pd-ic") + '<text x="671" y="760" text-anchor="middle" class="pd-t">سرکشی هر روزه</text></g>')
-    o.append('<g class="pdet" data-k="4"><circle class="pd-box" cx="680" cy="772" r="62"/>' + ic("question", 646, 738, 68, "pd-ic") + '<text x="680" y="690" text-anchor="middle" class="pd-t">خرید حدسی</text></g>')
-    o.append('<g class="pdet" data-k="5">' + ic("clipboard-text", 820, 150, 76, "pd-ic") + '<text x="858" y="130" text-anchor="middle" class="pd-t">بدون سند</text></g>')
-    o.append('<g class="pdet" data-k="6">' + ic("trend-down", 1346, 456, 68, "pd-ic") + '<text x="1380" y="580" text-anchor="middle" class="pd-t">جای کم‌دید</text></g>')
+    o.append('<g class="pdet" data-k="4"><circle class="pd-box" cx="680" cy="772" r="62"/>' + ic("question", 646, 738, 68, "pd-ic") + '<text x="868" y="800" text-anchor="middle" class="pd-t">خرید حدسی</text></g>')
+    o.append('<g class="pdet" data-k="5">' + ic("clipboard-text", 706, 30, 40, "pd-ic") + '<text x="640" y="62" text-anchor="middle" class="pd-t">بدون سند</text></g>')
+    o.append('<g class="pdet" data-k="6">' + ic("trend-down", 1348, 400, 64, "pd-ic") + '<text x="1380" y="610" text-anchor="middle" class="pd-t">جای کم‌دید</text></g>')
     for k, x, y in PINS:
         o.append(f'<g class="pin" data-k="{k}" transform="translate({x} {y})"><circle class="pring" r="44"/><circle class="pdot" r="24"/><text class="pnum" y="9" text-anchor="middle">{k}</text></g>')
     o.append("</g>")
@@ -251,7 +253,7 @@ def shelf_svg(sfx="", dims=False, state=True):
     o.append('<text x="600" y="55" text-anchor="middle" font-size="30" font-weight="800" fill="#5DEBAF" direction="ltr">B-03</text>')
     for y, l in zip(BOARDS, LAB):
         o.append(f'<line x1="120" y1="{y}" x2="146" y2="{y}" stroke="#5DEBAF" stroke-width="2"/>')
-        o.append(f'<text x="112" y="{y + 5}" text-anchor="end" font-size="16" font-weight="700" fill="#A9CDBF" font-family="Inter,Arial,sans-serif">{l}</text>')
+        o.append(f'<text x="112" y="{y + 5}" text-anchor="end" direction="ltr" font-size="16" font-weight="700" fill="#A9CDBF" font-family="Inter,Arial,sans-serif">{l}</text>')
     o.append('<line x1="133" y1="150" x2="133" y2="675" stroke="rgba(93,235,175,.4)" stroke-width="1" stroke-dasharray="3 5"/>')
     GX0, GX1 = 540, 700
     for bi, base in enumerate(BOARDS):

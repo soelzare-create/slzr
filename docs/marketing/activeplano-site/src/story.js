@@ -134,7 +134,7 @@
     var avis = $('avisP'); if (!avis) return;
     var svg = $('worldP'), cam = $('camP'), pins = [].slice.call(avis.querySelectorAll('.pin')), dets = [].slice.call(avis.querySelectorAll('.pdet'));
     var aw = 0, ah = 0, base = 1, cur = 0;
-    var T = [[800, 500, 1], [1090, 500, 3.4], [280, 515, 2.6], [670, 505, 2.0], [680, 830, 2.8], [800, 215, 3.0], [1380, 515, 2.8]];
+    var T = [[800, 500, 1], [1090, 500, 3.4], [280, 510, 2.6], [670, 505, 2.0], [740, 830, 2.8], [660, 150, 3.0], [1380, 515, 2.8]];
     function put(k, instant) {
       var c = T[k], S = base * c[2], t = 'translate(' + aw / 2 + 'px,' + ah / 2 + 'px) scale(' + S + ') translate(' + (-c[0]) + 'px,' + (-c[1]) + 'px)';
       if (instant) cam.style.transition = 'none'; cam.style.transform = t; if (instant) { void cam.getBoundingClientRect(); cam.style.transition = ''; }
