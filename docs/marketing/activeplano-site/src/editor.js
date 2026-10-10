@@ -56,6 +56,8 @@
     r.classList.remove('js'); r.classList.remove('can-edit'); if (!r.getAttribute('class')) r.removeAttribute('class'); r.removeAttribute('data-theme');
     r.querySelectorAll('canvas').forEach(function (c) { c.removeAttribute('width'); c.removeAttribute('height'); });
     r.querySelector('body').classList.remove('editing', 'no-story'); if (!r.querySelector('body').getAttribute('class')) r.querySelector('body').removeAttribute('class');
+    var open = 0; r.querySelectorAll('#doc .need').forEach(function (n) { if (/NEED/.test(n.textContent)) open++; });
+    var rb = r.querySelector('meta[name="robots"]'); if (rb) rb.setAttribute('content', open ? 'noindex,nofollow' : 'index,follow,max-image-preview:large,max-snippet:-1');
     var s = r.querySelector('#edStatus'); if (s) s.textContent = '';
     ['edSave', 'edDone', 'edDiscard'].forEach(function (id) { var b = r.querySelector('#' + id); if (b) b.setAttribute('hidden', ''); });
     var t = r.querySelector('#edToggle'); if (t) t.removeAttribute('hidden');
