@@ -1,0 +1,99 @@
+# استقرار لندینگ ActivePlano روی یک زیردامنهٔ داران ایکس (هاست cPanel، از طریق FTP).
+#
+# ── چگونه کار می‌کند ───────────────────────────────────────────────────────
+# با هر push به main که پوشهٔ docs/marketing/activeplano-site را تغییر دهد
+# (یا اجرای دستی از تب Actions)، این Workflow فایل‌های سایت را (بدون پوشهٔ src)
+# برمی‌دارد، آدرس‌های canonical/og/sitemap را به SITE_URL زیر برمی‌گرداند،
+# یک .htaccess برای فشرده‌سازی و کش اضافه می‌کند و همه را با FTP روی ریشهٔ
+# زیردامنه آپلود می‌کند. برای رفتن به www.activeplano.com بعداً فقط SITE_URL
+# و Secretها عوض می‌شوند.
+#
+# ── راه‌اندازی یک‌بار ────────────────────────────────────────────────────────
+#   ۱. cPanel → Domains (یا Subdomains): زیردامنهٔ activeplano.daranx.com را
+#      بسازید. Document Root آن مثلاً public_html/activeplano می‌شود.
+#   ۲. cPanel → SSL/TLS Status: برای همین زیردامنه AutoSSL بگیرید.
+#   ۳. cPanel → FTP Accounts: یک حساب FTP جدا بسازید که Directory آن دقیقاً
+#      همان Document Root مرحلهٔ ۱ باشد (نه حساب FTP اپ پایتون).
+#   ۴. GitHub → Settings → Secrets and variables → Actions، سه Secret:
+#      LANDING_FTP_SERVER، LANDING_FTP_USERNAME، LANDING_FTP_PASSWORD
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: deploy-activeplano-landing
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "docs/marketing/activeplano-site/**"
+      - ".github/workflows/deploy-landing.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-landing
+  cancel-in-progress: true
+
+env:
+  SITE_URL: https://activeplano.daranx.com/
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check FTP secrets
+        env:
+          S: ${{ secrets.LANDING_FTP_SERVER }}
+          U: ${{ secrets.LANDING_FTP_USERNAME }}
+          P: ${{ secrets.LANDING_FTP_PASSWORD }}
+        run: |
+          if [ -z "$S" ] || [ -z "$U" ] || [ -z "$P" ]; then
+            echo "::error::LANDING_FTP_SERVER / LANDING_FTP_USERNAME / LANDING_FTP_PASSWORD are not set (see the header of this file)."
+            exit 1
+          fi
+
+      - name: Prepare site
+        run: |
+          mkdir -p dist
+          cp -r docs/marketing/activeplano-site/. dist/ && rm -rf dist/src
+          for f in dist/index.html dist/sitemap.xml dist/robots.txt dist/llms.txt; do
+            [ -f "$f" ] && sed -i "s#https://www.activeplano.com/#${SITE_URL}#g" "$f"
+          done
+          cat > dist/.htaccess <<'HT'
+          DirectoryIndex index.html
+          AddType font/woff2 .woff2
+          AddType image/webp .webp
+          <IfModule mod_deflate.c>
+            AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/xml image/svg+xml
+          </IfModule>
+          <IfModule mod_expires.c>
+            ExpiresActive On
+            ExpiresByType text/html "access plus 0 seconds"
+            ExpiresByType image/webp "access plus 30 days"
+            ExpiresByType image/png "access plus 30 days"
+            ExpiresByType font/woff2 "access plus 1 year"
+          </IfModule>
+          <IfModule mod_headers.c>
+            Header set X-Content-Type-Options "nosniff"
+            Header set Referrer-Policy "strict-origin-when-cross-origin"
+          </IfModule>
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteCond %{HTTPS} off
+            RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+          </IfModule>
+          HT
+          sed -i 's/^          //' dist/.htaccess
+          ls -la dist dist/assets
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.LANDING_FTP_SERVER }}
+          username: ${{ secrets.LANDING_FTP_USERNAME }}
+          password: ${{ secrets.LANDING_FTP_PASSWORD }}
+          protocol: ftps
+          security: loose
+          port: 21
+          local-dir: dist/
+          server-dir: ./
