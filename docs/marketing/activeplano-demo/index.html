@@ -199,7 +199,7 @@ body{background:var(--st-bg)}
 .chrome{height:30px;flex:none;display:flex;align-items:center;gap:6px;padding:0 12px;background:#E8EFEC;direction:ltr}
 .chrome i{width:10px;height:10px;border-radius:50%;background:#C9D6D1}.chrome span{margin-inline-start:12px;font:600 11px/1 system-ui;color:#6B8078;background:#fff;border-radius:6px;padding:4px 10px}
 .view{position:relative;overflow:hidden;aspect-ratio:1920/920}
-.cam{position:absolute;inset:0;transform-origin:0 0;transition:transform 1100ms var(--ease-in-out);will-change:transform}
+.cam{position:absolute;left:0;top:0;right:auto;bottom:auto;width:100%;height:100%;transform-origin:0 0;transition:transform 1100ms var(--ease-in-out);will-change:transform}
 .shot{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transition:opacity 500ms ease}
 .shot.on{opacity:1}
 .ring{display:none;position:absolute;border:3px solid var(--brand);border-radius:10px;box-shadow:0 0 0 9999px rgba(6,32,26,.0);opacity:0;transition:opacity 400ms ease 700ms}
@@ -220,6 +220,7 @@ body{background:var(--st-bg)}
 .need{background:#FFF1D6;color:#6E4300;border:1px dashed #D99A2B;border-radius:6px;padding:0 .4em;font-weight:700}
 @media(max-width:860px),(max-aspect-ratio:21/20){
   .screen{top:calc(var(--nav-h) + 56px);transform:none;inset-inline:.8rem;width:auto}
+  .view{aspect-ratio:auto;height:min(58svh,calc((100vw - 1.6rem) * 1.3))}
   .chrome{height:22px}.chrome span{display:none}
   .cap{width:auto}
   .chapter{top:calc(var(--nav-h) + 16px)}
@@ -280,7 +281,7 @@ body.no-story .chapter,html:not(.js) .chapter{position:relative;inset:auto;order
   <div>
     <h2>ActivePlano را روی فروشگاه خودتان ببینید</h2>
     <p>یک جلسهٔ حضوری یا آنلاین می‌گذاریم و چیدمان یکی از قفسه‌های شما را با هم می‌سازیم.</p>
-    <div class="acts"><a class="btn btn-brand" href="https://www.activeplano.com/#demo">درخواست جلسه</a><span class="btn btn-ghost"><span class="need">[NEED: تلفن]</span></span></div>
+    <div class="acts"><a class="btn btn-brand" href="https://www.activeplano.com/#demo">درخواست جلسه</a><a class="btn btn-ghost" dir="ltr" href="tel:+982188977021">۰۲۱-۸۸۹۷۷۰۲۱-۳۰</a></div>
   </div>
 </section>
 </main>
@@ -518,15 +519,17 @@ var E=StoryEngine, CFG={"map": [{"img": "02-projects", "f": null}, {"img": "03-p
 Object.keys(CFG).forEach(function(id){
   var sec=document.getElementById(id); if(!sec) return;
   var view=sec.querySelector('.view'), cam=sec.querySelector('.cam'), ring=sec.querySelector('.ring'), shots=[].slice.call(sec.querySelectorAll('.shot')), S=CFG[id], cur=0;
+  var DEF=[.1,0,.8,1];  /* phone: default framing = main content, sidebar cropped */
   function place(){
-    var s=S[cur], w=view.clientWidth, h=view.clientHeight, f=s.f;
+    var s=S[cur], vw=view.clientWidth, vh=view.clientHeight, iw=Math.max(vw, vh*1920/920), ih=iw*920/1920, narrow=iw>vw+2;
+    cam.style.width=iw+'px'; cam.style.height=ih+'px';
     shots.forEach(function(im){ im.classList.toggle('on', im.getAttribute('data-img')===s.img); });
-    if(!f){ cam.style.transform='translate(0px,0px) scale(1)'; ring.style.opacity=0; return; }
-    var k=Math.min(3.2, .9/Math.max(f[2], f[3]*h/h)), k2=Math.min(k, .9*w/(f[2]*w), .9*h/(f[3]*h)); k=Math.max(1, Math.min(k, k2));
-    var cx=(f[0]+f[2]/2)*w, cy=(f[1]+f[3]/2)*h, tx=w/2-cx*k, ty=h/2-cy*k;
-    tx=Math.min(0, Math.max(w-w*k, tx)); ty=Math.min(0, Math.max(h-h*k, ty));
+    var f=s.f||(narrow?DEF:null);
+    if(!f){ cam.style.transform='translate(0px,0px) scale(1)'; return; }
+    var k=Math.max(1, Math.min(3.2, .92*vw/(f[2]*iw), .92*vh/(f[3]*ih)));
+    var tx=vw/2-(f[0]+f[2]/2)*iw*k, ty=vh/2-(f[1]+f[3]/2)*ih*k;
+    tx=Math.min(0, Math.max(vw-iw*k, tx)); ty=Math.min(0, Math.max(vh-ih*k, ty));
     cam.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+k.toFixed(3)+')';
-    ring.style.left=(f[0]*100)+'%'; ring.style.top=(f[1]*100)+'%'; ring.style.width=(f[2]*100)+'%'; ring.style.height=(f[3]*100)+'%'; ring.style.opacity='';
   }
   var bounds=[]; for(var i=1;i<S.length;i++) bounds.push(i/S.length);
   E.act(id, bounds, {
