@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>ActivePlano | دموی مراحل کار پلانوگرام</title>
+<style>
+@font-face{font-family:"Vazirmatn";src:url("assets/Vazirmatn-VF.woff2") format("woff2");font-weight:100 900}
+@page{size:297mm 210mm;margin:0}
+:root{--bg:#F3F8F5;--ink:#0E2A23;--ink2:#3B554C;--ink3:#587068;--line:#D3E3DC;--accent:#145C48;--mint:#5DEBAF;--night:#06201A;--alert:#F0C36B}
+*{box-sizing:border-box}
+html,body{margin:0;background:#ccc}
+body{font-family:"Vazirmatn",sans-serif;color:var(--ink2);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{width:297mm;height:210mm;background:var(--bg);position:relative;overflow:hidden;page-break-after:always;margin:0 auto 8mm;padding:16mm 18mm 14mm;display:flex;flex-direction:column}
+@media print{html,body{background:none}.page{margin:0}}
+.wm{direction:ltr;font-weight:900;font-size:13pt;color:var(--ink)}.wm b{color:#017852}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:9pt;color:var(--ink3)}
+.foot{margin-top:auto;display:flex;justify-content:space-between;font-size:8.5pt;color:var(--ink3);padding-top:4mm;border-top:1px solid var(--line)}
+h1,h2{color:var(--ink);margin:0;line-height:1.35}
+h2{font-size:22pt;font-weight:850}
+.step{display:inline-block;font-size:10pt;font-weight:800;color:#017852;background:#DBF5EA;border-radius:999px;padding:1mm 4mm;margin-bottom:4mm}
+.lead{font-size:12.5pt;line-height:1.95;margin-top:4mm;max-width:95mm}
+.lead b{color:var(--ink)}
+ul.pts{margin:5mm 0 0;padding-inline-start:5mm;font-size:11pt;line-height:1.9;max-width:95mm}
+.body{flex:1;display:grid;grid-template-columns:100mm 1fr;gap:12mm;align-items:center;min-height:0;margin-top:6mm}
+.vis{height:100%;min-height:0;display:flex;align-items:center;justify-content:center;gap:6mm;background:var(--night);border-radius:6mm;padding:7mm;overflow:hidden}
+.vis img{max-width:100%;max-height:100%;object-fit:contain;border-radius:3mm;display:block}
+.vis.light{background:#fff;border:1px solid var(--line)}
+.tag{display:inline-block;font-size:8.5pt;font-weight:800;color:#6E4300;background:#FFF1D6;border:1px dashed #D99A2B;border-radius:2mm;padding:.3mm 2mm;margin-top:4mm}
+.plan-tag{font-size:9pt;font-weight:800;color:var(--accent);margin-top:4mm}
+/* cover */
+.cover{background:var(--night);color:#E8F5F0;padding:0}
+.cover .in{position:absolute;inset:0;padding:22mm 22mm;display:flex;flex-direction:column;justify-content:center;width:52%;z-index:2}
+.cover .wm{color:#E8F5F0;font-size:16pt}.cover .wm b{color:var(--mint)}
+.cover h1{color:#E8F5F0;font-size:34pt;font-weight:900;margin-top:10mm}.cover h1 em{font-style:normal;color:var(--mint)}
+.cover p{font-size:13pt;line-height:1.9;color:#A9CDBF;margin-top:6mm;max-width:120mm}
+.cover .art{position:absolute;inset:0 auto 0 0;width:55%;display:flex;align-items:center;justify-content:center;padding:14mm}
+.cover .art img{max-width:100%;max-height:100%;opacity:.95}
+.cover .badge{display:inline-block;margin-top:8mm;border:1px solid rgba(93,235,175,.4);color:#CFF8E6;border-radius:999px;padding:1.5mm 5mm;font-weight:800;font-size:10pt;width:max-content}
+/* overview */
+.flow{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm;margin-top:9mm}
+.flow div{background:#fff;border:1px solid var(--line);border-radius:5mm;padding:6mm}
+.flow b{display:block;color:#017852;font-size:10pt}
+.flow h3{margin:1.5mm 0 1.5mm;color:var(--ink);font-size:13pt}
+.flow p{margin:0;font-size:10.5pt;line-height:1.8}
+/* plans */
+.plans{display:grid;grid-template-columns:repeat(4,1fr);gap:5mm;margin-top:8mm}
+.plan{background:#fff;border:1px solid var(--line);border-radius:5mm;padding:6mm;display:flex;flex-direction:column}
+.plan.hot{background:var(--accent);color:#F3F8F5;border-color:var(--accent)}
+.plan .n{direction:ltr;text-align:right;font-weight:900;font-size:17pt;color:var(--ink)}.plan.hot .n{color:#fff}
+.plan .s{font-weight:800;font-size:10pt;color:var(--ink3);margin-bottom:3mm}.plan.hot .s{color:#CFF8E6}
+.plan ul{margin:0;padding-inline-start:4mm;font-size:9.6pt;line-height:1.75;flex:1}
+.plan .pr{margin-top:4mm;padding-top:3mm;border-top:1px solid var(--line);font-size:10pt}.plan.hot .pr{border-color:rgba(255,255,255,.3)}
+.plan .pr b{font-size:15pt;color:var(--ink)}.plan.hot .pr b{color:#fff}
+.cta{margin-top:7mm;background:var(--night);color:#E8F5F0;border-radius:5mm;padding:6mm 8mm;display:flex;justify-content:space-between;align-items:center;font-size:11.5pt}
+.cta b{color:var(--mint);font-size:13pt}
+.need{background:#FFF1D6;color:#6E4300;border:1px dashed #D99A2B;border-radius:2mm;padding:0 2mm;font-weight:800}
+</style>
+</head>
+<body>
+
+<!-- 1 cover -->
+<section class="page cover">
+  <div class="art"><img src="assets/plan-zones.webp" alt=""></div>
+  <div class="in">
+    <div class="wm">Active<b>Plano</b></div>
+    <h1>از نقشهٔ فروشگاه<br><em>تا قفسهٔ کنترل‌شده</em></h1>
+    <p>دموی مراحل کار پلانوگرام با ActivePlano، قدم‌به‌قدم و با تصویر.</p>
+    <span class="badge">اولین نرم‌افزار پلانوگرام فروشگاهی در ایران</span>
+  </div>
+</section>
+
+<!-- 2 overview -->
+<section class="page">
+  <div class="top"><span class="wm">Active<b>Plano</b></span><span>مسیر کار در یک نگاه</span></div>
+  <h2 style="margin-top:8mm">شش قدم، از نقشه تا تحلیل</h2>
+  <p class="lead" style="max-width:none">پلانوگرام یعنی نقشه‌ای که نشان می‌دهد هر کالا دقیقاً کجای قفسه باشد. ActivePlano این نقشه را برای کل فروشگاه می‌سازد، اجرا و کنترل می‌کند.</p>
+  <div class="flow">
+    <div><b>قدم ۱</b><h3>نقشه و بخش‌بندی</h3><p>نقشهٔ فروشگاه را بارگذاری می‌کنید و هر گروه کالا بخش خودش را می‌گیرد.</p></div>
+    <div><b>قدم ۲</b><h3>چیدمان هر قفسه</h3><p>کالاها طبقه‌به‌طبقه و با اندازهٔ دقیق روی قفسه چیده می‌شوند.</p></div>
+    <div><b>قدم ۳</b><h3>فهرست کالای لازم</h3><p>قبل از خرید می‌دانید برای پر کردن قفسه‌ها چه کالایی لازم است.</p></div>
+    <div><b>قدم ۴</b><h3>برگهٔ چیدمان و QR</h3><p>برای هر قفسه یک برگه چاپ می‌شود؛ کارکنان از روی آن می‌چینند.</p></div>
+    <div><b>قدم ۵</b><h3>کنترل با یک اسکن</h3><p>با اسکن QR معلوم می‌شود قفسه مثل طرح چیده شده یا نه.</p></div>
+    <div><b>قدم ۶</b><h3>تحلیل فروش</h3><p>فروش یک ماه بررسی می‌شود و چیدمان با عدد بهتر می‌شود.</p></div>
+  </div>
+  <div class="foot"><span>www.ActivePlano.com</span><span>۲</span></div>
+</section>
+
+<!-- 3 step 1 -->
+<section class="page">
+  <div class="top"><span class="wm">Active<b>Plano</b></span><span>قدم ۱ از ۶</span></div>
+  <div class="body">
+    <div>
+      <span class="step">قدم ۱</span>
+      <h2>نقشهٔ فروشگاه و بخش‌بندی</h2>
+      <p class="lead">نقشهٔ فروشگاه را در نرم‌افزار بارگذاری می‌کنید. هر گروه کالا، مثل لبنیات یا شوینده، <b>بخش ثابت خودش</b> را می‌گیرد.</p>
+      <ul class="pts"><li>هر قفسه روی نقشه یک کد دارد (مثلاً B-03).</li><li>مسیر مشتری از ورودی تا صندوق روشن است.</li><li>تغییر چیدمان فروشگاه با نسخهٔ جدید ثبت می‌شود.</li></ul>
+    </div>
+    <div class="vis"><img src="assets/plan-zones.webp" alt="نقشهٔ فروشگاه با بخش‌بندی"></div>
+  </div>
+  <div class="foot"><span>www.ActivePlano.com</span><span>۳</span></div>
+</section>
+
+<!-- 4 step 2 -->
+<section class="page">
+  <div class="top"><span class="wm">Active<b>Plano</b></span><span>قدم ۲ از ۶</span></div>
+  <div class="body" style="grid-template-columns:82mm 1fr">
+    <div>
+      <span class="step">قدم ۲</span>
+      <h2>چیدمان هر قفسه، طبقه‌به‌طبقه</h2>
+      <p class="lead">کالاها را روی هر طبقه می‌چینید، با <b>اندازهٔ دقیق طبقه به سانتی‌متر</b>.</p>
+      <ul class="pts"><li>تعداد ردیف رو به مشتری، تعداد کالا و وزن هر طبقه حساب می‌شود.</li><li>جا و وزن هر طبقه کنترل می‌شود.</li><li>دستیار هوشمند نرم‌افزار چیدمان پیشنهاد می‌دهد.</li></ul>
+    </div>
+    <div class="vis light" style="padding:5mm"><img src="assets/shot-editor.webp" alt="ویرایشگر چیدمان ActivePlano" style="max-width:76%"><img src="assets/shot-shelf-planogram.webp" alt="پلانوگرام یک قفسه با ارتفاع طبقه‌ها" style="max-width:22%"></div>
+  </div>
+  <div class="foot"><span>www.ActivePlano.com</span><span>۴</span></div>
+</section>
+
+<!-- 5 step 3 -->
+<section class="page">
+  <div class="top"><span class="wm">Active<b>Plano</b></span><span>قدم ۳ از ۶</span></div>
+  <div class="body">
+    <div>
+      <span class="step">قدم ۳</span>
+      <h2>فهرست کالای مورد نیاز</h2>
+      <p class="lead">بعد از پلانوگرام، <b>فهرست کلی کالایی</b> که برای پر کردن قفسه‌ها لازم است آماده می‌شود.</p>
+      <ul class="pts"><li>برای شعبهٔ جدید: خرید اول بدون حدس.</li><li>نه سرمایه در کالای اضافه می‌خوابد، نه کالا کم می‌آید.</li></ul>
+      <span class="tag">تصویر نمونه</span>
+    </div>
+    <div class="vis"><img src="assets/first-purchase.webp" alt="برآورد خرید اول به تفکیک گروه کالا"></div>
+  </div>
+  <div class="foot"><span>www.ActivePlano.com</span><span>۵</span></div>
+</section>
+
+<!-- 6 step 4 -->
+<section class="page">
+  <div class="top"><span class="wm">Active<b>Plano</b></span><span>قدم ۴ از ۶</span></div>
+  <div class="body">
+    <div>
+      <span class="step">قدم ۴</span>
+      <h2>برگهٔ چیدمان با QR</h2>
+      <p class="lead">برای هر قفسه یک برگه چاپ می‌شود و کارکنان <b>دقیقاً از روی همین برگه</b> می‌چینند.</p>
+      <ul class="pts"><li>عکس قفسه و جدول کالاها</li><li>جای قفسه روی نقشهٔ فروشگاه</li><li>کد QR برای پیگیری اجرا</li><li>جای امضای طراح، سرپرست و مرچندایزر</li></ul>
+    </div>
+    <div class="vis light"><img src="assets/shot-execution-sheet.webp" alt="برگهٔ اجرای چیدمان با QR"></div>
+  </div>
+  <div class="foot"><span>www.ActivePlano.com</span><span>۶</span></div>
+</section>
+
+<!-- 7 step 5 -->
+<section class="page">
+  <div class="top"><span class="wm">Active<b>Plano</b></span><span>قدم ۵ از ۶</span></div>
+  <div class="body">
+    <div>
+      <span class="step">قدم ۵</span>
+      <h2>کنترل قفسه با یک اسکن</h2>
+      <p class="lead">با اسکن QR برگه می‌بینید چیدمان انجام شده یا نه، و <b>قفسهٔ واقعی را کنار طرح</b> مقایسه می‌کنید.</p>
+      <ul class="pts"><li>جای خالی زود پیدا می‌شود؛ قبل از اینکه مشتری دست خالی برود.</li><li>سرکشی روزانه کوتاه‌تر می‌شود.</li><li>کار تیم چیدمان قابل سنجش است.</li></ul>
+    </div>
+    <div class="vis" style="flex-direction:column"><img src="assets/shelf-gap.webp" alt="قفسه با یک جای خالی" style="max-height:62%"><img src="assets/compare.webp" alt="مقایسهٔ قفسهٔ واقعی با طرح" style="max-height:34%"></div>
+  </div>
+  <div class="foot"><span>www.ActivePlano.com</span><span>۷</span></div>
+</section>
+
+<!-- 8 step 6 -->
+<section class="page">
+  <div class="top"><span class="wm">Active<b>Plano</b></span><span>قدم ۶ از ۶</span></div>
+  <div class="body">
+    <div>
+      <span class="step">قدم ۶</span>
+      <h2>تحلیل فروش و بهتر کردن چیدمان</h2>
+      <p class="lead">فروش یک ماه فروشگاه شما را بررسی می‌کنیم و می‌گوییم <b>کدام کالا به جای بهتری</b> نیاز دارد.</p>
+      <ul class="pts"><li>کالای پرسود از جای کم‌دید به جای پرفروش می‌رود.</li><li>تصمیم با عدد، نه با سلیقه.</li></ul>
+      <p class="plan-tag">در پلن‌های VIP و Franchise</p>
+      <span class="tag">نمودار نمونه</span>
+    </div>
+    <div class="vis"><img src="assets/analysis.webp" alt="نمودار تحلیل فروش یک ماه"></div>
+  </div>
+  <div class="foot"><span>www.ActivePlano.com</span><span>۸</span></div>
+</section>
+
+<!-- 9 plans + contact -->
+<section class="page">
+  <div class="top"><span class="wm">Active<b>Plano</b></span><span>روش‌های همکاری</span></div>
+  <h2 style="margin-top:6mm">چهار روش همکاری</h2>
+  <div class="plans">
+    <div class="plan"><div class="n">Basic</div><div class="s">نرم‌افزار</div><ul><li>نقشه و چیدمان هر قفسه، طبقه‌به‌طبقه</li><li>فهرست کالای مورد نیاز بعد از پلانوگرام</li><li>برگهٔ چیدمان و کنترل با QR</li><li>اطلاعات کالاها را خودتان وارد می‌کنید</li></ul><div class="pr"><b>۱۹۹ میلیون</b> تومان · شش ماه</div></div>
+    <div class="plan"><div class="n">Pro</div><div class="s">نرم‌افزار + اطلاعات کالا</div><ul><li>همهٔ امکانات Basic</li><li>اطلاعات آمادهٔ کالاها (اندازه، بارکد، مشخصات)</li><li>قرارداد یک‌ساله</li></ul><div class="pr"><b>۳۹۹ میلیون</b> تومان</div></div>
+    <div class="plan"><div class="n">VIP</div><div class="s">+ تحلیل فروش و مشاوره</div><ul><li>همهٔ امکانات Pro</li><li>تحلیل فروش و اصلاح چیدمان با عدد</li><li>همراهی کارشناسان مرچندایزینگ</li><li>قرارداد یک‌ساله</li></ul><div class="pr"><b>۱٫۲ میلیارد</b> تومان</div></div>
+    <div class="plan hot"><div class="n">Franchise</div><div class="s">ویژهٔ فرانچایزرها</div><ul><li>همهٔ امکانات VIP</li><li>یک استاندارد چیدمان برای همهٔ شعبه‌ها</li><li>برند شما در هر شعبه از روی چیدمان شناخته می‌شود</li></ul><div class="pr">برای قیمت تماس بگیرید</div></div>
+  </div>
+  <div class="cta"><div><b>جلسهٔ حضوری یا آنلاین</b><br>برای دیدن ActivePlano روی فروشگاه خودتان با ما تماس بگیرید.</div><div style="text-align:left;direction:ltr">www.ActivePlano.com<br><span class="need" dir="rtl">[NEED: تلفن و ایمیل]</span></div></div>
+  <div class="foot"><span>محصولی از به‌سرما و DaranX</span><span>۹</span></div>
+</section>
+
+</body>
+</html>
