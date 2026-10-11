@@ -92,6 +92,20 @@ body{background:var(--st-bg)}
 .end h2{color:var(--st-ink)}.end p{color:var(--st-ink-2);margin-top:1rem}
 .end .acts{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
 .need{background:#FFF1D6;color:#6E4300;border:1px dashed #D99A2B;border-radius:6px;padding:0 .4em;font-weight:700}
+
+.meet{width:min(1040px,100%);display:grid;grid-template-columns:1fr 1.25fr;gap:clamp(1.5rem,4vw,3rem);align-items:start;text-align:start}
+.meet-head p{margin-top:.8rem}.meet-head a{color:var(--brand);font-weight:800}
+.end .form{background:var(--st-surface);border:1px solid var(--st-line);border-radius:20px;padding:clamp(1.1rem,3vw,1.8rem)}
+.field input{background:#F3F8F5;color:#0E2A23;border-color:transparent}
+.field label,.meet-type legend{color:var(--st-ink)}
+.meet-type{grid-column:1/-1;border:0;padding:0;margin:0;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.meet-type legend{font-weight:800;font-size:.92rem;margin-bottom:.4rem;width:100%}
+.meet-type label{display:inline-flex;align-items:center;gap:.45rem;min-height:44px;padding:.4rem 1rem;border:1px solid var(--st-line-2);border-radius:999px;cursor:pointer;color:var(--st-ink);font-weight:700}
+.meet-type label:has(input:checked){background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.meet-type input{accent-color:var(--brand-ink);margin:0}
+.form-ok h3{color:var(--st-ink)}.form-msg{color:var(--st-ink-2)}
+.field .err{color:#FFB4A8}
+@media(max-width:860px){.meet{grid-template-columns:1fr}}
 @media(max-width:860px),(max-aspect-ratio:21/20){
   .screen{top:calc(var(--nav-h) + 56px);transform:none;inset-inline:.8rem;width:auto}
   .view{aspect-ratio:auto;height:min(58svh,calc((100vw - 1.6rem) * 1.3))}
@@ -165,10 +179,31 @@ page = f'''<!doctype html>
 </section>
 {body}
 <section class="end on-dark" id="contact">
-  <div>
-    <h2>ActivePlano را روی فروشگاه خودتان ببینید</h2>
-    <p>یک جلسهٔ حضوری یا آنلاین می‌گذاریم و چیدمان یکی از قفسه‌های شما را با هم می‌سازیم.</p>
-    <div class="acts"><a class="btn btn-brand" href="https://www.activeplano.com/#demo">درخواست جلسه</a><a class="btn btn-ghost" dir="ltr" href="tel:+982188977021">۰۲۱-۸۸۹۷۷۰۲۱-۳۰</a></div>
+  <div class="meet">
+    <div class="meet-head">
+      <h2>ActivePlano را روی فروشگاه خودتان ببینید</h2>
+      <p>یک جلسهٔ حضوری یا آنلاین می‌گذاریم و چیدمان یکی از قفسه‌های شما را با هم می‌سازیم.</p>
+      <p>یا همین حالا تماس بگیرید: <a dir="ltr" href="tel:+982188977021">۰۲۱-۸۸۹۷۷۰۲۱-۳۰</a></p>
+    </div>
+    <form class="form" id="demoForm" data-endpoint="../api/lead.php" novalidate>
+      <div class="errsum" id="errsum" role="alert" tabindex="-1" aria-labelledby="errtitle"><h3 id="errtitle">برای ارسال، این موارد را اصلاح کنید</h3><ul id="errlist"></ul></div>
+      <div class="fields">
+        <fieldset class="field meet-type"><legend>نوع جلسه</legend>
+          <label><input type="radio" name="meeting" value="online" checked> آنلاین</label>
+          <label><input type="radio" name="meeting" value="in-person"> حضوری</label>
+        </fieldset>
+        <div class="field"><label for="f-name">نام و نام خانوادگی</label><input id="f-name" name="name" autocomplete="name" required aria-describedby="err-name"><p class="err" id="err-name"></p></div>
+        <div class="field"><label for="f-company">نام فروشگاه یا شرکت</label><input id="f-company" name="company" autocomplete="organization" required aria-describedby="err-company"><p class="err" id="err-company"></p></div>
+        <div class="field"><label for="f-phone">شمارهٔ تماس</label><input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" required aria-describedby="err-phone"><p class="err" id="err-phone"></p></div>
+        <div class="field"><label for="f-city">شهر (اختیاری)</label><input id="f-city" name="city" autocomplete="address-level2"></div>
+        <div class="field"><label for="f-branches">تعداد شعبه (اختیاری)</label><input id="f-branches" name="branches" inputmode="numeric" aria-describedby="err-branches"><p class="err" id="err-branches"></p></div>
+        <div class="field"><label for="f-time">زمان مناسب برای شما (اختیاری)</label><input id="f-time" name="time" placeholder="مثلاً شنبه‌ها صبح"></div>
+        <input type="hidden" name="source" value="demo-meeting"><input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-brand" id="demoBtn" type="submit">درخواست جلسه</button>
+        <p class="form-msg" id="formMsg" role="status" aria-live="polite"></p>
+      </div>
+      <div class="form-ok" role="status"><h3 id="okTitle">درخواست شما ثبت شد</h3><p>برای هماهنگی زمان جلسه به‌زودی با شما تماس می‌گیریم.</p></div>
+    </form>
   </div>
 </section>
 </main>
@@ -176,6 +211,7 @@ page = f'''<!doctype html>
 <script>{(HERE / "src/vendor/ScrollTrigger.min.js").read_text()}</script>
 <script>{(HERE / "src/engine/story-engine.js").read_text()}</script>
 <script>{scenes_js}</script>
+<script>{(HERE / "src/engine/ui.js").read_text()}</script>
 </body>
 </html>
 '''

@@ -48,7 +48,7 @@
       summary.classList.add('on'); summary.focus(); return;
     }
     summary.classList.remove('on');
-    var data = {}; [].slice.call(form.elements).forEach(function (el) { if (el.name) data[el.name] = el.value.trim(); });
+    var data = {}; [].slice.call(form.elements).forEach(function (el) { if (el.name && !((el.type === 'radio' || el.type === 'checkbox') && !el.checked)) data[el.name] = el.value.trim(); });
     if (data.website) return; /* honeypot */
     var ep = form.getAttribute('data-endpoint');
     if (!ep) { msg.textContent = 'مقصد ارسال فرم هنوز تنظیم نشده است (نسخهٔ پیش‌نویس).'; return; }
