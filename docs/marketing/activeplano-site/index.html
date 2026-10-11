@@ -419,6 +419,14 @@ body.no-story .gapempty{opacity:1}
 #models .step-lead{font-size:.9rem;line-height:1.6}
 #models .step-list{font-size:.84rem;line-height:1.6;gap:.2rem;margin-top:.25rem}
 #models .price{padding-top:.65rem}#models .price b{font-size:1.25rem}
+
+/* caption with a screenshot under it (opening act, scene 1) */
+.cap.with-shot{top:calc(var(--nav-h) + 28px);transform:translateY(14px) scale(.985)}
+.cap.with-shot.on{transform:none}
+.cap-shot{margin:.9rem 0 0;display:flex;justify-content:center}
+.cap-shot img{display:block;width:auto;max-width:100%;height:auto;max-height:calc(100svh - var(--nav-h) - 250px);border-radius:12px;background:#fff;box-shadow:0 18px 40px rgba(2,12,9,.45)}
+@media(max-width:860px),(max-aspect-ratio:21/20){.cap.with-shot{top:auto}.cap-shot img{max-height:26svh}}
+body.no-story .cap.with-shot,html:not(.js) .cap.with-shot{top:auto}
 </style>
 <script>document.documentElement.classList.add('js');if(location.protocol==='file:'||/[?&]edit|#edit/.test(location.search+location.hash))document.documentElement.classList.add('can-edit');</script>
 </head>
@@ -527,7 +535,7 @@ body.no-story .gapempty{opacity:1}
     </div>
     <div class="caps">
       <div class="cap lead" data-s="0"><h2>شعبهٔ جدید را قبل از خرید کالا، در نرم‌افزار بچینید</h2><p>به یک شعبهٔ تازه برویم. قفسه‌ها هنوز خالی‌اند.</p></div>
-      <div class="cap" data-s="1"><h3>چیدمان شعبهٔ جدید</h3><p>قبل از باز شدن شعبه، چیدمان را در ActivePlano می‌چینید: بخش‌ها، راهروها و قفسه‌ها.</p></div>
+      <div class="cap with-shot" data-s="1"><h3>چیدمان شعبهٔ جدید</h3><p>قبل از باز شدن شعبه، چیدمان را در ActivePlano می‌چینید: بخش‌ها، راهروها و قفسه‌ها.</p><figure class="cap-shot"><img src="assets/shot-shelf-planogram.webp" width="394" height="765" alt="پلانوگرام یک قفسه در ActivePlano: جای هر کالا در هر طبقه با ارتفاع طبقه‌ها به سانتی‌متر" loading="lazy" decoding="async"></figure></div>
       <div class="cap" data-s="2"><h3>خرید اول، بدون حدس</h3><p>قبل از سفارش کالا حساب می‌کنید برای پر کردن قفسه‌ها، از هر گروه کالا چقدر لازم است.</p></div>
       <div class="cap" data-s="3"><h3>روز افتتاح</h3><p>هر قفسه از روی برگه‌اش چیده و با QR بررسی می‌شود. شعبه از روز اول مرتب باز می‌شود.</p><p class="cap-act"><a class="btn btn-mint btn-sm" href="#demo">درخواست دمو</a></p></div>
     </div>
