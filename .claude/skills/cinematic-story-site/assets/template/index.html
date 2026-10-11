@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{Brand}} | {{primary keyword in 3-6 words}}</title>
+<meta name="description" content="{{One plain sentence: what it is, for whom, the outcome. 140-160 chars.}}">
+<meta name="robots" content="noindex,nofollow"><!-- switch to index,follow when no [NEED] markers remain -->
+<link rel="canonical" href="{{https://www.example.com/}}">
+<meta property="og:type" content="website"><meta property="og:title" content="{{same as title}}"><meta property="og:description" content="{{same as description}}"><meta property="og:image" content="{{https://www.example.com/assets/og.png}}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="../engine/base.css">
+<style>
+/* site layer: brand tokens + scene styling only. Keep the engine's base.css untouched. */
+:root{ --brand:#5B8CFF; --brand-ink:#0B1220; }
+.dot{fill:var(--st-ink-3);opacity:.55}.dot.key{fill:var(--brand);opacity:1}
+.ring{fill:none;stroke:var(--brand);stroke-width:3;opacity:0;transition:opacity var(--t-card) ease}
+#hero[data-sc="2"] .ring,#hero[data-sc="3"] .ring{opacity:1}
+.label{fill:var(--st-ink);font-size:22px;font-weight:800;paint-order:stroke;stroke:var(--st-bg);stroke-width:8px;stroke-linejoin:round}
+</style>
+<script>document.documentElement.classList.add('js');if(location.protocol==='file:'||/[?&]edit|#edit/.test(location.search+location.hash))document.documentElement.classList.add('can-edit');</script>
+</head>
+<body>
+<a class="skip" href="#what">{{Skip to the plain-text summary}}</a>
+<header class="topbar" id="topbar"><div class="wrap">
+  <a href="#hero" class="wm">{{Brand}}</a>
+  <nav class="nav" aria-label="{{Sections}}"><a href="#act2">{{Act 2}}</a><a href="#what">{{About}}</a><a href="#demo">{{Contact}}</a></nav>
+  <a class="btn btn-brand btn-sm" href="#demo">{{Primary CTA}}</a>
+</div><div class="progress" aria-hidden="true"><i id="prog"></i></div></header>
+
+<div id="doc"><main>
+
+<!-- ACT 1 (hero). Pattern used here: "zoom in" — the whole, then a group, then the one thing that matters.
+     Replace the SVG with the subject's own world. 4 scenes => --len ~ 4 x 100svh + 100svh. -->
+<section class="story" id="hero" data-hero style="--len:500svh" aria-label="{{What this story shows}}">
+  <div class="stage">
+    <svg class="scene" id="world" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g id="cam" class="cam">
+        <g id="dots"></g>
+        <circle class="ring" cx="1100" cy="460" r="70"/>
+        <text class="label" x="1100" y="580" text-anchor="middle">{{label}}</text>
+      </g>
+    </svg>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="story-copy" id="storyCopy">
+      <span class="badge">{{short proof or claim}}</span>
+      <h1>{{Hook: the problem in the reader's words, <em>max ~8 words</em>}}</h1>
+      <p class="verdict">{{One sentence: what it is and the outcome.}}</p>
+      <div class="hero-actions"><a class="btn btn-brand" href="#demo">{{Primary CTA}}</a><a class="btn btn-ghost" href="#act2">{{Secondary}}</a></div>
+    </div>
+    <div class="caps">
+      <div class="cap" data-s="1"><p class="cap-t">{{Scene 1 title}}</p><p>{{One line, max ~20 words.}}</p></div>
+      <div class="cap" data-s="2"><p class="cap-t">{{Scene 2 title}}</p><p>{{One line.}}</p></div>
+      <div class="cap" data-s="3"><p class="cap-t">{{Scene 3: the moment that matters}}</p><p>{{One line.}}</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ACT 2. Pattern: "show, then explain" — a real screenshot or chart pops in per scene beside the caption. -->
+<section class="story" id="act2" style="--len:400svh" aria-label="{{How it works}}">
+  <div class="stage">
+    <div class="scene side" aria-hidden="true">
+      <div class="ov" data-s="1"><figure class="frame"><img src="{{assets/shot-1.webp}}" alt="{{describe the screenshot}}" width="1600" height="900" loading="lazy"></figure></div>
+      <div class="ov" data-s="2"><figure class="frame"><img src="{{assets/shot-2.webp}}" alt="{{describe}}" width="1600" height="900" loading="lazy"></figure></div>
+    </div>
+    <div class="caps">
+      <div class="cap lead" data-s="0"><h2>{{Act title}}</h2><p>{{One line that sets up the steps.}}</p></div>
+      <div class="cap" data-s="1"><h3>{{Step 1}}</h3><p>{{One line.}}</p></div>
+      <div class="cap" data-s="2"><h3>{{Step 2}}</h3><p>{{One line.}}</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Plain-text summary for readers, search engines and AI answers (keep it; it is not optional) -->
+<section class="sec" id="what" aria-labelledby="h-what"><div class="wrap">
+  <h2 id="h-what" data-reveal>{{Brand}} {{چیست؟ / what is it?}}</h2>
+  <div class="prose" data-reveal><p>{{Definition sentence with the primary keyword. Who it is for. What it does in 3-4 plain facts.}}</p></div>
+</div></section>
+
+<section class="sec" id="demo" aria-labelledby="h-demo"><div class="wrap">
+  <h2 id="h-demo" data-reveal>{{Final CTA heading}}</h2>
+  <!-- paste the demo form from references/components.md here -->
+</div></section>
+</main>
+<footer class="foot"><div class="wrap">{{Brand}}</div></footer>
+</div>
+
+<div class="editbar" id="editbar"><button type="button" id="edToggle" class="pri">ویرایش متن</button><button type="button" id="edSave" hidden>ذخیرهٔ فایل</button><button type="button" id="edDone" hidden>پایان ویرایش</button><button type="button" id="edDiscard" hidden>دورریختن تغییرات</button><span class="st" id="edStatus" role="status" aria-live="polite"></span></div>
+
+<script src="../engine/editor.js"></script>
+<script src="../vendor/gsap.min.js"></script>
+<script src="../vendor/ScrollTrigger.min.js"></script>
+<script src="../engine/story-engine.js"></script>
+<script>
+/* Site scenes. Rule: handlers only set transform/opacity/classes; reset() removes everything they set. */
+(function () {
+  var E = StoryEngine, U = E.util, $ = U.$;
+  /* generate the "world" once (here: a field of dots; in a real site, the subject's own map/object/process) */
+  var g = $('dots'), html = '';
+  for (var y = 80; y < 860; y += 60) for (var x = 80; x < 1560; x += 60) html += '<circle class="dot' + (x === 1100 && y === 440 ? ' key' : '') + '" cx="' + x + '" cy="' + (y + 20) + '" r="9"/>';
+  g.innerHTML = html;
+  var cam = $('cam'), copy = $('storyCopy'), W = 1600, H = 900;
+  /* camera: scale around a focus point; continuous, so it lives in frame() */
+  function camAt(p) {
+    var t1 = U.ease(U.seg(p, .2, .45)), t2 = U.ease(U.seg(p, .45, .72));
+    var s = U.elerp(1, 1.8, t1) * U.elerp(1, 2.6, t2), fx = U.lerp(800, 1000, t1) + (1100 - 1000) * t2, fy = U.lerp(450, 470, t1);
+    var ax = innerWidth / innerHeight > 1.05 ? W * .36 : W / 2;  /* keep the focus away from the caption side */
+    return 'translate(' + ax + ' ' + (H / 2) + ') scale(' + s.toFixed(4) + ') translate(' + (-fx).toFixed(1) + ' ' + (-fy).toFixed(1) + ')';
+  }
+  E.act('hero', [.18, .45, .72], {
+    frame: function (p) { cam.setAttribute('transform', camAt(p)); var f = 1 - U.seg(p, .05, .15); copy.style.opacity = f; copy.style.visibility = f < .01 ? 'hidden' : 'visible'; },
+    reset: function () { cam.removeAttribute('transform'); copy.removeAttribute('style'); }
+  }, [0, .32, .58, 1]);
+  var ovs = [].slice.call(document.querySelectorAll('#act2 .ov'));
+  E.act('act2', [.25, .6], {
+    scene: function (sc) { ovs.forEach(function (o) { o.classList.toggle('on', +o.getAttribute('data-s') === sc); }); },
+    reset: function () { ovs.forEach(function (o) { o.classList.remove('on'); }); }
+  });
+  E.start();
+})();
+</script>
+<script src="../engine/ui.js"></script>
+</body>
+</html>
