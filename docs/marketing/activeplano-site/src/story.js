@@ -280,7 +280,7 @@
     /* regular sections: blocks leave upward and fade as the next ones arrive */
     [].slice.call(doc.querySelectorAll('.interlude [data-reveal], #what [data-reveal], #benefits [data-reveal], #models [data-reveal], #proof [data-reveal]')).forEach(function (el) {
       fx.push(gsap.fromTo(el, { opacity: 1, y: 0 }, { opacity: 0, y: -36, ease: 'none', immediateRender: false,
-        scrollTrigger: { trigger: el, start: 'bottom 42%', end: 'bottom 4%', scrub: .3, onToggle: function (s) { if (s.isActive) el.style.transition = 'none'; } } }));
+        scrollTrigger: { trigger: el, start: 'bottom 14%', end: 'bottom -4%', scrub: .3, onToggle: function (s) { if (s.isActive) el.style.transition = 'none'; } } }));
     });
     doc.querySelectorAll('.faq details').forEach(function (d) { d.addEventListener('toggle', refreshSoon); });
   }

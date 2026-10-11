@@ -407,6 +407,18 @@ body.no-story .gapempty{opacity:1}
 }
 @media print{.topbar,.editbar,.editing-banner{display:none!important}.story{height:auto!important}.stage{position:relative!important;height:auto!important}}
 
+
+/* models: whole section fits one screen */
+#models{padding-block:calc(var(--nav-h) + 1.2rem) clamp(1.5rem,4vh,3rem)}
+#models .wrap{max-width:min(1440px,100%)}
+#models .sec-head h2{font-size:clamp(1.5rem,1rem + 1.4vw,2.2rem)}
+#models .stairs{margin-top:1.2rem;align-items:stretch;gap:.9rem}
+#models .step{margin-top:0;padding:1.05rem 1.15rem;gap:.3rem;min-height:0}
+#models .step h3.tier{font-size:1.45rem}
+#models .step-sub{font-size:.92rem}
+#models .step-lead{font-size:.9rem;line-height:1.6}
+#models .step-list{font-size:.84rem;line-height:1.6;gap:.2rem;margin-top:.25rem}
+#models .price{padding-top:.65rem}#models .price b{font-size:1.25rem}
 </style>
 <script>document.documentElement.classList.add('js');if(location.protocol==='file:'||/[?&]edit|#edit/.test(location.search+location.hash))document.documentElement.classList.add('can-edit');</script>
 </head>
@@ -573,10 +585,10 @@ body.no-story .gapempty{opacity:1}
     <div class="sec-head" data-reveal=""><h2 id="h-models">چهار روش همکاری</h2></div>
     <p class="models-note" data-reveal="">هر مدل همهٔ امکانات مدل قبلی را دارد.</p>
     <div class="stairs">
-      <article class="step" style="--i: 0" data-reveal=""><span class="step-n">مدل ۱</span><h3 class="tier" dir="ltr">Basic</h3><p class="step-sub">نرم‌افزار</p><p class="step-lead">شش ماه استفاده از نرم‌افزار پلانوگرام، با همهٔ امکانات.</p><ul class="step-list"><li>نقشهٔ فروشگاه و چیدمان هر قفسه، طبقه‌به‌طبقه</li><li>برگهٔ چیدمان و کنترل اجرا با QR</li><li>کنترل جا و وزن هر طبقه</li><li>اندازه و مشخصات کالاها را خودتان وارد می‌کنید</li></ul><p class="price"><b>۱۹۹ میلیون</b> تومان<span>برای شش ماه</span></p></article>
-      <article class="step" style="--i: 1" data-reveal=""><span class="step-n">مدل ۲</span><h3 class="tier" dir="ltr">Pro</h3><p class="step-sub">نرم‌افزار + اطلاعات کالا</p><p class="step-lead">همهٔ امکانات Basic، به‌اضافه:</p><ul class="step-list"><li>اطلاعات آمادهٔ کالاها (اندازه، بارکد و مشخصات)؛ لازم نیست تک‌تک کالاها را اندازه بگیرید</li></ul><p class="price"><b>۳۹۹ میلیون</b> تومان</p></article>
-      <article class="step" style="--i: 2" data-reveal=""><span class="step-n">مدل ۳</span><h3 class="tier" dir="ltr">VIP</h3><p class="step-sub">نرم‌افزار + تحلیل فروش و مشاورهٔ چیدمان</p><p class="step-lead">همهٔ امکانات Pro، به‌اضافه:</p><ul class="step-list"><li>تحلیل فروش و اصلاح چیدمان با عدد</li><li>همراهی کارشناسان مرچندایزینگ ما در طراحی چیدمان و جای درست هر کالا</li></ul><p class="price"><b>۱٫۲ میلیارد</b> تومان</p></article>
-      <article class="step hot" style="--i: 3" data-reveal=""><span class="step-n">مدل ۴</span><h3 class="tier" dir="ltr">Franchise</h3><p class="step-sub">ویژهٔ فرانچایزرها</p><p class="step-lead">همهٔ امکانات VIP، به‌اضافه:</p><ul class="step-list"><li>یک استاندارد چیدمان برای همهٔ شعبه‌ها</li><li>مشتری در هر شعبه، برند شما را از روی چیدمان می‌شناسد</li></ul><p class="price"><a href="#demo">برای استعلام قیمت تماس بگیرید</a></p></article>
+      <article class="step" style="--i: 0" data-reveal=""><span class="step-n">مدل ۱</span><h3 class="tier" dir="ltr">Basic</h3><p class="step-sub">نرم‌افزار</p><p class="step-lead">شش ماه استفاده از نرم‌افزار پلانوگرام، با همهٔ امکانات.</p><ul class="step-list"><li>قابلیت آپلود نقشهٔ فروشگاه و چیدمان هر قفسه، طبقه‌به‌طبقه.</li><li>قابلیت ارائه لیست کلی کالای مورد نیاز فروشگاه پس از پلانوگرام.</li><li>برگهٔ چیدمان و کنترل اجرا با QR</li><li>کنترل جا و وزن هر طبقه.</li><li>اندازه و مشخصات کالاها را خودتان وارد می‌کنید.</li></ul><p class="price"><b>۱۹۹ میلیون</b> تومان<span>برای شش ماه</span></p></article>
+      <article class="step" style="--i: 1" data-reveal=""><span class="step-n">مدل ۲</span><h3 class="tier" dir="ltr">Pro</h3><p class="step-sub">نرم‌افزار + اطلاعات کالا</p><ul class="step-list"><li>قابلیت آپلود نقشهٔ فروشگاه و چیدمان هر قفسه، طبقه‌به‌طبقه.</li><li>قابلیت ارائه لیست کلی کالای مورد نیاز فروشگاه پس از پلانوگرام.</li><li>برگهٔ چیدمان و کنترل اجرا با QR.</li><li>کنترل جا و وزن هر طبقه.</li><li><b>اطلاعات آمادهٔ کالاها (اندازه، بارکد و مشخصات)؛ لازم نیست تک‌تک کالاها را اندازه بگیرید.</b></li><li><b>مدت قرارداد: یک سال.</b></li></ul><p class="price"><b>۳۹۹ میلیون</b> تومان</p></article>
+      <article class="step" style="--i: 2" data-reveal=""><span class="step-n">مدل ۳</span><h3 class="tier" dir="ltr">VIP</h3><p class="step-sub">نرم‌افزار + تحلیل فروش و مشاورهٔ چیدمان</p><ul class="step-list"><li>قابلیت آپلود نقشهٔ فروشگاه و چیدمان هر قفسه، طبقه‌به‌طبقه.</li><li>قابلیت ارائه لیست کلی کالای مورد نیاز فروشگاه پس از پلانوگرام.</li><li>برگهٔ چیدمان و کنترل اجرا با QR.</li><li>کنترل جا و وزن هر طبقه.</li><li><span>اطلاعات آمادهٔ کالاها (اندازه، بارکد و مشخصات)؛ لازم نیست تک‌تک کالاها را اندازه بگیرید.</span></li><li><b>تحلیل فروش و اصلاح چیدمان با عدد.</b></li><li><b>همراهی کارشناسان مرچندایزینگ ما در طراحی چیدمان و جای درست هر کالا.</b></li><li><b>مدت قرارداد: یک سال.</b></li></ul><p class="price"><b>۱٫۲ میلیارد</b> تومان</p></article>
+      <article class="step hot" style="--i: 3" data-reveal=""><span class="step-n">مدل ۴</span><h3 class="tier" dir="ltr">Franchise</h3><p class="step-sub">ویژهٔ فرانچایزرها</p><ul class="step-list"><li>قابلیت آپلود نقشهٔ فروشگاه و چیدمان هر قفسه، طبقه‌به‌طبقه.</li><li>قابلیت ارائه لیست کلی کالای مورد نیاز فروشگاه پس از پلانوگرام.</li><li>برگهٔ چیدمان و کنترل اجرا با QR.</li><li>تحلیل فروش و اصلاح چیدمان با عدد.</li><li>اطلاعات آمادهٔ کالاها (اندازه، بارکد و مشخصات)؛ لازم نیست تک‌تک کالاها را اندازه بگیرید.</li><li>همراهی کارشناسان مرچندایزینگ ما در طراحی چیدمان و جای درست هر کالا.</li><li><b>یک استاندارد چیدمان برای همهٔ شعبه‌ها</b></li><li><b>مشتری در هر شعبه، برند شما را از روی چیدمان می‌شناسد</b></li></ul><p class="price"><a href="#demo">برای استعلام قیمت تماس بگیرید</a></p></article>
     </div>
   </div>
 </section>
@@ -1055,7 +1067,7 @@ body.no-story .gapempty{opacity:1}
     /* regular sections: blocks leave upward and fade as the next ones arrive */
     [].slice.call(doc.querySelectorAll('.interlude [data-reveal], #what [data-reveal], #benefits [data-reveal], #models [data-reveal], #proof [data-reveal]')).forEach(function (el) {
       fx.push(gsap.fromTo(el, { opacity: 1, y: 0 }, { opacity: 0, y: -36, ease: 'none', immediateRender: false,
-        scrollTrigger: { trigger: el, start: 'bottom 42%', end: 'bottom 4%', scrub: .3, onToggle: function (s) { if (s.isActive) el.style.transition = 'none'; } } }));
+        scrollTrigger: { trigger: el, start: 'bottom 14%', end: 'bottom -4%', scrub: .3, onToggle: function (s) { if (s.isActive) el.style.transition = 'none'; } } }));
     });
     doc.querySelectorAll('.faq details').forEach(function (d) { d.addEventListener('toggle', refreshSoon); });
   }
