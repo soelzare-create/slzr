@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>ActivePlano | معرفی یک‌صفحه‌ای</title>
+<style>
+@font-face{font-family:"Vazirmatn";src:url("assets/Vazirmatn-VF.woff2") format("woff2");font-weight:100 900}
+@page{size:210mm 297mm;margin:0}
+:root{--night:#06201A;--surface:#0B332A;--mint:#5DEBAF;--ink:#0E2A23;--ink2:#3B554C;--ink3:#587068;--bg:#F3F8F5;--line:#D3E3DC;--accent:#145C48}
+*{box-sizing:border-box}html,body{margin:0;background:#ccc}
+body{font-family:"Vazirmatn",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:var(--ink2)}
+.page{width:210mm;height:297mm;margin:0 auto;background:var(--bg);overflow:hidden;display:flex;flex-direction:column}
+@media print{html,body{background:none}}
+.top{background:var(--night);color:#E8F5F0;padding:12mm 14mm 0;position:relative}
+.row{display:flex;justify-content:space-between;align-items:center}
+.wm{direction:ltr;font-weight:900;font-size:15pt}.wm b{color:var(--mint)}
+.badge{border:1px solid rgba(93,235,175,.4);color:#CFF8E6;border-radius:999px;padding:1mm 4mm;font-size:8.5pt;font-weight:800}
+h1{margin:6mm 0 0;font-size:24pt;line-height:1.35;font-weight:900;color:#E8F5F0}h1 em{font-style:normal;color:var(--mint)}
+.sub{font-size:11pt;line-height:1.9;color:#A9CDBF;margin:3mm 0 0;max-width:150mm}
+.hero{margin:7mm 0 0;border-radius:4mm 4mm 0 0;overflow:hidden;box-shadow:0 -10px 40px rgba(0,0,0,.35)}
+.hero img{display:block;width:100%;height:68mm;object-fit:cover;object-position:top}
+.body{padding:7mm 14mm 6mm;flex:1;display:flex;flex-direction:column}
+h2{margin:0 0 4mm;color:var(--ink);font-size:13pt;font-weight:850}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:3.5mm}
+.st{background:#fff;border:1px solid var(--line);border-radius:3mm;overflow:hidden}
+.st img{display:block;width:100%;height:20mm;object-fit:cover;object-position:top;border-bottom:1px solid var(--line)}
+.st div{padding:2.5mm 3mm}.st b{display:block;color:var(--ink);font-size:9.5pt}.st span{font-size:8.3pt;line-height:1.7;display:block;margin-top:.5mm}
+.gains{display:grid;grid-template-columns:repeat(3,1fr);gap:3.5mm;margin-top:6mm}
+.gains div{border-top:2.5px solid var(--mint);padding-top:2.5mm}.gains b{color:var(--ink);font-size:10pt;display:block}.gains span{font-size:8.6pt;line-height:1.7}
+.plans{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin-top:6mm}
+.pl{background:#fff;border:1px solid var(--line);border-radius:3mm;padding:3mm}
+.pl .n{direction:ltr;text-align:right;font-weight:900;color:var(--ink);font-size:12pt}.pl .s{font-size:8pt;color:var(--ink3);font-weight:700;margin-top:.5mm;min-height:8mm}
+.pl .p{font-size:8.5pt;margin-top:1.5mm}.pl .p b{font-size:11pt;color:var(--ink)}
+.pl.hot{background:var(--accent);border-color:var(--accent);color:#DDF5EA}.pl.hot .n{color:#fff}.pl.hot .s{color:#CFF8E6}
+.foot{margin-top:auto;background:var(--night);color:#E8F5F0;padding:6mm 14mm;display:flex;justify-content:space-between;align-items:center}
+.foot b{color:var(--mint);font-size:13pt;direction:ltr;unicode-bidi:isolate}
+.foot small{display:block;color:#A9CDBF;font-size:8.5pt;margin-top:1mm}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <div class="row"><span class="wm">Active<b>Plano</b></span><span class="badge">اولین نرم‌افزار پلانوگرام فروشگاهی در ایران</span></div>
+    <h1>کالا در انبار هست،<br><em>روی قفسه نیست؟</em></h1>
+    <p class="sub">ActivePlano نرم‌افزار پلانوگرام فروشگاه است: چیدمان را طراحی کنید، با یک اسکن QR کنترل کنید و با فروش هر ماه بهترش کنید.</p>
+    <div class="hero"><img src="assets/06-shelf-edit.webp" alt="ویرایشگر قفسه در ActivePlano"></div>
+  </div>
+  <div class="body">
+    <h2>از نقشه تا قفسهٔ کنترل‌شده</h2>
+    <div class="steps">
+      <div class="st"><img src="assets/03-plan.webp" alt=""><div><b>نقشه</b><span>هر قفسه روی نقشهٔ فروشگاه کد و شناسنامه دارد.</span></div></div>
+      <div class="st"><img src="assets/06-shelf-edit.webp" alt="" style="object-position:left top"><div><b>چیدمان قفسه</b><span>طبقه‌به‌طبقه، با اندازهٔ دقیق و شمارش کالا.</span></div></div>
+      <div class="st"><img src="assets/08-sheet.webp" alt=""><div><b>برگهٔ چیدمان و QR</b><span>کارکنان از روی برگه می‌چینند؛ اجرا با اسکن کنترل می‌شود.</span></div></div>
+      <div class="st"><img src="assets/09-analysis1.webp" alt=""><div><b>تحلیل</b><span>جا، ارزش و فروش هر گروه کالا در یک داشبورد.</span></div></div>
+    </div>
+    <div class="gains">
+      <div><b>قفسهٔ خالی کمتر</b><span>جای خالی با سرکشی کوتاه و اسکن QR زود پیدا می‌شود.</span></div>
+      <div><b>خرید اول حساب‌شده</b><span>قبل از خرید، فهرست کالای لازم برای پر کردن قفسه‌ها آماده است.</span></div>
+      <div><b>چیدمان مستند</b><span>با رفتن افراد، استاندارد چیدمان از بین نمی‌رود.</span></div>
+    </div>
+    <div class="plans">
+      <div class="pl"><div class="n">Basic</div><div class="s">نرم‌افزار، شش ماه</div><div class="p"><b>۱۹۹ میلیون</b> تومان</div></div>
+      <div class="pl"><div class="n">Pro</div><div class="s">+ اطلاعات کالا، یک سال</div><div class="p"><b>۳۹۹ میلیون</b> تومان</div></div>
+      <div class="pl"><div class="n">VIP</div><div class="s">+ تحلیل فروش و مشاورهٔ چیدمان</div><div class="p"><b>۱٫۲ میلیارد</b> تومان</div></div>
+      <div class="pl hot"><div class="n">Franchise</div><div class="s">استاندارد چیدمان برای همهٔ شعبه‌ها</div><div class="p">تماس بگیرید</div></div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>جلسهٔ دمو، حضوری یا آنلاین<small>محصولی از به‌سرما و DaranX · www.ActivePlano.com</small></div>
+    <b>۰۲۱-۸۸۹۷۷۰۲۱-۳۰</b>
+  </div>
+</div>
+</body>
+</html>
