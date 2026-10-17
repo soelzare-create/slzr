@@ -75,7 +75,7 @@ def map_svg(R):
         g.append(f'<line class="grid" x1="{i*80}" y1="-700" x2="{i*80}" y2="700"/>')
         g.append(f'<line class="grid" x1="-1000" y1="{i*80}" x2="1000" y2="{i*80}"/>')
     # links
-    by = {s['id']: s for s in sites}
+    labelled = {}
     for l in R['links']:
         (x1, y1), (x2, y2) = P[l['a']], P[l['b']]
         cls = 'link' if l['feasible'] else 'link bad'
@@ -90,6 +90,10 @@ def map_svg(R):
         g.append(f'<text class="dist s2" x="{mx+nx*26:.1f}" y="{my+ny*26+8:.1f}" text-anchor="middle" direction="ltr">{lab}</text>')
         # azimuth ticks at both ends
         for sid, az, (ox, oy) in ((l['a'], l['azimuth_ab'], (x1, y1)), (l['b'], l['azimuth_ba'], (x2, y2))):
+            # nearly parallel links from one site would stack their bearing labels: label only the first
+            if any(abs((az - q + 180) % 360 - 180) < 10 for q in labelled.setdefault(sid, [])):
+                continue
+            labelled[sid].append(az)
             r = math.radians(az)
             tx, ty = ox + math.sin(r) * min(70, ln * .3), oy - math.cos(r) * min(70, ln * .3)
             g.append(f'<line class="az s3 draw" pathLength="1" x1="{ox:.1f}" y1="{oy:.1f}" x2="{tx:.1f}" y2="{ty:.1f}"/>')
@@ -109,10 +113,11 @@ def map_svg(R):
                 vx, vy = vx + (ox - x) / n, vy + (oy - y) / n
         n = math.hypot(vx, vy)
         ux, uy = (-vx / n, -vy / n) if n > .2 else (0, 1)
-        lx, ly = x + ux * 50, y + uy * 46 + 9
+        lx, ly = x + ux * 36, y + uy * 40 + 9
+        anchor = 'end' if ux < -.4 else 'start' if ux > .4 else 'middle'
         g.append(f'<g class="site{hub}"><circle class="halo s1" cx="{x:.1f}" cy="{y:.1f}" r="26"/>'
                  f'<circle class="pin" cx="{x:.1f}" cy="{y:.1f}" r="9"/>'
-                 f'<text class="sname s1" x="{lx:.1f}" y="{ly:.1f}" text-anchor="middle">{e(s.get("name", s["id"]))}</text></g>')
+                 f'<text class="sname s1" x="{lx:.1f}" y="{ly:.1f}" text-anchor="{anchor}" direction="ltr">{e(s.get("name", s["id"]))}</text></g>')
     return '\n'.join(g)
 
 

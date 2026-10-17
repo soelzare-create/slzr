@@ -13,7 +13,7 @@ Talk to the user in Persian. Keep the numbers exact and say where each one came 
 
 Ask for everything below in a single message, so the user answers once. Offer the default in brackets for anything they may not know. Do not block on optional items.
 
-1. **Locations:** a Google Maps link or `lat, lon` for each point, plus a short name (e.g. «دفتر مرکزی»). Shortened `maps.app.goo.gl` links work when the network allows; otherwise ask for the full link.
+1. **Locations:** a Google Maps link or `lat, lon` for each point, plus a short name (e.g. «دفتر مرکزی»). Shortened `maps.app.goo.gl` links work when the network allows; otherwise ask for the full link. Google "search" links (`/maps/search/7PWC+2CC .../@lat,lon`) carry a Plus Code: the script decodes the Plus Code, because the `@lat,lon` in those links is only the map viewport, not the pin.
 2. **Where the antenna sits:** building height or roof height in metres at each point, and any existing mast on it. [Default: single-storey building, 4 m]
 3. **Obstacles along the path:** tall buildings, towers, trees, hills, with their approximate height and position (distance from one end, or a map link). Also the typical building height of the neighbourhood (clutter). [Default clutter: 9 m in city areas, 0 m in open land]
 4. **Required throughput** in real Mbps and what it carries: internet, CCTV cameras (about 4–8 Mbps per 1080p camera), VoIP, or a mix. [Default: 50 Mbps]

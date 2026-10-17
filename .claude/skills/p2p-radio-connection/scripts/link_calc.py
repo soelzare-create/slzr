@@ -40,6 +40,52 @@ _PATTERNS = [
 ]
 
 
+# ---------------------------------------------------------------- Plus Codes (Open Location Code)
+# Google "search" links often carry a Plus Code such as 7PWC+2CC plus a viewport "@lat,lon" that is NOT the pin.
+# The Plus Code is the real place, so it wins over the viewport.
+_OLC = '23456789CFGHJMPQRVWX'
+_OLC_RE = re.compile(r'(?<![0-9A-Z])([23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{0,7})(?![0-9A-Z])')
+
+
+def _olc_decode(code):
+    code = code.replace('+', '').upper()
+    lat, lng, res = -90.0, -180.0, 20.0
+    for i in range(0, min(len(code), 10), 2):
+        lat += _OLC.index(code[i]) * res
+        if i + 1 < len(code):
+            lng += _OLC.index(code[i + 1]) * res
+        last_lat, last_lng = res, res
+        res /= 20
+    rl, rg = last_lat, last_lng
+    for ch in code[10:]:
+        rl, rg = rl / 5, rg / 4
+        v = _OLC.index(ch)
+        lat += (v // 4) * rl
+        lng += (v % 4) * rg
+    return lat + rl / 2, lng + rg / 2
+
+
+def _olc_encode4(lat, lng):
+    lat, lng = lat + 90, lng + 180
+    return _OLC[int(lat // 20)] + _OLC[int(lng // 20)] + _OLC[int(lat % 20)] + _OLC[int(lng % 20)]
+
+
+def plus_code(code, ref):
+    """Decode a full or short Plus Code; short codes are recovered nearest to ref (lat, lon)."""
+    code = code.upper()
+    pad = 8 - code.index('+')
+    if pad == 0:
+        return _olc_decode(code)
+    full = _olc_encode4(*ref)[:pad] + code
+    lat, lng = _olc_decode(full)
+    res = 20.0 ** (2 - pad / 2)
+    if ref[0] + res / 2 < lat: lat -= res
+    elif ref[0] - res / 2 > lat: lat += res
+    if ref[1] + res / 2 < lng: lng -= res
+    elif ref[1] - res / 2 > lng: lng += res
+    return lat, lng
+
+
 def _resolve_short(url):
     req = urllib.request.Request(url, method='GET', headers={'User-Agent': 'Mozilla/5.0'})
     with urllib.request.urlopen(req, timeout=15) as r:
@@ -56,6 +102,16 @@ def parse_location(text):
             s = urllib.parse.unquote(_resolve_short(s))
         except Exception as e:
             raise ValueError(f'Short link could not be opened ({e}). Send the full link or "lat, lon".')
+    pc = _OLC_RE.search(s.split('@')[0].upper())
+    if pc:
+        ref = None
+        for p in _PATTERNS:
+            m = p.search(s)
+            if m:
+                ref = (float(m.group(1)), float(m.group(2)))
+                break
+        if ref or len(pc.group(1).split('+')[0]) == 8:
+            return plus_code(pc.group(1), ref or (0, 0))
     for p in _PATTERNS:
         m = p.search(s)
         if m:
