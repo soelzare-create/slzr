@@ -276,7 +276,7 @@ def budget(radio_a, radio_b, d_m, f_ghz, margin_target, max_width, required):
 
 
 # ---------------------------------------------------------------- link analysis
-def analyse_link(A, B, cfg, catalog, offline):
+def analyse_link(A, B, cfg, catalog, offline, ptmp=False):
     a, b = A['latlon'], B['latlon']
     D = haversine(a, b)
     f = cfg['freq_ghz']
@@ -386,6 +386,26 @@ def analyse_link(A, B, cfg, catalog, offline):
     margin = cfg.get('fade_margin_db') or default_margin(D)
     req = cfg.get('required_mbps', 50)
     opts = []
+    if ptmp:
+        # A is a multipoint base (sector AP); B is one client of the same ecosystem.
+        for ap in catalog:
+            if 'ap' not in ap['roles'] or D > ap['range_km'] * 1000:
+                continue
+            best = None
+            for c in (c for c in catalog if c['ecosystem'] == ap['ecosystem'] and 'cpe' in c['roles']):
+                bud = budget(ap, c, D, f, margin, cfg.get('max_width_mhz', 80), req)
+                # the base is bought for capacity: take the client that unlocks the most of it, cheapest on a tie
+                if bud and bud['max_mbps'] >= req and (best is None or (bud['max_mbps'], -c['price_rank']) > (best[0]['max_mbps'], -best[1]['price_rank'])):
+                    best = (bud, c)
+            if best:
+                bud, c = best
+                bud.update({'id': ap['id'], 'cpe': c['id'], 'band': ap['band'], 'meets': True, 'grx_dbi': c['gain_dbi']})
+                opts.append(bud)
+        res['ptmp'] = True
+        res['fade_margin_target_db'] = margin
+        res['radio_options'] = opts
+        res['picks'] = pick_tiers(opts, {m['id']: m for m in catalog}, req, margin)
+        return res
     for m in catalog:
         if 'ptp' not in m['roles']:
             continue
@@ -483,6 +503,7 @@ def main():
 
     pairs = [(l['a'], l['b']) for l in cfg.get('links', [])]
     existing = {(l['a'], l['b']) for l in cfg.get('links', []) if l.get('existing')}   # already built; drawn for context only
+    ptmp = {(l['a'], l['b']) for l in cfg.get('links', []) if l.get('ptmp')}          # a = multipoint base station, b = client
     hub = cfg.get('hub')
     if not pairs:
         if len(sites) == 2:
@@ -496,7 +517,7 @@ def main():
     links = []
     for a, b in pairs:
         print(f'analysing {a} -> {b} ...', file=sys.stderr)
-        links.append(analyse_link(by[a], by[b], cfg, catalog, args.offline))
+        links.append(analyse_link(by[a], by[b], cfg, catalog, args.offline, (a, b) in ptmp))
         links[-1]['existing'] = (a, b) in existing or (b, a) in existing
     star = None
     if hub and len(pairs) > 1:

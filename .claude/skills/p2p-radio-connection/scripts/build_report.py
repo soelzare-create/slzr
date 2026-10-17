@@ -200,6 +200,7 @@ def profile_svg(l, sites):
 # ------------------------------------------------------------------ act 3: budget
 def budget_svg(b, radio, target):
     tx, G = b['tx_dbm'], radio['gain_dbi']
+    G2 = b.get('grx_dbi', G)   # client antenna differs from the base on multipoint links
     eirp = b['eirp_dbm']
     after_path = eirp - b['loss_db']
     rx, sens = b['rx_dbm'], b['sens_dbm']
@@ -207,7 +208,7 @@ def budget_svg(b, radio, target):
     X0, Y0, Y1 = 90, 50, 520
     Y = lambda v: Y0 + (Y1 - Y0) * (hi - v) / (hi - lo)
     cols = [('Tx', 0, tx, 's1 pos', f'{tx:g} dBm'), ('+ آنتن', tx, eirp, 's1 pos', f'+{G:g} dB'),
-            ('− مسیر', eirp, after_path, 's2 neg', f'−{b["loss_db"]:g} dB'), ('+ آنتن', after_path, rx, 's3 pos', f'+{G:g} dB')]
+            ('− مسیر', eirp, after_path, 's2 neg', f'−{b["loss_db"]:g} dB'), ('+ آنتن', after_path, rx, 's3 pos', f'+{G2:g} dB')]
     g = []
     for v in range(int(math.ceil(lo / 10) * 10), int(hi) + 1, 10):
         g.append(f'<line class="tick" x1="{X0}" x2="960" y1="{Y(v):.1f}" y2="{Y(v):.1f}"/><text class="tl" x="{X0-10}" y="{Y(v)+5:.1f}" text-anchor="end" direction="ltr">{v} dBm</text>')
@@ -348,7 +349,7 @@ def build(R, prices, brief=None):
   <div class="stage">
     <div class="scene side" aria-hidden="true"><svg class="bud" viewBox="0 0 1000 570" preserveAspectRatio="xMidYMid meet">{remap(budget_svg(bal, m, L0["fade_margin_target_db"]), {"s2": "s1", "s3": "s1", "s4": "s2"})}</svg></div>
     <div class="caps">
-      <div class="cap lead" data-s="0"><h2>سیگنال کافی می‌رسد؟</h2><p>با <span class="ltr">{e(m["brand"])} {e(m["model"])}</span> در هر دو طرف.</p></div>
+      <div class="cap lead" data-s="0"><h2>سیگنال کافی می‌رسد؟</h2><p>{f'<span class="ltr">{e(m["model"])}</span> در {e(name(L0["a"]))} و <span class="ltr">{e(cat[bal["cpe"]]["model"])}</span> در {e(name(L0["b"]))}.' if bal.get("cpe") else f'با <span class="ltr">{e(m["brand"])} {e(m["model"])}</span> در هر دو طرف.'}</p></div>
       <div class="cap" data-s="1"><h3>سیگنال دریافتی {fa(bal["rx_dbm"])} dBm</h3><p>بعد از {fa(bal["loss_db"])} دسی‌بل افت مسیر در {km(L0["distance_m"])}.</p></div>
       <div class="cap" data-s="2"><h3>حاشیهٔ اطمینان {fa(bal["margin_db"])} دسی‌بل</h3><p>هدف دست‌کم {fa(L0["fade_margin_target_db"])}؛ ظرفیت واقعی حدود {fa(bal["real_mbps"])} مگابیت.</p></div>
     </div>
@@ -372,6 +373,11 @@ def build(R, prices, brief=None):
                 continue
             m, o = cat[mid], opts[mid]
             p = P.get(mid)
+            client = ''
+            if o.get('cpe'):
+                c, cp = cat[o['cpe']], P.get(o['cpe'])
+                client = (f'<p class="why">کلاینت در {e(name(l["b"]))}: <span class="ltr">{e(c["brand"])} {e(c["model"])}</span></p>'
+                          + (f'<p class="price">{e(cp["price"])} <small>{e(cp.get("unit", ""))}</small></p>' if cp else f'<p class="price">{need("قیمت روز کلاینت")}</p>'))
             price = (f'<p class="price">{e(p["price"])} <small>{e(p.get("unit", ""))}</small></p>'
                      f'<p class="src">منبع: <a href="{e(p["source"])}" rel="noopener" target="_blank">{e(p.get("shop") or "لینک")}</a></p>') if p else f'<p class="price">{need("قیمت روز")}</p>'
             if o.get('margin_db') is None:
@@ -383,7 +389,7 @@ def build(R, prices, brief=None):
                         f'<li>حاشیهٔ اطمینان: {fa(o["margin_db"])} dB</li>')
             cards.append(f'''<article class="card tier-{tier}" data-reveal><p class="tier">{TIER_FA[tier]}</p>
 <h3 class="ltr">{e(m["brand"])} {e(m["model"])}</h3><p class="why">{TIER_WHY[tier]}</p><ul>{spec}<li>پورت {e(m["port"])}، دمای کاری <span class="ltr">{e(m["temp"])}</span> °C</li></ul>
-<p class="note">{e(m["notes"])}</p>{price}</article>''')
+<p class="note">{e(m["notes"])}</p>{price}{client}</article>''')
         title = f'{e(name(l["a"]))} ↔ {e(name(l["b"]))}'
         body = ''.join(cards) if cards else '<p>هیچ رادیویی با این فاصله و حاشیهٔ اطمینان مناسب نیست؛ نقطهٔ واسط لازم است.</p>'
         gear.append(f'<div class="linkgear"><h3 class="lg-t">{title} · {km(l["distance_m"])}</h3><div class="cards">{body}</div></div>')

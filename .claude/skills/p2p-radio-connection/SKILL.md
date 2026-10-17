@@ -21,7 +21,7 @@ The reader, often the customer's manager, decides in the first 15–20 seconds w
 
 Analyse alternatives (direct link, relay through an existing site, other relays) quietly, then **deliver one flow**: the chain the customer will actually build, e.g. «باهنر ← پاداد ← دفتر مرکزی». Do not compare every location and do not list stats for every pair.
 
-- In `project.json`, keep only the sites on the chosen flow. Mark links that already exist with `"existing": true`. They are drawn dashed on the map for context and are not analysed, priced or put on the install sheet.
+- In `project.json`, keep only the sites on the chosen flow. Mark links that already exist with `"existing": true`. Mark a link from a multipoint base (sector radio) with `"ptmp": true`, base site as `a`: the calculator pairs each sector AP with the client of the same brand that unlocks the most capacity, and the report shows the AP plus that client. They are drawn dashed on the map for context and are not analysed, priced or put on the install sheet.
 - The report shows only the new link(s): one path profile, one link budget, **one recommended radio** with its price, and the install rows.
 - Mention the rejected alternative at most once, as the reason for the choice (e.g. the money saved), inside the hero sentence, not as a table.
 
