@@ -264,11 +264,11 @@ def budget(radio_a, radio_b, d_m, f_ghz, margin_target, max_width, required):
                                 'margin_db': round(rx - sens, 1), 'phy_mbps': PHY[w][mcs], 'real_mbps': round(min(PHY[w][mcs] * EFFICIENCY, cap)),
                                 'tx_dbm': tx, 'eirp_dbm': round(tx + radio_a['gain_dbi'] - radio_a.get('cable_loss_db', 0), 1),
                                 'loss_db': round(loss, 1), 'fspl_db': round(fspl(d_m, f_ghz), 1)})
-                break  # highest MCS that holds the margin at this width
     if not configs:
         return None
     top = max(configs, key=lambda c: (c['real_mbps'], c['margin_db']))
-    # recommended setting: the narrowest channel that already meets the need (less noise, more stable in cities)
+    # recommended setting: the narrowest channel and the lowest modulation that already meet the need
+    # (less noise, the most fade margin); the capacity headroom is reported separately as max_mbps
     fits = [c for c in configs if c['real_mbps'] >= required]
     rec = dict(min(fits, key=lambda c: (c['width_mhz'], -c['margin_db'])) if fits else top)
     rec.update({'max_mbps': top['real_mbps'], 'max_width_mhz': top['width_mhz'], 'max_modulation': top['modulation'], 'max_margin_db': top['margin_db']})
@@ -482,6 +482,7 @@ def main():
     by = {s['id']: s for s in sites}
 
     pairs = [(l['a'], l['b']) for l in cfg.get('links', [])]
+    existing = {(l['a'], l['b']) for l in cfg.get('links', []) if l.get('existing')}   # already built; drawn for context only
     hub = cfg.get('hub')
     if not pairs:
         if len(sites) == 2:
@@ -496,6 +497,7 @@ def main():
     for a, b in pairs:
         print(f'analysing {a} -> {b} ...', file=sys.stderr)
         links.append(analyse_link(by[a], by[b], cfg, catalog, args.offline))
+        links[-1]['existing'] = (a, b) in existing or (b, a) in existing
     star = None
     if hub and len(pairs) > 1:
         star = analyse_star(by[hub], [p[1] for p in pairs], cfg, catalog, links)

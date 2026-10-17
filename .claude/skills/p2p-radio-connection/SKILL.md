@@ -17,6 +17,14 @@ The reader, often the customer's manager, decides in the first 15–20 seconds w
 - **Chat reply:** the first line is the answer. Then 3–6 short lines, a small table only if it compares options. Assumptions and open items go in one line at the end, not as long lists. Everything else lives in the report.
 - **Frame the result around the customer's benefit.** When a cheaper route exists (a relay through a site they already have, a shorter link, cheaper radios), lead with it and state the saving in toman. Show the more expensive option only as the comparison. Do not hide the condition that makes the cheaper route work (e.g. spare capacity on an existing link); state it once, briefly.
 
+## One flow, not a survey
+
+Analyse alternatives (direct link, relay through an existing site, other relays) quietly, then **deliver one flow**: the chain the customer will actually build, e.g. «باهنر ← پاداد ← دفتر مرکزی». Do not compare every location and do not list stats for every pair.
+
+- In `project.json`, keep only the sites on the chosen flow. Mark links that already exist with `"existing": true`. They are drawn dashed on the map for context and are not analysed, priced or put on the install sheet.
+- The report shows only the new link(s): one path profile, one link budget, **one recommended radio** with its price, and the install rows.
+- Mention the rejected alternative at most once, as the reason for the choice (e.g. the money saved), inside the hero sentence, not as a table.
+
 ## 1. Collect the inputs (one message, with defaults)
 
 Ask for everything below in a single message, so the user answers once. Offer the default in brackets for anything they may not know. Do not block on optional items.
@@ -111,11 +119,11 @@ First write `brief.json`, the answer-first summary (see the 15–20 second rule 
 {"headline": "باهنر از مسیر پاداد وصل می‌شود",
  "verdict": "پاداد سر راه دفتر مرکزی است؛ یک لینک کوتاه کافی است و به رادیوی دوربرد گران نیازی نیست.",
  "stats": [{"value": "حدود ۴۰ میلیون تومان", "label": "صرفه‌جویی در تجهیزات"}, {"value": "۲٫۸۶ کیلومتر", "label": "به‌جای ۹٫۴۳"}],
- "primary_link": "PD-BH", "primary_model": "tplink-cpe710",
- "compare": {"title": "چرا از پاداد؟", "columns": ["", "پیشنهاد ما", "جایگزین"], "rows": [{"cells": ["هزینه", "…", "…"], "win": true}], "note": "شرط‌ها در یک جمله"}}
+ "flow": "باهنر ← پاداد ← دفتر مرکزی",
+ "primary_link": "PD-BH", "primary_model": "tplink-cpe710"}
 ```
 
-When several routes were analysed (direct vs relay), `compare` is what lets the reader see the decision at a glance. Then:
+Say in a stat label when a height is measured from the ground, so nobody confuses it with mast height on the roof or with elevation above sea level. Then:
 
 ```bash
 python3 <skill>/scripts/build_report.py results.json --prices prices.json --brief brief.json -o report.html
@@ -145,7 +153,7 @@ Deliver the HTML file to the user: send it as a file and/or publish it as an art
 Short, answer first (see the 15–20 second rule). Aim for under ~12 lines:
 
 1. One line with the answer and the benefit (route + saving or cost).
-2. A compact table only when comparing options (distance, radio, cost, mast).
+2. The flow in one line, the radio and its price, and antenna height **from the ground** (mast on the roof + building).
 3. One line with the condition or risk that matters most.
 4. One line listing assumptions to confirm (building heights, obstacles, existing link capacity) and that a site survey comes before purchase.
 

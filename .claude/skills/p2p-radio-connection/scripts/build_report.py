@@ -23,7 +23,7 @@ Story (cinematic-story-site engine, one gesture = one scene):
   Act    budget   : transmit power -> path loss -> received signal -> fade margin (main link, balanced pick)
   Sections        : equipment tiers with prices, PtMP sectors, installation sheet, field checklist, plain summary
 """
-import argparse, base64, html, json, math
+import argparse, base64, html, json, math, re
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -86,7 +86,7 @@ def map_svg(R):
     labelled = {}
     for l in R['links']:
         (x1, y1), (x2, y2) = P[l['a']], P[l['b']]
-        cls = 'link' if l['feasible'] else 'link bad'
+        cls = 'link existing' if l.get('existing') else 'link' if l['feasible'] else 'link bad'
         g.append(f'<line class="{cls} s2 draw" pathLength="1" x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}"/>')
         mx, my = (x1 + x2) / 2, (y1 + y2) / 2
         ln = math.hypot(x2 - x1, y2 - y1) or 1
@@ -230,6 +230,11 @@ def budget_svg(b, radio, target):
 
 
 # ------------------------------------------------------------------ page
+def remap(svg, m):
+    """Merge scenes: rename scene classes (e.g. s3 -> s1) inside every class attribute."""
+    return re.sub(r'class="([^"]*)"', lambda k: 'class="' + ' '.join(m.get(t, t) for t in k.group(1).split()) + '"', svg)
+
+
 def auto_brief(R, name, P):
     """Default answer-first brief when the caller did not write one: the main link, its masts and the pick."""
     l = R['links'][0]
@@ -256,6 +261,7 @@ def build(R, prices, brief=None):
     if brief.get('primary_link'):   # the recommended link leads the story (first profile act, budget act)
         pa, pb = brief['primary_link'].split('-')
         links.sort(key=lambda l: 0 if {l['a'], l['b']} == {pa, pb} else 1)
+    links = [l for l in links if not l.get('existing')] or links   # existing links only appear on the map
     L0 = links[0]
     name = lambda sid: sites[sid].get('name', sid)
     P = (prices or {}).get('items', {})
@@ -274,12 +280,16 @@ def build(R, prices, brief=None):
         h1 = f'{fa(n_sites)} نقطه، <em>{fa(len(links))} لینک رادیویی</em>'
     verdict = ('هر لینک با ارتفاع دکل مشخص و تجهیزات موجود در بازار ایران برقرار می‌شود.' if feasible_all
                else 'بخشی از مسیرها دید مستقیم ندارند و به نقطهٔ واسط یا سازهٔ بلندتر نیاز دارند.')
-    az_line = '؛ '.join(f'{e(name(l["a"]))} رو به {fa(round(l["azimuth_ab"]))}° ({l["compass_ab"]})' for l in links[:3])
-    dist_line = '؛ '.join(f'{e(name(l["a"]))} تا {e(name(l["b"]))}: {km(l["distance_m"])}' for l in links[:3])
+    az_line = '؛ '.join(f'{e(name(l["a"]))} رو به {fa(round(l["azimuth_ab"]))}°، {e(name(l["b"]))} رو به {fa(round(l["azimuth_ba"]))}°' for l in links[:2])
+    dist_line = '؛ '.join(f'{e(name(l["a"]))} تا {e(name(l["b"]))}: {km(l["distance_m"])}' for l in links[:2])
+    old = [l for l in R['links'] if l.get('existing')]
+    if old:
+        dist_line += '. ' + '، '.join(f'{e(name(l["a"]))} و {e(name(l["b"]))} از قبل به هم وصل‌اند' for l in old) + '.'
+    flow = brief.get('flow') or ' ← '.join(name(x) for x in [links[0]['b'], links[0]['a']])
     story.append(f'''
-<section class="story" id="map" data-hero style="--len:500svh" aria-label="نقشهٔ نقاط و مسیر لینک‌ها">
+<section class="story" id="map" data-hero style="--len:400svh" aria-label="نقشهٔ نقاط و مسیر لینک‌ها">
   <div class="stage">
-    <svg class="scene" id="world" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g id="cam" class="cam">{map_svg(R)}</g></svg>
+    <svg class="scene" id="world" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g id="cam" class="cam">{remap(map_svg(R), {"s2": "s1", "s3": "s2"})}</g></svg>
     <div class="vignette" aria-hidden="true"></div>
     <div class="story-copy" id="storyCopy">
       <span class="badge">طرح لینک رادیویی · {e(R["project"])}</span>
@@ -289,15 +299,14 @@ def build(R, prices, brief=None):
       <div class="hero-actions"><a class="btn btn-brand" href="{"#result" if brief.get("compare") else "#gear"}">{"مقایسهٔ گزینه‌ها" if brief.get("compare") else "تجهیزات پیشنهادی"}</a><a class="btn btn-ghost" href="#install">برگهٔ نصب</a></div>
     </div>
     <div class="caps">
-      <div class="cap" data-s="1"><p class="cap-t">{fa(n_sites)} نقطه روی نقشه</p><p>مختصات از لینک‌های شما خوانده شد.</p></div>
-      <div class="cap" data-s="2"><p class="cap-t">فاصلهٔ مستقیم</p><p>{dist_line}</p></div>
-      <div class="cap" data-s="3"><p class="cap-t">جهت آنتن‌ها</p><p>{az_line}</p></div>
+      <div class="cap" data-s="1"><p class="cap-t">{e(flow)}</p><p>{dist_line}</p></div>
+      <div class="cap" data-s="2"><p class="cap-t">جهت آنتن‌ها</p><p>{az_line}</p></div>
     </div>
   </div>
 </section>''')
-    css_rules.append(scene_css('map', 4, ['html.js body:not(.no-story) #map:not([data-sc="0"]) .story-copy{opacity:0;visibility:hidden}',
+    css_rules.append(scene_css('map', 3, ['html.js body:not(.no-story) #map:not([data-sc="0"]) .story-copy{opacity:0;visibility:hidden}',
                                           '#map .story-copy{transition:opacity 260ms var(--ease-out),visibility 0s linear 260ms}']))
-    acts_js.append("E.act('map',[.2,.45,.72],{frame:mapFrame,reset:function(){cam.removeAttribute('transform')}},[0,.32,.58,1]);")
+    acts_js.append("E.act('map',[.3,.65],{frame:mapFrame,reset:function(){cam.removeAttribute('transform')}},[0,.48,1]);")
 
     # ---------------- profile acts
     for i, l in enumerate(links[:4]):
@@ -315,21 +324,19 @@ def build(R, prices, brief=None):
             fres_l = 'یک نقطهٔ واسط (رله) یا سازهٔ بلندتر لازم است.'
         warn = '' if l['terrain_ok'] else f' {need("دادهٔ ارتفاع زمین دریافت نشد")}'
         story.append(f'''
-<section class="story" id="{aid}" style="--len:600svh" aria-label="پروفایل مسیر {e(A)} تا {e(B)}">
+<section class="story" id="{aid}" style="--len:500svh" aria-label="پروفایل مسیر {e(A)} تا {e(B)}">
   <div class="stage">
-    <div class="scene side" aria-hidden="true"><svg class="prof" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMid meet">{profile_svg(l, sites)}</svg></div>
+    <div class="scene side" aria-hidden="true"><svg class="prof" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMid meet">{remap(profile_svg(l, sites), {"s2": "s1", "s3": "s1", "s4": "s2", "s5": "s3"})}</svg></div>
     <div class="caps">
-      <div class="cap lead" data-s="0"><h2>مسیر {e(A)} تا {e(B)} از کنار</h2><p>زمین، موانع و انحنای زمین در طول {km(l["distance_m"])}.{warn}</p></div>
-      <div class="cap" data-s="1"><h3>ارتفاع زمین</h3><p>{e(A)} {fa(l["ground_a_m"], 1)} متر، {e(B)} {fa(l["ground_b_m"], 1)} متر؛ اختلاف {fa(abs(l["ground_diff_m"]), 1)} متر.</p></div>
-      <div class="cap" data-s="2"><h3>موانع مسیر</h3><p>{obs_line}</p></div>
-      <div class="cap" data-s="3"><h3>انحنای زمین</h3><p>وسط مسیر، زمین {fa(l["max_bulge_m"], 1)} متر بالا می‌آید و جلوی دید را می‌گیرد.</p></div>
-      <div class="cap" data-s="4"><h3>ارتفاع دکل</h3><p>{mast_line}</p></div>
-      <div class="cap" data-s="5"><h3>{fres_t}</h3><p>{fres_l}</p></div>
+      <div class="cap lead" data-s="0"><h2>مسیر {e(A)} تا {e(B)}</h2><p>{km(l["distance_m"])} از کنار.{warn}</p></div>
+      <div class="cap" data-s="1"><h3>موانع سر راه</h3><p>{obs_line} اختلاف ارتفاع زمین {fa(abs(l["ground_diff_m"]), 1)} متر.</p></div>
+      <div class="cap" data-s="2"><h3>ارتفاع دکل</h3><p>{mast_line}</p></div>
+      <div class="cap" data-s="3"><h3>{fres_t}</h3><p>{fres_l}</p></div>
     </div>
   </div>
 </section>''')
-        css_rules.append(scene_css(aid, 6, []))
-        acts_js.append(f"E.act('{aid}',[.14,.32,.5,.68,.84]);")
+        css_rules.append(scene_css(aid, 4, []))
+        acts_js.append(f"E.act('{aid}',[.22,.5,.76]);")
 
     # ---------------- budget act (main link, balanced pick)
     bal_id = brief.get('primary_model') or L0.get('picks', {}).get('balanced')
@@ -337,20 +344,18 @@ def build(R, prices, brief=None):
     if bal and bal.get('margin_db') is not None:
         m = cat[bal_id]
         story.append(f'''
-<section class="story" id="budget" style="--len:500svh" aria-label="بودجهٔ لینک">
+<section class="story" id="budget" style="--len:400svh" aria-label="بودجهٔ لینک">
   <div class="stage">
-    <div class="scene side" aria-hidden="true"><svg class="bud" viewBox="0 0 1000 570" preserveAspectRatio="xMidYMid meet">{budget_svg(bal, m, L0["fade_margin_target_db"])}</svg></div>
+    <div class="scene side" aria-hidden="true"><svg class="bud" viewBox="0 0 1000 570" preserveAspectRatio="xMidYMid meet">{remap(budget_svg(bal, m, L0["fade_margin_target_db"]), {"s2": "s1", "s3": "s1", "s4": "s2"})}</svg></div>
     <div class="caps">
       <div class="cap lead" data-s="0"><h2>سیگنال کافی می‌رسد؟</h2><p>با <span class="ltr">{e(m["brand"])} {e(m["model"])}</span> در هر دو طرف.</p></div>
-      <div class="cap" data-s="1"><h3>توان ارسال</h3><p>فرستنده {fa(bal["tx_dbm"])} و آنتن {fa(m["gain_dbi"])}؛ توان مؤثر {fa(bal["eirp_dbm"])} dBm.</p></div>
-      <div class="cap" data-s="2"><h3>افت مسیر</h3><p>در {km(L0["distance_m"])}، {fa(bal["loss_db"])} دسی‌بل از سیگنال کم می‌شود.</p></div>
-      <div class="cap" data-s="3"><h3>سیگنال دریافتی</h3><p>آنتن مقابل آن را به {fa(bal["rx_dbm"])} dBm می‌رساند.</p></div>
-      <div class="cap" data-s="4"><h3>حاشیهٔ اطمینان {fa(bal["margin_db"])} دسی‌بل</h3><p>هدف دست‌کم {fa(L0["fade_margin_target_db"])}؛ ظرفیت واقعی حدود {fa(bal["real_mbps"])} مگابیت.</p></div>
+      <div class="cap" data-s="1"><h3>سیگنال دریافتی {fa(bal["rx_dbm"])} dBm</h3><p>بعد از {fa(bal["loss_db"])} دسی‌بل افت مسیر در {km(L0["distance_m"])}.</p></div>
+      <div class="cap" data-s="2"><h3>حاشیهٔ اطمینان {fa(bal["margin_db"])} دسی‌بل</h3><p>هدف دست‌کم {fa(L0["fade_margin_target_db"])}؛ ظرفیت واقعی حدود {fa(bal["real_mbps"])} مگابیت.</p></div>
     </div>
   </div>
 </section>''')
-        css_rules.append(scene_css('budget', 5, []))
-        acts_js.append("E.act('budget',[.18,.4,.62,.82]);")
+        css_rules.append(scene_css('budget', 3, []))
+        acts_js.append("E.act('budget',[.3,.65]);")
 
     # ---------------- equipment section
     gear = []
@@ -358,8 +363,9 @@ def build(R, prices, brief=None):
         opts = {o['id']: o for o in l.get('radio_options', [])}
         cards = []
         picks = dict(l.get('picks', {}))
-        if l is L0 and brief.get('primary_model') in opts:
-            picks = {'recommended': brief['primary_model'], **{k: v for k, v in picks.items() if v != brief['primary_model'] and k != 'balanced'}}
+        # one flow, one answer: show only the radio we recommend for each new link
+        rec = brief.get('primary_model') if l is L0 and brief.get('primary_model') in opts else picks.get('balanced')
+        picks = {'recommended': rec} if rec else {}
         for tier in ('recommended', 'economy', 'balanced', 'pro'):
             mid = picks.get(tier)
             if not mid:
@@ -420,12 +426,10 @@ def build(R, prices, brief=None):
 <h2 id="h-checks" data-reveal>قبل از خرید و نصب</h2>
 <div class="prose" data-reveal><ul>
 {terrain_warn}
-<li><b>بازدید میدانی:</b> از بام یک طرف با دوربین دوچشمی یا پهپاد، طرف مقابل را ببینید. دادهٔ ماهواره‌ای ساختمان‌های تازه و درخت‌ها را نشان نمی‌دهد.</li>
-<li><b>اسکن تداخل:</b> با ابزار Scan در MikroTik یا airView در Ubiquiti کانال خلوت را پیدا کنید؛ در شهر کانال ۲۰ یا ۴۰ مگاهرتز پایدارتر است.</li>
-<li><b>مقررات:</b> باند و توان تشعشعی (EIRP) را با ضوابط سازمان تنظیم مقررات و ارتباطات رادیویی تطبیق دهید.</li>
-<li><b>دکل:</b> برای آنتن‌های پرتو باریک (۵ درجه و کمتر) دکل باید بدون لرزش باشد؛ مهار سیمی و پایهٔ محکم.</li>
-<li><b>گرما و گردوخاک:</b> دمای کاری دستگاه را چک کنید، کابل شبکهٔ Outdoor شیلددار و کانکتور ضدآب بزنید.</li>
-<li><b>صاعقه و ارت:</b> ارت دکل، محافظ PoE (Surge Protector) و UPS برای هر دو طرف.</li>
+<li><b>بازدید میدانی:</b> دید مستقیم را از بام تأیید کنید.</li>
+<li><b>اسکن تداخل</b> و انتخاب کانال خلوت (۲۰ مگاهرتز در شهر).</li>
+<li><b>مقررات:</b> باند و EIRP طبق ضوابط سازمان تنظیم مقررات.</li>
+<li><b>نصب:</b> دکل محکم، کابل Outdoor شیلددار، ارت و محافظ PoE.</li>
 </ul>
 <p class="assume">فرض‌ها: فرکانس {fa(R["freq_ghz"])} گیگاهرتز، ضریب انحنا k={fa(L0["k"])}، هدف پاک‌بودن {fa(round(L0["clearance_target"]*100))}٪ منطقهٔ فرنل، منبع ارتفاع: <span class="ltr">{e(L0["terrain_source"])}</span>، حساسیت گیرنده‌ها مقادیر معمول 802.11ac است؛ پیش از خرید با دیتاشیت تطبیق دهید.</p></div></div></section>'''
 
@@ -434,9 +438,8 @@ def build(R, prices, brief=None):
         + (f'دکل {fa(l["mast_a_m"])} و {fa(l["mast_b_m"])} متر روی بام، آزیموت {fa(round(l["azimuth_ab"]))}° و {fa(round(l["azimuth_ba"]))}°.' if l['feasible'] else 'بدون دید مستقیم؛ نقطهٔ واسط لازم است.')
         + '</li>' for l in links)
     what = f'''<section class="sec" id="what" aria-labelledby="h-what"><div class="wrap">
-<h2 id="h-what" data-reveal>این طرح لینک رادیویی چه می‌گوید؟</h2>
-<div class="prose" data-reveal><p>این گزارش طرح لینک رادیویی نقطه‌به‌نقطه برای «{e(R["project"])}» است: {fa(n_sites)} نقطه، {fa(len(links))} لینک و مجموع {km(total_km)} مسیر در باند {fa(R["freq_ghz"])} گیگاهرتز با نیاز {fa(R["required_mbps"])} مگابیت واقعی.</p>
-<ul>{summary_items}</ul></div></div></section>'''
+<h2 id="h-what" data-reveal>خلاصه</h2>
+<div class="prose" data-reveal><p>طرح لینک رادیویی «{e(R["project"])}»: {e(brief["headline"])}. {e(brief["verdict"])}</p></div></div></section>'''
 
     compare_html = ''
     if brief.get('compare'):
@@ -449,7 +452,7 @@ def build(R, prices, brief=None):
 
     gear_html = f'''<section class="sec" id="gear" aria-labelledby="h-gear"><div class="wrap">
 <h2 id="h-gear" data-reveal>تجهیزات پیشنهادی</h2>
-<p class="sub" data-reveal>برای هر لینک سه گزینه، همه در بازار ایران. {price_note}</p>
+<p class="sub" data-reveal>{price_note}</p>
 {"".join(gear)}</div></section>'''
 
     nav = '<a href="#p0">پروفایل مسیر</a>' + ('<a href="#budget">بودجهٔ لینک</a>' if bal else '') + '<a href="#gear">تجهیزات</a><a href="#install">نصب</a>'
@@ -458,7 +461,7 @@ def build(R, prices, brief=None):
         font=base64.b64encode((ASSETS / 'fonts' / 'Vazirmatn-wght.woff2').read_bytes()).decode(),
         base_css=(ASSETS / 'engine' / 'base.css').read_text(encoding='utf-8'),
         scene_css='\n'.join(css_rules), nav=nav, story='\n'.join(story),
-        sections=compare_html + what + gear_html + star_html + install + checks, date=fa(R['generated']),
+        sections=compare_html + gear_html + star_html + install + checks + what, date=fa(R['generated']),
         gsap=(ASSETS / 'vendor' / 'gsap.min.js').read_text(encoding='utf-8'),
         st=(ASSETS / 'vendor' / 'ScrollTrigger.min.js').read_text(encoding='utf-8'),
         engine=(ASSETS / 'engine' / 'story-engine.js').read_text(encoding='utf-8'),
@@ -483,6 +486,7 @@ TEMPLATE = '''<!doctype html>
 .grid{{stroke:rgba(238,242,248,.05);stroke-width:1}}
 .link{{stroke:var(--brand);stroke-width:4;stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset 1.1s var(--ease-in-out)}}
 .link.bad{{stroke:var(--alert)}}
+.link.existing{{stroke:var(--st-ink-3);stroke-width:3;stroke-dasharray:10 8!important;stroke-dashoffset:0!important}}
 .az{{stroke:var(--st-ink-2);stroke-width:2;stroke-dasharray:1;transition:stroke-dashoffset .7s var(--ease-out)}}
 .dist,.azl{{fill:var(--st-ink);font:800 22px var(--font);paint-order:stroke;stroke:var(--st-bg);stroke-width:7px;stroke-linejoin:round}}
 .azl{{font-size:17px;fill:var(--st-ink-2)}}
