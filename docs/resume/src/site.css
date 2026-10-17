@@ -145,22 +145,22 @@ body.no-story .m-line{stroke-dasharray:none}
 
 /* ---------- act 2: Kala-Val ---------- */
 .scene.side.kv .ov{width:min(92%,600px)}
-.kv .frame{background:#fff;padding:10px;transition:transform 700ms var(--ease-out)}
+.kv .frame{background:#fff;padding:10px}
 .kv .frame img{border-radius:8px}
-#kalaval[data-sc="1"] .frame.dots{transform:scale(1.04)}
-.kv .frame.dots{box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 2px #39d353,0 0 40px rgba(57,211,83,.35)}
+.kv .frame{transition:transform 700ms var(--ease-out),box-shadow 700ms var(--ease-out)}
+#kalaval[data-sc="1"] .kv .frame{transform:scale(1.03);box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 2px #39d353,0 0 40px rgba(57,211,83,.35)}
 .vlan{width:100%;height:auto;display:block}
 .vlan .core{fill:var(--brand)}.vlan .ct{fill:var(--brand-ink)}
 .vlan .box{fill:#0D2036;stroke:var(--brand);stroke-width:2}
 .vlan .lk{stroke:var(--st-ink-3);stroke-width:2;stroke-dasharray:4 6}
-.vlan text{font-family:var(--font)}.vlan .t1{font-size:24px;font-weight:900;fill:var(--st-ink)}.vlan .t2{font-size:16px;font-weight:600;fill:var(--st-ink-2)}
+.vlan text{font-family:var(--font)}.vlan .t1{font-size:22px;font-weight:850;fill:var(--st-ink)}.vlan .t2{font-size:17px;font-weight:600;fill:var(--st-ink-2)}
 .sla{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
 .sla li{border:1px solid var(--st-line-2);border-radius:var(--r-card);padding:1.2rem 1.3rem;background:rgba(255,255,255,.04)}
 .sla b{display:block;font-size:clamp(2rem,1.4rem + 2vw,3rem);font-weight:900;color:var(--brand);line-height:1.15}
 .sla span{color:var(--st-ink-2);font-weight:700}
 @media(max-width:860px),(max-aspect-ratio:21/20){.sla li{padding:.8rem .9rem}.sla b{font-size:1.7rem}}
-body.no-story .kv .ov:not([data-s="1"]){display:block;position:relative;left:auto;top:auto;transform:none;opacity:1;width:100%;max-width:600px;margin-inline:auto}
-body.no-story .scene.side.kv{height:auto;display:grid;gap:1rem}
+body.no-story .kv .ov,html:not(.js) .kv .ov{display:block;position:relative;left:auto;top:auto;transform:none;opacity:1;width:100%;max-width:600px;margin-inline:auto}
+body.no-story .scene.side.kv,html:not(.js) .scene.side.kv{height:auto;width:100%;position:relative;inset:auto;display:grid;gap:1rem}
 
 /* ---------- projects ---------- */
 .sectors{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.4rem}
@@ -178,18 +178,21 @@ body.no-story .scene.side.kv{height:auto;display:grid;gap:1rem}
 .proj .ticks{margin-top:1rem;gap:.55rem}.proj .ticks li{font-size:.97rem;line-height:1.8}
 .proj-media{display:grid;gap:.8rem}
 .plan{margin:0;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
-.plan a{display:block}.plan img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;background:#fff;transition:transform 400ms var(--ease-out)}
-.plan a:hover img{transform:scale(1.02)}
-.plan figcaption{font-size:.85rem;font-weight:700;color:var(--ink-3);padding:.5rem .9rem;border-top:1px solid var(--line);background:var(--surface)}
+.plan-btn{display:block;width:100%;padding:0;border:0;background:#fff;cursor:zoom-in;font:inherit;color:inherit}
+.plan img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;background:#fff}
+@media (hover:hover) and (pointer:fine){.plan-btn img{transition:transform 400ms var(--ease-out)}.plan-btn:hover img{transform:scale(1.02)}}
+.plan-btn:active img{transform:scale(.99)}
+.plan figcaption{font-size:.88rem;font-weight:700;color:var(--ink-2);padding:.55rem .9rem;border-top:1px solid var(--line);background:var(--surface);line-height:1.7}
+.zoom-hint{display:block;font-size:.78rem;font-weight:600;color:var(--ink-3)}
+html:not(.js) .zoom-hint{display:none}
 .photos{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
-/* photo slot: the labelled placeholder sits underneath; a loaded photo covers it, a missing one removes itself */
-.photo{margin:0;aspect-ratio:4/3;border-radius:16px;overflow:hidden;position:relative;border:1.5px dashed var(--line-2);
-  background:repeating-linear-gradient(135deg,transparent 0 14px,color-mix(in srgb,var(--line) 45%,transparent) 14px 15px),var(--tint)}
-.photo img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
-.photo .ph-empty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:.25rem;text-align:center;color:var(--ink-3);font-size:.88rem;font-weight:700;padding:.6rem}
-.photo .ph-empty .ic{width:1.8rem;height:1.8rem;color:var(--accent-text)}
-.photo code{font-size:.72rem;font-weight:600;opacity:.8;word-break:break-all}
-@media print{.photo.empty{display:none}}
+.photo{margin:0;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:var(--tint)}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+/* draft build only: a labelled slot for a missing photo */
+.photo.empty{display:grid;place-content:center;justify-items:center;gap:.25rem;text-align:center;color:var(--ink-3);font-size:.88rem;font-weight:700;padding:.6rem;
+  border:1.5px dashed var(--line-2);background:repeating-linear-gradient(135deg,transparent 0 14px,rgba(127,150,180,.12) 14px 15px),var(--tint)}
+.photo.empty .ic{width:1.8rem;height:1.8rem;color:var(--accent-text)}
+.photo.empty code{font-size:.72rem;font-weight:600;opacity:.8;word-break:break-all}
 
 .plans{display:grid;gap:.8rem}.plans.n2{grid-template-columns:1fr 1fr}
 @media(max-width:560px){.plans.n2{grid-template-columns:1fr}}
@@ -197,4 +200,84 @@ body.no-story .scene.side.kv{height:auto;display:grid;gap:1rem}
 @media(max-width:860px),(max-aspect-ratio:21/20){
   .key text{font-size:40px}.key:not(.big) text{font-size:30px}
   .key:not(.big) .core{r:9px}
+}
+
+
+/* ================= mobile & compatibility layer =================
+   Readers open this from WhatsApp, Telegram or a link, on any phone: it must read well with or without JS. */
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+a,button,.btn{touch-action:manipulation}
+button,.btn,.nav a,.wm{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* top bar: solid fallback for browsers without color-mix(), padded clear of the notch */
+.topbar{background:rgba(243,246,250,.94);padding-top:env(safe-area-inset-top,0px);height:calc(var(--nav-h) + env(safe-area-inset-top,0px));
+  background:color-mix(in srgb,var(--bg) 88%,transparent)}
+.topbar.ondark{background:rgba(7,21,42,.86);background:color-mix(in srgb,var(--st-bg) 82%,transparent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .topbar{background:rgba(8,19,32,.9)}}
+.wrap{padding-inline:max(var(--gutter),env(safe-area-inset-left,0px),env(safe-area-inset-right,0px))}
+.story-copy{top:calc(50% + env(safe-area-inset-top,0px) / 2)}
+/* pinned stages need small-viewport units; old browsers fall back to the static page (see engine) */
+.js .stage{height:100vh;height:100svh}
+
+@media(max-width:860px),(max-aspect-ratio:21/20){
+  .story-copy{top:calc(var(--nav-h) + env(safe-area-inset-top,0px) + 18px)}
+  .cap,.cap.lead{bottom:calc(1.4rem + env(safe-area-inset-bottom,0px))}
+  .steps{top:calc(var(--nav-h) + env(safe-area-inset-top,0px) + 14px)}
+  .scene.side{top:calc(var(--nav-h) + env(safe-area-inset-top,0px) + 44px)}
+  /* larger diagram text once the drawings are scaled down to a phone */
+  .m-node text{font-size:46px}.m-node .n{font-size:30px}
+  .venn text{font-size:46px}.venn .mid{font-size:40px}
+  .sec{padding-block:clamp(3rem,10vw,4.5rem)}
+  .proj{padding:1.1rem;border-radius:20px;gap:1.1rem}
+  .proj h3{font-size:1.3rem}.proj-no{font-size:2.1rem}
+  .proj .ticks li{font-size:.95rem}
+}
+/* phones with touch: shorter scroll distance per scene, since scrolling is native */
+@media (pointer:coarse){
+  #hero{--len:320svh !important}
+  #kalaval{--len:440svh !important}
+  #system{--len:600svh !important}
+}
+/* short phones (iPhone SE, small Android): the whole first screen must still fit */
+@media (max-height:720px) and (max-width:860px){
+  .story-copy .badge{display:none}
+  .story-copy h1{font-size:1.55rem;margin-top:0}
+  .story-copy .verdict{font-size:.9rem;line-height:1.75;margin-top:.5rem}
+  .facts{margin-top:.7rem}.facts li{padding:.35rem .55rem}.facts b{font-size:1.05rem}.facts span{font-size:.72rem}
+  .story-copy .hero-actions{margin-top:.8rem}.story-copy .btn{min-height:42px;padding:.5rem 1.1rem}
+}
+@media (max-width:360px){.facts span{font-size:.7rem}.story-copy h1{font-size:1.5rem}}
+.proj.solo{grid-template-columns:1fr}
+
+/* contact: big, thumb-friendly call buttons */
+.contact .lines{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:.6rem;max-width:760px;margin-inline:auto}
+.contact .lines a{display:flex;align-items:center;justify-content:center;gap:.5rem;min-height:52px;border-radius:999px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);font-size:1.05rem;font-weight:800;transition:transform 140ms var(--ease-out),background-color 140ms ease}
+.contact .lines a:active{transform:scale(.97);background:rgba(255,255,255,.2)}
+.contact .lines .ic{width:1.2rem;height:1.2rem}
+.contact .addr{font-size:.95rem;line-height:1.9;display:flex;gap:.4rem;justify-content:center;align-items:flex-start;margin-top:1.2rem}.contact .addr .ic{width:1.2rem;height:1.2rem;flex:none;margin-top:.35em}
+
+/* plan viewer */
+.lb{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;background:rgba(5,12,24,.98);opacity:0;transition:opacity 180ms var(--ease-out)}
+.lb.on{opacity:1}.lb[hidden]{display:none}
+.lb-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:calc(.7rem + env(safe-area-inset-top,0px)) max(1rem,env(safe-area-inset-right,0px)) .7rem max(1rem,env(safe-area-inset-left,0px));color:#EAF1F8}
+.lb-cap{font-weight:800;font-size:.95rem;margin:0}
+.lb-x{min-height:44px;padding:.4rem 1.2rem;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font:800 .95rem var(--font);cursor:pointer}
+.lb-x:active{transform:scale(.97)}
+.lb-body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:grid;place-items:center;padding:0 .6rem calc(.8rem + env(safe-area-inset-bottom,0px))}
+.lb-body img{max-width:100%;max-height:100%;width:auto;height:auto;background:#fff;border-radius:10px;touch-action:pinch-zoom}
+html.lb-open,html.lb-open body{overflow:hidden}
+@media (prefers-reduced-motion:reduce){.lb{transition:none}}
+
+/* static page: drawings take their natural height from the cropped viewBox */
+body.no-story svg.scene,html:not(.js) svg.scene{height:auto;max-height:none}
+html:not(.js) #methodw{opacity:1}
+html:not(.js) .m-node circle{fill:var(--brand);stroke:var(--brand)}html:not(.js) .m-node .n{fill:var(--brand-ink)}
+.wm{min-height:44px}
+
+/* PDF / print: phone-sized pages; keep cards and drawings whole */
+@media print{
+  html,body{background:var(--bg)}
+  .stage,.story{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .proj,.plan,.photo,.cap,.contact,.prod-card,.sla li,.vlan{break-inside:avoid}
+  .zoom-hint,.skip,.lb{display:none!important}
 }

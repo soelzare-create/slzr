@@ -2,6 +2,17 @@
 (function () {
   var E = window.StoryEngine; if (!E) return;
   var U = E.util, $ = U.$, W = 1600, H = 900;
+  /* Scene drawings ship framed for the static page (no JS, reduced motion, old browsers): viewBox cropped to the
+     content, "meet". While the story runs they use the full 1600x900 world with "slice" and a moving camera. */
+  var SVGS = [].slice.call(document.querySelectorAll('svg.scene[data-static]')), live = false;
+  function liveFrame() {
+    if (live) return; live = true;
+    SVGS.forEach(function (s) { s.setAttribute('viewBox', '0 0 1600 900'); s.setAttribute('preserveAspectRatio', 'xMidYMid slice'); });
+  }
+  function staticFrame() {
+    live = false;
+    SVGS.forEach(function (s) { s.setAttribute('viewBox', s.getAttribute('data-static')); s.setAttribute('preserveAspectRatio', 'xMidYMid meet'); });
+  }
 
   /* Visible part of a 1600x900 "slice" viewBox, and where the subject should sit:
      desktop keeps the focus on the left (captions sit on the right in RTL), phones centre it and shrink to fit. */
@@ -18,20 +29,21 @@
   var F0 = [680, 460], F1 = [590, 460], F2 = [330, 630];
   E.act('hero', [.3, .65], {
     frame: function (p) {
+      liveFrame();
       var v = view(940), t1 = U.ease(U.seg(p, .1, .3)), t2 = U.ease(U.seg(p, .5, .82));
       var s = U.elerp(1, 1.06, t1) * U.elerp(1, 1.9, t2);
       var fx = U.lerp(U.lerp(F0[0], F1[0], t1), F2[0], t2), fy = U.lerp(U.lerp(F0[1], F1[1], t1), F2[1], t2);
       c1.setAttribute('transform', cam(v, s, fx, fy));
       var f = 1 - U.seg(p, .04, .14); copy.style.opacity = f; copy.style.visibility = f < .01 ? 'hidden' : 'visible';
     },
-    reset: function () { c1.removeAttribute('transform'); copy.removeAttribute('style'); }
+    reset: function () { staticFrame(); c1.removeAttribute('transform'); copy.removeAttribute('style'); }
   });
 
 
   /* ---------- act 2: Kala-Val, real plan then VLANs then support ---------- */
   var kvo = [].slice.call(document.querySelectorAll('#kalaval .ov'));
   E.act('kalaval', [.25, .5, .75], {
-    scene: function (sc) { kvo.forEach(function (o) { o.classList.toggle('on', +o.getAttribute('data-s') === sc); }); },
+    scene: function (sc) { kvo.forEach(function (o) { o.classList.toggle('on', o.getAttribute('data-s').split(' ').indexOf(String(sc)) > -1); }); },
     reset: function () { kvo.forEach(function (o) { o.classList.remove('on'); }); }
   });
 
@@ -48,6 +60,7 @@
   E.act('system', [.12, .3, .46, .62, .78], {
     scene: function (sc) { nodes.forEach(function (n, i) { n.classList.toggle('on', sc >= 2 && i <= sc - 2); }); },
     frame: function (p) {
+      liveFrame();
       var v = view(1000), t = U.ease(U.seg(p, .03, .17));
       c2.setAttribute('transform', cam(v, 1, 540, 520)); c3.setAttribute('transform', cam(v, 1, 560, 500));
       vs.forEach(function (g) {

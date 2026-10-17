@@ -105,14 +105,29 @@ def icon(name):
     return f'<svg class="ic" viewBox="0 0 256 256" aria-hidden="true">{inner}</svg>'
 
 
-body = rd("body.html").replace("{{NETWORK}}", network()).replace("{{VENN}}", venn()).replace("{{METHOD}}", method()).replace("{{PROJECTS}}", R.projects()).replace("{{VLAN}}", R.vlan_svg())
-body = re.sub(r"\{\{ICON:([a-z-]+)\}\}", lambda m: icon(m.group(1)), body)
-assert "{{" not in body, re.findall(r"\{\{[^}]*\}\}", body)
+import base64, mimetypes
 
-open_needs = len(re.findall(r"\[NEED", body))
-robots = "noindex,nofollow" if open_needs else "index,follow"
-title = "رزومهٔ داران‌ایکس | طراحی و اجرای زیرساخت، امنیت و هوشمندی"
-desc = "رزومهٔ داران‌ایکس: پروژه‌های کالا-وال، آرتمیس و زنجیرهٔ توریور، محصول ActivePlano و روش کار شناخت، طراحی، اجرا و پشتیبانی."
+
+def data_uri(rel):
+    p = ROOT / rel
+    mime = {".webp": "image/webp", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}[p.suffix.lower()]
+    return f"data:{mime};base64," + base64.b64encode(p.read_bytes()).decode()
+
+
+def assemble(draft):
+    body = rd("body.html").replace("{{NETWORK}}", network()).replace("{{VENN}}", venn()).replace("{{METHOD}}", method())
+    body = body.replace("{{PROJECTS}}", R.projects(draft)).replace("{{VLAN}}", R.vlan_svg())
+    body = re.sub(r"\{\{ICON:([a-z-]+)\}\}", lambda m: icon(m.group(1)), body)
+    assert "{{" not in body, re.findall(r"\{\{[^}]*\}\}", body)
+    if not draft:
+        # the client copy carries no editing tools
+        body = re.sub(r'<div class="editbar".*?</div>\s*', "", body, flags=re.S)
+        body = body.replace('<span id="needCount" class="need-count"></span>', "")
+    return body
+
+
+title = "رزومهٔ داران‌ایکس | شبکه، دوربین و سرور برای کسب‌وکارها"
+desc = "رزومهٔ داران‌ایکس: ده کارفرما از فروشگاه‌های زنجیره‌ای تا کلینیک‌ها و کارخانه‌ها، با نقشه‌های واقعی پروژه‌ها؛ کالا وال، توریور، آرتمیس و دیگران."
 SITE = "https://www.daranx.com/"
 ld = {"@context": "https://schema.org", "@graph": [
     {"@type": "Organization", "@id": SITE + "#org", "name": "DaranX", "alternateName": "داران‌ایکس", "url": SITE,
@@ -123,17 +138,23 @@ ld = {"@context": "https://schema.org", "@graph": [
 ]}
 FAV = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23153A62'/%3E"
        "%3Cpath d='M9 9l14 14M23 9L9 23' stroke='%237FB0DF' stroke-width='3.4' stroke-linecap='round'/%3E%3C/svg%3E")
-import base64
 # fonts load from file:// only when embedded (Chrome blocks file-origin font fetches)
 FONT_URI = "url(data:font/woff2;base64," + base64.b64encode((ROOT / "assets" / "Vazirmatn-VF.woff2").read_bytes()).decode() + ")"
-head = f"""<!doctype html>
+
+
+def page(draft):
+    body = assemble(draft)
+    edit_flag = ("if(location.protocol==='file:'||/[?&]edit|#edit/.test(location.search+location.hash))"
+                 "document.documentElement.classList.add('can-edit');") if draft else ""
+    head = f"""<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{title}</title>
 <meta name="description" content="{desc}">
-<meta name="robots" content="{robots}">
+<meta name="robots" content="noindex,nofollow">
+<meta name="format-detection" content="telephone=no">
 <meta property="og:type" content="website"><meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:locale" content="fa_IR">
 <meta name="theme-color" content="#07152A"><meta name="color-scheme" content="light dark">
 <link rel="icon" href="{FAV}">
@@ -142,10 +163,20 @@ head = f"""<!doctype html>
 {rd("engine/base.css")}
 {rd("site.css").replace('url("assets/Vazirmatn-VF.woff2")', FONT_URI)}
 </style>
-<script>document.documentElement.classList.add('js');if(location.protocol==='file:'||/[?&]edit|#edit/.test(location.search+location.hash))document.documentElement.classList.add('can-edit');</script>
+<script>document.documentElement.classList.add('js');{edit_flag}</script>
 </head>
 """
-js = "".join(f"<script>\n{rd(p)}\n</script>\n" for p in ("engine/editor.js", "vendor/gsap.min.js", "vendor/ScrollTrigger.min.js", "engine/story-engine.js", "scenes.js", "engine/ui.js"))
-out = head + "<body>\n" + body + "\n" + js + "</body>\n</html>\n"
-(ROOT / "index.html").write_text(out, encoding="utf-8")
-print(f"built {len(out) // 1024} KB, open [NEED] markers: {open_needs}, robots={robots}")
+    files = (["engine/editor.js"] if draft else []) + ["vendor/gsap.min.js", "vendor/ScrollTrigger.min.js", "engine/story-engine.js", "scenes.js", "engine/ui.js", "site.js"]
+    js = "".join(f"<script>\n{rd(p)}\n</script>\n" for p in files)
+    out = head + "<body>\n" + body + "\n" + js + "</body>\n</html>\n"
+    if not draft:
+        # one self-contained file: every image travels inside the HTML, so it opens from any messenger or phone
+        out = re.sub(r'(src|href)="(assets/[^"]+\.(?:webp|svg|jpe?g|png))"', lambda m: f'{m.group(1)}="{data_uri(m.group(2))}"', out)
+        assert 'src="assets/' not in out
+    return out
+
+
+client, draft = page(False), page(True)
+(ROOT / "index.html").write_text(client, encoding="utf-8")
+(ROOT / "draft.html").write_text(draft, encoding="utf-8")
+print(f"client index.html {len(client) // 1024} KB (self-contained), draft.html {len(draft) // 1024} KB")

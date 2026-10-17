@@ -23,11 +23,16 @@
   var lerp = function (a, b, t) { return a + (b - a) * t; };
   var elerp = function (a, b, t) { return Math.exp(lerp(Math.log(a), Math.log(b), t)); };
   var RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var ok = !!(window.gsap && window.ScrollTrigger);
+  /* Touch screens keep the browser's own scrolling: no gesture capture, no snapping. Scenes still follow scroll position. */
+  var TOUCH = matchMedia('(pointer: coarse)').matches;
+  /* Old browsers without small-viewport units cannot size the pinned stages: show the static, fully readable page instead. */
+  var SVH = !!(window.CSS && CSS.supports && CSS.supports('height', '1svh'));
+  var ok = !!(window.gsap && window.ScrollTrigger) && SVH;
   var acts = [], pageTriggers = [], statik = false, started = false;
   window.StoryEngine = { util: { $: $, clamp: clamp, seg: seg, ease: ease, lerp: lerp, elerp: elerp }, act: Act, start: boot, reduced: RM };
   if (!ok) { body.classList.add('no-story'); window.StoryEngine.act = function () {}; window.StoryEngine.start = function () {}; return; }
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
 
   /* ---------- act factory ---------- */
   function Act(id, bounds, h, stops) {
@@ -112,7 +117,7 @@
     var max = ScrollTrigger.maxScroll(window), cur = self.scroll(); if (!max || !stopsPx.length || busy || nearStop(cur)) return cur / max;
     var t = nextStop(cur, self.direction); return t === null ? v : t / max;
   }
-  /* wheel / swipe: one gesture = one step, played as a tween so the scene between two stops reads as motion */
+  /* wheel (desktop): one gesture = one step, played as a tween so the scene between two stops reads as motion */
   var busy = false, tw = null, proxy = { y: 0 };
   function glide(t, dur) {
     busy = true; proxy.y = scrollY; if (tw) tw.kill();
@@ -126,9 +131,6 @@
     glide(t, clamp(.55 + dist * .35, .7, 1.25));
   }
   function onWheel(e) { if (!started || e.ctrlKey || body.classList.contains('editing')) return; e.preventDefault(); if (Math.abs(e.deltaY) < 3) return; step(e.deltaY > 0 ? 1 : -1); }
-  var ty0 = null;
-  function onTouchStart(e) { ty0 = e.touches.length === 1 ? e.touches[0].clientY : null; }
-  function onTouchMove(e) { if (!started || ty0 === null || e.touches.length > 1) return; if (e.cancelable) e.preventDefault(); var dy = ty0 - e.touches[0].clientY; if (Math.abs(dy) > 28) { step(dy > 0 ? 1 : -1); ty0 = null; } }
   function onFocus(e) {
     var cap = e.target.closest && e.target.closest('.cap'); if (!cap || cap.classList.contains('on') || !started) return;
     var a = acts.filter(function (x) { return x.sec.contains(cap); })[0]; if (!a) return;
@@ -146,13 +148,14 @@
   }
   function transitionsStart() {
     var vh = innerHeight;
-    pageTriggers.push(ScrollTrigger.create({
-      start: 0, end: 'max', onRefresh: buildStops,
-      snap: { snapTo: stepTo, delay: .12, duration: { min: .5, max: 1.1 }, ease: 'power2.inOut', inertia: false }
-    }));
-    ScrollTrigger.addEventListener('refreshInit', buildStops);
-    addEventListener('wheel', onWheel, { passive: false });
-    addEventListener('touchstart', onTouchStart, { passive: true }); addEventListener('touchmove', onTouchMove, { passive: false });
+    if (!TOUCH) {
+      pageTriggers.push(ScrollTrigger.create({
+        start: 0, end: 'max', onRefresh: buildStops,
+        snap: { snapTo: stepTo, delay: .12, duration: { min: .5, max: 1.1 }, ease: 'power2.inOut', inertia: false }
+      }));
+      ScrollTrigger.addEventListener('refreshInit', buildStops);
+      addEventListener('wheel', onWheel, { passive: false });
+    }
     doc.addEventListener('click', onAnchor); doc.addEventListener('focusin', onFocus);
     /* outgoing act: its stage recedes while the next act rises over it */
     acts.forEach(function (a) {
@@ -171,7 +174,7 @@
   function refreshSoon() { clearTimeout(rT); rT = setTimeout(function () { ScrollTrigger.refresh(); }, 120); }
   function transitionsStop() {
     ScrollTrigger.removeEventListener('refreshInit', buildStops);
-    removeEventListener('wheel', onWheel); removeEventListener('touchstart', onTouchStart); removeEventListener('touchmove', onTouchMove);
+    removeEventListener('wheel', onWheel);
     doc.removeEventListener('click', onAnchor); doc.removeEventListener('focusin', onFocus); if (tw) tw.kill(); tw = null; busy = false;
     fx.forEach(function (t) { if (t.scrollTrigger) t.scrollTrigger.kill(); t.kill(); gsap.set(t.targets(), { clearProps: 'opacity,transform,transition,scale' }); }); fx = [];
   }
