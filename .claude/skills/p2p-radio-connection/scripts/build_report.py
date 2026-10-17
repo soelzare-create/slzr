@@ -153,7 +153,8 @@ def profile_svg(l, sites):
     while h <= hi:
         g.append(f'<line class="tick" x1="{X0}" x2="{X1}" y1="{Y(h):.1f}" y2="{Y(h):.1f}"/><text class="tl" x="{X0-10}" y="{Y(h)+5:.1f}" text-anchor="end" direction="ltr">{h:g} m</text>')
         h += step
-    for i in range(0, 6):
+    g.append(f'<text class="tl" x="{X0}" y="{Y0-22}" text-anchor="middle">ارتفاع از سطح دریا</text>')
+    for i in range(1, 5):
         x = D * i / 5
         g.append(f'<text class="tl" x="{X(x):.1f}" y="{Y1+30}" text-anchor="middle" direction="ltr">{x/1000:.2f} km</text>')
     # ground (+ bulge appears at scene 3 as a lifted outline)
@@ -189,7 +190,7 @@ def profile_svg(l, sites):
         mx = X(x) + (15 if x == 0 else -15)
         g.append(f'<line class="mast s4 grow" x1="{mx:.1f}" y1="{Y(base):.1f}" x2="{mx:.1f}" y2="{Y(ant):.1f}"/>')
         g.append(f'<circle class="ant s4" cx="{mx:.1f}" cy="{Y(ant):.1f}" r="7"/>')
-        g.append(f'<text class="slab s4" x="{min(max(mx, X0 + 70), X1 - 70):.1f}" y="{Y(ant)-18:.1f}" text-anchor="middle">{e(sites[sid].get("name", sid))}</text>')
+        g.append(f'<text class="slab" x="{X(x):.1f}" y="{Y1+62}" text-anchor="middle">{e(sites[sid].get("name", sid))}</text>')
     if ok:
         ci = min(range(len(d)), key=lambda j: abs(d[j] - l['critical_point_m']))
         g.append(f'<circle class="crit s5" cx="{X(d[ci]):.1f}" cy="{Y(clutter[ci]):.1f}" r="8"/>')
@@ -317,27 +318,25 @@ def build(R, prices, brief=None):
         obs_line = (f'ساختمان‌ها حدود {fa(l["clutter_m"])} متر' if l['clutter_m'] else 'بدون پوشش ساختمانی عمومی') + (f'؛ {obs}.' if obs else '.')
         if l['feasible']:
             mast_line = f'{e(A)}: {fa(l["mast_a_m"])} متر، {e(B)}: {fa(l["mast_b_m"])} متر روی بام.'
-            fres_t = 'منطقهٔ فرنل آزاد است'
-            fres_l = f'دست‌کم {fa(l["min_clearance_pct"])}٪ منطقهٔ فرنل اول خالی است؛ هدف {fa(round(l["clearance_target"]*100))}٪.'
+            fres_t = 'مسیر سیگنال باز است'
+            fres_l = f'سیگنال مثل یک دوک سبز پخش می‌شود و {fa(l["min_clearance_pct"])}٪ آن از روی ساختمان‌ها رد می‌شود؛ حداقل لازم {fa(round(l["clearance_target"]*100))}٪.'
         else:
             mast_line = 'حتی با بلندترین دکل مجاز، مسیر باز نمی‌شود.'
-            fres_t = 'مسیر بسته است'
+            fres_t = 'مسیر سیگنال بسته است'
             fres_l = 'یک نقطهٔ واسط (رله) یا سازهٔ بلندتر لازم است.'
-        warn = '' if l['terrain_ok'] else f' {need("دادهٔ ارتفاع زمین دریافت نشد")}'
         story.append(f'''
-<section class="story" id="{aid}" style="--len:500svh" aria-label="پروفایل مسیر {e(A)} تا {e(B)}">
+<section class="story" id="{aid}" style="--len:400svh" aria-label="پروفایل مسیر {e(A)} تا {e(B)}">
   <div class="stage">
-    <div class="scene side" aria-hidden="true"><svg class="prof" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMid meet">{remap(profile_svg(l, sites), {"s2": "s1", "s3": "s1", "s4": "s2", "s5": "s3"})}</svg></div>
+    <div class="scene side" aria-hidden="true"><svg class="prof" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">{remap(profile_svg(l, sites), {"s2": "", "s3": "", "s4": "s1", "s5": "s2"})}</svg></div>
     <div class="caps">
-      <div class="cap lead" data-s="0"><h2>مسیر {e(A)} تا {e(B)}</h2><p>{km(l["distance_m"])} از کنار.{warn}</p></div>
-      <div class="cap" data-s="1"><h3>موانع سر راه</h3><p>{obs_line} اختلاف ارتفاع زمین {fa(abs(l["ground_diff_m"]), 1)} متر.</p></div>
-      <div class="cap" data-s="2"><h3>ارتفاع دکل</h3><p>{mast_line}</p></div>
-      <div class="cap" data-s="3"><h3>{fres_t}</h3><p>{fres_l}</p></div>
+      <div class="cap lead" data-s="0"><h2>{e(A)} تا {e(B)}: دید مستقیم دارد؟</h2><p>برش مسیر {km(l["distance_m"])} از کنار. قهوه‌ای زمین است و خاکستری {obs_line[:-1]}.</p></div>
+      <div class="cap" data-s="1"><h3>آنتن‌ها بالای ساختمان‌ها</h3><p>{mast_line} آنتن‌ها {fa(l.get("antenna_agl_a_m", 0))} و {fa(l.get("antenna_agl_b_m", 0))} متر از زمین.</p></div>
+      <div class="cap" data-s="2"><h3>{fres_t}</h3><p>{fres_l}</p></div>
     </div>
   </div>
 </section>''')
-        css_rules.append(scene_css(aid, 4, []))
-        acts_js.append(f"E.act('{aid}',[.22,.5,.76]);")
+        css_rules.append(scene_css(aid, 3, []))
+        acts_js.append(f"E.act('{aid}',[.3,.65]);")
 
     # ---------------- budget act (main link, balanced pick)
     bal_id = brief.get('primary_model') or L0.get('picks', {}).get('balanced')
