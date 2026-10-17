@@ -9,6 +9,14 @@ Design a wireless link the way a field engineer does: measure, check the path, s
 
 Talk to the user in Persian. Keep the numbers exact and say where each one came from.
 
+## The 15–20 second rule (applies to everything you deliver)
+
+The reader, often the customer's manager, decides in the first 15–20 seconds whether the work is useful. So every deliverable opens with **what this is and what the answer is**, before any method or number tables:
+
+- **Report hero:** a headline that *is* the answer (≤ 8 words, e.g. «باهنر از مسیر پاداد وصل می‌شود»), one sentence of why, and at most 3 stat tiles: the key figures, ideally including the money saved or spent. Write these in `brief.json` (step 5).
+- **Chat reply:** the first line is the answer. Then 3–6 short lines, a small table only if it compares options. Assumptions and open items go in one line at the end, not as long lists. Everything else lives in the report.
+- **Frame the result around the customer's benefit.** When a cheaper route exists (a relay through a site they already have, a shorter link, cheaper radios), lead with it and state the saving in toman. Show the more expensive option only as the comparison. Do not hide the condition that makes the cheaper route work (e.g. spare capacity on an existing link); state it once, briefly.
+
 ## 1. Collect the inputs (one message, with defaults)
 
 Ask for everything below in a single message, so the user answers once. Offer the default in brackets for anything they may not know. Do not block on optional items.
@@ -97,8 +105,20 @@ Rules:
 
 ## 5. Build the cinematic report
 
+First write `brief.json`, the answer-first summary (see the 15–20 second rule and the docstring of `build_report.py`):
+
+```json
+{"headline": "باهنر از مسیر پاداد وصل می‌شود",
+ "verdict": "پاداد سر راه دفتر مرکزی است؛ یک لینک کوتاه کافی است و به رادیوی دوربرد گران نیازی نیست.",
+ "stats": [{"value": "حدود ۴۰ میلیون تومان", "label": "صرفه‌جویی در تجهیزات"}, {"value": "۲٫۸۶ کیلومتر", "label": "به‌جای ۹٫۴۳"}],
+ "primary_link": "PD-BH", "primary_model": "tplink-cpe710",
+ "compare": {"title": "چرا از پاداد؟", "columns": ["", "پیشنهاد ما", "جایگزین"], "rows": [{"cells": ["هزینه", "…", "…"], "win": true}], "note": "شرط‌ها در یک جمله"}}
+```
+
+When several routes were analysed (direct vs relay), `compare` is what lets the reader see the decision at a glance. Then:
+
 ```bash
-python3 <skill>/scripts/build_report.py results.json --prices prices.json -o report.html
+python3 <skill>/scripts/build_report.py results.json --prices prices.json --brief brief.json -o report.html
 ```
 
 This produces one self-contained Persian RTL HTML file (about 350 KB: font, GSAP and the cinematic-story engine are inlined), so it opens offline and can be sent on WhatsApp or Telegram. It follows the cinematic-story-site method: one scroll gesture plays one scene.
@@ -122,12 +142,14 @@ Deliver the HTML file to the user: send it as a file and/or publish it as an art
 
 ## 6. The chat summary
 
-Keep it short. The report carries the detail. Include:
+Short, answer first (see the 15–20 second rule). Aim for under ~12 lines:
 
-- One line per link: distance, ground-elevation difference, mast at each end, azimuths.
-- The recommended (balanced) radio with its real throughput, margin and price.
-- What is still open: `[NEED]` items, missing prices, and assumptions the user should confirm (building heights, obstacles).
-- Before anyone buys hardware: a site survey with line-of-sight from the roof, an interference scan, and the regulator's (سازمان تنظیم مقررات) band and EIRP limits.
+1. One line with the answer and the benefit (route + saving or cost).
+2. A compact table only when comparing options (distance, radio, cost, mast).
+3. One line with the condition or risk that matters most.
+4. One line listing assumptions to confirm (building heights, obstacles, existing link capacity) and that a site survey comes before purchase.
+
+The report carries the rest: per-link detail, azimuths, tilt, regulator and field checklist.
 
 ## Files
 

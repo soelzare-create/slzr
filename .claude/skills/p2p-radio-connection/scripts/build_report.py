@@ -9,6 +9,14 @@ prices.json (optional, filled from a live web search, never invented):
   "items": { "mikrotik-lhg5ac": {"price": "۸٬۹۰۰٬۰۰۰ تومان", "unit": "هر عدد", "source": "https://torob.com/...", "shop": "ترب"} } }
 Models without a price show a visible [NEED: قیمت روز] chip.
 
+brief.json (optional, answer-first: the reader must get the subject and the result in the first 15-20 seconds):
+{ "headline": "باهنر از مسیر پاداد وصل می‌شود",          # the answer, <= ~8 words
+  "verdict": "one sentence: why, and what it saves",
+  "stats": [{"value": "۲٫۹ کیلومتر", "label": "باهنر تا پاداد"}, ...],   # max 3 tiles in the hero
+  "primary_link": "PD-BH", "primary_model": "tplink-cpe710",            # leads the story and the gear cards
+  "compare": {"title": "...", "columns": [...], "rows": [{"cells": [...], "win": true}], "note": "..."} }
+Without it, a default brief is built from the first link and its balanced pick.
+
 Story (cinematic-story-site engine, one gesture = one scene):
   Act 1  map      : the sites appear -> link lines draw with distance -> antenna directions
   Act 2+ profile  : terrain -> obstacles -> earth bulge -> masts rise -> Fresnel zone clears (one act per link, max 4)
@@ -21,8 +29,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ASSETS = HERE.parent / 'assets'
 FA_DIGITS = str.maketrans('0123456789.-', '۰۱۲۳۴۵۶۷۸۹٫−')
-TIER_FA = {'economy': 'اقتصادی', 'balanced': 'بهینه (پیشنهاد اصلی)', 'pro': 'حرفه‌ای'}
-TIER_WHY = {'economy': 'کمترین هزینه که نیاز را برآورده می‌کند.',
+TIER_FA = {'recommended': 'پیشنهاد ما', 'economy': 'اقتصادی', 'balanced': 'بهینه (پیشنهاد اصلی)', 'pro': 'حرفه‌ای'}
+TIER_WHY = {'recommended': 'گزینه‌ای که برای این پروژه انتخاب کرده‌ایم.', 'economy': 'کمترین هزینه که نیاز را برآورده می‌کند.',
             'balanced': 'بهترین نسبت کارایی به قیمت با حاشیهٔ امن.',
             'pro': 'بیشترین ظرفیت و پایداری برای رشد آینده.'}
 
@@ -222,10 +230,32 @@ def budget_svg(b, radio, target):
 
 
 # ------------------------------------------------------------------ page
-def build(R, prices):
+def auto_brief(R, name, P):
+    """Default answer-first brief when the caller did not write one: the main link, its masts and the pick."""
+    l = R['links'][0]
+    if not l['feasible']:
+        return {'headline': f'{name(l["a"])} تا {name(l["b"])}: دید مستقیم ندارد',
+                'verdict': 'مسیر مستقیم با دکل مجاز باز نمی‌شود؛ یک نقطهٔ واسط لازم است.',
+                'stats': [{'value': km(l['distance_m']), 'label': 'فاصله'}]}
+    mid = l.get('picks', {}).get('balanced')
+    m = R['catalog'].get(mid, {})
+    stats = [{'value': km(l['distance_m']), 'label': 'فاصله'},
+             {'value': f'{fa(l["mast_a_m"])} و {fa(l["mast_b_m"])} متر', 'label': 'دکل روی بام'}]
+    if mid:
+        stats.append({'value': P[mid]['price'] if mid in P else m.get('model', ''), 'label': m.get('model', '') if mid in P else 'رادیوی پیشنهادی'})
+    return {'headline': f'{name(l["a"])} به {name(l["b"])} وصل می‌شود',
+            'verdict': f'با دکل {fa(max(l["mast_a_m"], l["mast_b_m"]))} متری و یک جفت {m.get("brand", "")} {m.get("model", "")}.',
+            'stats': stats, 'primary_model': mid}
+
+
+def build(R, prices, brief=None):
     sites = {s['id']: s for s in R['sites']}
     cat = R['catalog']
     links = R['links']
+    brief = brief or {}
+    if brief.get('primary_link'):   # the recommended link leads the story (first profile act, budget act)
+        pa, pb = brief['primary_link'].split('-')
+        links.sort(key=lambda l: 0 if {l['a'], l['b']} == {pa, pb} else 1)
     L0 = links[0]
     name = lambda sid: sites[sid].get('name', sid)
     P = (prices or {}).get('items', {})
@@ -233,6 +263,7 @@ def build(R, prices):
     n_sites = len(sites)
     total_km = sum(l['distance_m'] for l in links)
     feasible_all = all(l['feasible'] for l in links)
+    brief = {**auto_brief(R, name, P), **brief}
 
     css_rules, acts_js, story = [], [], []
 
@@ -251,10 +282,11 @@ def build(R, prices):
     <svg class="scene" id="world" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g id="cam" class="cam">{map_svg(R)}</g></svg>
     <div class="vignette" aria-hidden="true"></div>
     <div class="story-copy" id="storyCopy">
-      <span class="badge">طرح لینک رادیویی · {fa(R["freq_ghz"])} گیگاهرتز</span>
-      <h1>{h1}</h1>
-      <p class="verdict">{verdict}</p>
-      <div class="hero-actions"><a class="btn btn-brand" href="#gear">تجهیزات پیشنهادی</a><a class="btn btn-ghost" href="#install">برگهٔ نصب</a></div>
+      <span class="badge">طرح لینک رادیویی · {e(R["project"])}</span>
+      <h1>{e(brief["headline"])}</h1>
+      <p class="verdict">{e(brief["verdict"])}</p>
+      <div class="stats">{"".join(f'<div class="stat"><b>{e(x["value"])}</b><span>{e(x["label"])}</span></div>' for x in brief.get("stats", [])[:3])}</div>
+      <div class="hero-actions"><a class="btn btn-brand" href="{"#result" if brief.get("compare") else "#gear"}">{"مقایسهٔ گزینه‌ها" if brief.get("compare") else "تجهیزات پیشنهادی"}</a><a class="btn btn-ghost" href="#install">برگهٔ نصب</a></div>
     </div>
     <div class="caps">
       <div class="cap" data-s="1"><p class="cap-t">{fa(n_sites)} نقطه روی نقشه</p><p>مختصات از لینک‌های شما خوانده شد.</p></div>
@@ -300,7 +332,7 @@ def build(R, prices):
         acts_js.append(f"E.act('{aid}',[.14,.32,.5,.68,.84]);")
 
     # ---------------- budget act (main link, balanced pick)
-    bal_id = L0.get('picks', {}).get('balanced')
+    bal_id = brief.get('primary_model') or L0.get('picks', {}).get('balanced')
     bal = next((o for o in L0.get('radio_options', []) if o['id'] == bal_id), None)
     if bal and bal.get('margin_db') is not None:
         m = cat[bal_id]
@@ -325,8 +357,11 @@ def build(R, prices):
     for l in links:
         opts = {o['id']: o for o in l.get('radio_options', [])}
         cards = []
-        for tier in ('economy', 'balanced', 'pro'):
-            mid = l.get('picks', {}).get(tier)
+        picks = dict(l.get('picks', {}))
+        if l is L0 and brief.get('primary_model') in opts:
+            picks = {'recommended': brief['primary_model'], **{k: v for k, v in picks.items() if v != brief['primary_model'] and k != 'balanced'}}
+        for tier in ('recommended', 'economy', 'balanced', 'pro'):
+            mid = picks.get(tier)
             if not mid:
                 continue
             m, o = cat[mid], opts[mid]
@@ -403,6 +438,15 @@ def build(R, prices):
 <div class="prose" data-reveal><p>این گزارش طرح لینک رادیویی نقطه‌به‌نقطه برای «{e(R["project"])}» است: {fa(n_sites)} نقطه، {fa(len(links))} لینک و مجموع {km(total_km)} مسیر در باند {fa(R["freq_ghz"])} گیگاهرتز با نیاز {fa(R["required_mbps"])} مگابیت واقعی.</p>
 <ul>{summary_items}</ul></div></div></section>'''
 
+    compare_html = ''
+    if brief.get('compare'):
+        head = ''.join(f'<th>{e(h)}</th>' for h in brief['compare']['columns'])
+        body = ''.join('<tr>' + ''.join(f'<td class="{"win" if r.get("win") else ""}">{e(c)}</td>' for c in r['cells']) + '</tr>' for r in brief['compare']['rows'])
+        compare_html = f'''<section class="sec" id="result" aria-labelledby="h-result"><div class="wrap">
+<h2 id="h-result" data-reveal>{e(brief['compare'].get('title', 'چرا این گزینه؟'))}</h2>
+<div class="tbl cmp" data-reveal><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>
+{f'<p class="sub" data-reveal>{e(brief["compare"]["note"])}</p>' if brief['compare'].get('note') else ''}</div></section>'''
+
     gear_html = f'''<section class="sec" id="gear" aria-labelledby="h-gear"><div class="wrap">
 <h2 id="h-gear" data-reveal>تجهیزات پیشنهادی</h2>
 <p class="sub" data-reveal>برای هر لینک سه گزینه، همه در بازار ایران. {price_note}</p>
@@ -414,7 +458,7 @@ def build(R, prices):
         font=base64.b64encode((ASSETS / 'fonts' / 'Vazirmatn-wght.woff2').read_bytes()).decode(),
         base_css=(ASSETS / 'engine' / 'base.css').read_text(encoding='utf-8'),
         scene_css='\n'.join(css_rules), nav=nav, story='\n'.join(story),
-        sections=what + gear_html + star_html + install + checks, date=fa(R['generated']),
+        sections=compare_html + what + gear_html + star_html + install + checks, date=fa(R['generated']),
         gsap=(ASSETS / 'vendor' / 'gsap.min.js').read_text(encoding='utf-8'),
         st=(ASSETS / 'vendor' / 'ScrollTrigger.min.js').read_text(encoding='utf-8'),
         engine=(ASSETS / 'engine' / 'story-engine.js').read_text(encoding='utf-8'),
@@ -475,7 +519,13 @@ svg [class*=" s"],svg [class^="s"]{{transition:opacity 420ms var(--ease-out),str
 .linkgear{{margin-top:2.6rem}}.lg-t{{font-size:1.2rem;margin-bottom:1rem}}
 .cards{{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}}
 .card{{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:1.4rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.5rem}}
-.card.tier-balanced{{border:2px solid var(--accent-text)}}
+.card.tier-balanced,.card.tier-recommended{{border:2px solid var(--accent-text)}}
+.stats{{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.2rem}}
+.stat{{border:1px solid var(--st-line-2);background:rgba(255,255,255,.05);border-radius:14px;padding:.55rem .9rem;display:grid;min-width:8.5rem}}
+.stat b{{color:var(--st-ink);font-size:1.15rem;font-weight:900;line-height:1.5}}.stat span{{color:var(--st-ink-2);font-size:.82rem}}
+.cmp{{margin-top:1.4rem}}
+@media (max-aspect-ratio:21/20){{html.js body:not(.no-story) #map[data-sc="0"] .site{{opacity:0}}}}
+.site{{transition:opacity 420ms var(--ease-out)}}.cmp td.win{{color:var(--accent-text);font-weight:800}}
 .card h3{{font-size:1.15rem;text-align:start}}
 .card ul{{margin:.3rem 0;padding-inline-start:1.1rem;font-size:.95rem;display:grid;gap:.25rem}}
 .tier{{font-weight:900;color:var(--accent-text);font-size:.9rem}}.why{{color:var(--ink);font-weight:700}}
@@ -531,10 +581,12 @@ def main():
     ap.add_argument('results')
     ap.add_argument('-o', '--out', default='report.html')
     ap.add_argument('--prices')
+    ap.add_argument('--brief', help='answer-first summary: headline, verdict, stats, primary_link, primary_model, compare')
     a = ap.parse_args()
     R = json.loads(Path(a.results).read_text(encoding='utf-8'))
     prices = json.loads(Path(a.prices).read_text(encoding='utf-8')) if a.prices else None
-    out = build(R, prices)
+    brief = json.loads(Path(a.brief).read_text(encoding='utf-8')) if a.brief else None
+    out = build(R, prices, brief)
     Path(a.out).write_text(out, encoding='utf-8')
     print(f'wrote {a.out} ({len(out)//1024} KB)')
 
