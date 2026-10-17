@@ -75,6 +75,13 @@ What the script does:
 - It runs a link budget for every radio in `references/radios.json`, picks the highest modulation that keeps the fade margin, and returns three picks: `economy`, `balanced` and `pro`.
 - For a star it also checks the azimuth spread at the hub and suggests sector antennas.
 
+**Buildings from OpenStreetMap.** The calculator also asks OpenStreetMap (Overpass API) for every building whose footprint enters the radio corridor.
+- A building with a mapped height or number of floors becomes an obstacle. It is placed by how far it reaches into the clearance zone, so a building beside the zone is ignored and one straddling the line counts in full.
+- Buildings with only a footprint are counted. The `clutter_m` assumption still covers them, so keep asking the user for the typical building height.
+- The result is in `links[].osm` and in the report's checklist.
+- If Overpass is unreachable, the user can run the query on overpass-turbo.eu, export the JSON and pass it with `--osm-file`. `--no-osm` skips the lookup.
+- Coverage of building heights in Iranian cities is thin. Treat a "0 buildings with height" result as "unknown", not "clear", and keep the field check (drone at antenna height) in the advice.
+
 **If the elevation lookup fails** (no internet, blocked host), the script warns on stderr and marks `terrain_ok: false`. Then:
 
 - Tell the user.

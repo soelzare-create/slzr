@@ -161,13 +161,107 @@ def project_on_path(a, b, p):
 COMPASS_FA = ['شمال', 'شمال‌شرق', 'شرق', 'جنوب‌شرق', 'جنوب', 'جنوب‌غرب', 'غرب', 'شمال‌غرب']
 
 
+# ---------------------------------------------------------------- buildings from OpenStreetMap
+# Bare-earth / smoothed elevation models miss buildings. OSM has footprints and, for some buildings,
+# a height or number of floors. Buildings whose footprint enters the radio corridor become obstacles.
+OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']
+LEVEL_M = 3.2   # metres per floor, roof slab included
+
+
+def destination(p, brg, dist):
+    """Point at distance dist (m) and bearing brg (deg) from p."""
+    la, lo, b, d = math.radians(p[0]), math.radians(p[1]), math.radians(brg), dist / R_EARTH
+    la2 = math.asin(math.sin(la) * math.cos(d) + math.cos(la) * math.sin(d) * math.cos(b))
+    lo2 = lo + math.atan2(math.sin(b) * math.sin(d) * math.cos(la), math.cos(d) - math.sin(la) * math.sin(la2))
+    return math.degrees(la2), math.degrees(lo2)
+
+
+def corridor(a, b, half_width):
+    br = bearing(a, b)
+    return [destination(a, br - 90, half_width), destination(b, br - 90, half_width),
+            destination(b, br + 90, half_width), destination(a, br + 90, half_width)]
+
+
+def building_height(tags):
+    """Height in metres from OSM tags, or None when only the footprint is mapped."""
+    for k in ('height', 'building:height'):
+        v = re.match(r'\s*([0-9.]+)', tags.get(k, ''))
+        if v:
+            return float(v.group(1))
+    v = re.match(r'\s*([0-9.]+)', tags.get('building:levels', ''))
+    if v:
+        return float(v.group(1)) * LEVEL_M + float(tags.get('roof:levels', '0') or 0) * LEVEL_M
+    return None
+
+
+def fetch_osm(poly):
+    q = '[out:json][timeout:60];(way["building"](poly:"{p}");relation["building"](poly:"{p}"););out tags geom;'.format(
+        p=' '.join(f'{la:.6f} {lo:.6f}' for la, lo in poly))
+    err = []
+    for url in OVERPASS:
+        try:
+            return _get_json(url, urllib.parse.urlencode({'data': q}).encode(), 'application/x-www-form-urlencoded')
+        except Exception as e:
+            err.append(f'{url}: {e}')
+    raise RuntimeError(' | '.join(err))
+
+
+def osm_obstacles(A, B, cfg, osm_json=None):
+    """Turn OSM buildings in the corridor into centre-line-equivalent obstacles for analyse_link."""
+    a, b, f = A['latlon'], B['latlon'], cfg['freq_ghz']
+    D = haversine(a, b)
+    clr = cfg.get('clearance', 0.6)
+    half = fresnel_r(D / 2, D / 2, f) + 30
+    data = osm_json if osm_json is not None else fetch_osm(corridor(a, b, half))
+    br = math.radians(bearing(a, b))
+    found, heights, obs = 0, 0, []
+    for el in data.get('elements', []):
+        tags = el.get('tags', {})
+        geom = el.get('geometry') or [g for m in el.get('members', []) if m.get('role') == 'outer' for g in m.get('geometry', [])]
+        if not geom:
+            continue
+        pts = []
+        for g in geom:
+            p = (g['lat'], g['lon'])
+            at, xt = project_on_path(a, b, p)
+            rel = math.radians(bearing(a, p)) - br
+            if math.cos(rel) < 0:
+                at = -at                                   # behind the start
+            pts.append((at, math.copysign(xt, math.sin(rel))))   # signed: left / right of the line
+        inside = [(at, xt) for at, xt in pts if 0 < at < D]
+        if not inside or min(abs(t[1]) for t in inside) > half:
+            continue
+        found += 1
+        h = building_height(tags)
+        if h is None:
+            continue
+        heights += 1
+        # the side of the footprint nearest the line decides how far it reaches into the signal path
+        if min(t[1] for t in inside) < 0 < max(t[1] for t in inside):
+            at, xt = sum(t[0] for t in inside) / len(inside), 0.0     # the footprint straddles the line
+        else:
+            at, xt = min(inside, key=lambda t: abs(t[1]))
+            xt = abs(xt)
+        rr = clr * fresnel_r(at, D - at, f)
+        if xt >= rr:
+            continue                                       # beside the clearance zone: no effect
+        h_eq = h + rr - math.sqrt(rr * rr - xt * xt)       # same intrusion as an obstacle on the centre line
+        span = max(t[0] for t in inside) - min(t[0] for t in inside)
+        floors = tags.get('building:levels')
+        fa = str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹')
+        label = (f'ساختمان {floors} طبقه' if floors else f'ساختمان {h:.0f} متری').translate(fa)
+        obs.append({'link': f"{A['id']}-{B['id']}", 'at_km': at / 1000, 'height_m': round(h_eq, 1), 'real_height_m': round(h, 1),
+                    'offset_m': round(xt), 'width_m': max(span, 10), 'name': label + ' (OSM)'})
+    return obs, {'buildings_in_corridor': found, 'with_height': heights, 'in_clearance_zone': len(obs), 'corridor_half_width_m': round(half)}
+
+
 def compass(deg):
     return COMPASS_FA[int((deg + 22.5) // 45) % 8]
 
 
 # ---------------------------------------------------------------- elevation
-def _get_json(url, data=None):
-    req = urllib.request.Request(url, data=data, headers={'User-Agent': 'p2p-radio-skill/1.0', 'Content-Type': 'application/json'})
+def _get_json(url, data=None, ctype='application/json'):
+    req = urllib.request.Request(url, data=data, headers={'User-Agent': 'p2p-radio-skill/1.0', 'Content-Type': ctype})
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.loads(r.read().decode())
 
@@ -313,7 +407,8 @@ def analyse_link(A, B, cfg, catalog, offline, ptmp=False):
         width = max(1, int(o.get('width_m', 30) / (D / n) / 2))
         for j in range(max(1, i - width), min(n, i + width) + 1):
             obst[j] = max(obst[j], o['height_m'])
-        named.append({'name': o.get('name', 'مانع'), 'at_m': round(at), 'height_m': o['height_m']})
+        named.append({'name': o.get('name', 'مانع'), 'at_m': round(at), 'height_m': o.get('real_height_m', o['height_m']),
+                      'offset_m': o.get('offset_m', 0)})
     for j in range(1, n):
         obst[j] = max(obst[j], clutter)
 
@@ -491,7 +586,9 @@ def main():
     ap.add_argument('project')
     ap.add_argument('-o', '--out', default='results.json')
     ap.add_argument('--catalog', default=str(HERE.parent / 'references' / 'radios.json'))
-    ap.add_argument('--offline', action='store_true', help='skip elevation APIs (flat earth between ground_m values)')
+    ap.add_argument('--offline', action='store_true', help='skip elevation APIs and OSM (flat earth between ground_m values)')
+    ap.add_argument('--no-osm', action='store_true', help='do not look up buildings in OpenStreetMap')
+    ap.add_argument('--osm-file', help='Overpass JSON saved by hand (e.g. from overpass-turbo.eu); used instead of the online lookup')
     args = ap.parse_args()
     cfg = json.loads(Path(args.project).read_text(encoding='utf-8'))
     catalog = json.loads(Path(args.catalog).read_text(encoding='utf-8'))['models']
@@ -515,10 +612,23 @@ def main():
     matrix = [{'a': x['id'], 'b': y['id'], 'distance_m': round(haversine(x['latlon'], y['latlon']))}
               for i, x in enumerate(sites) for y in sites[i + 1:]]
     links = []
+    osm_file = json.loads(Path(args.osm_file).read_text(encoding='utf-8')) if args.osm_file else None
+    osm_stats = {}
+    for a, b in pairs:
+        if (a, b) in existing or args.no_osm or (args.offline and osm_file is None):
+            continue
+        try:
+            extra, osm_stats[(a, b)] = osm_obstacles(by[a], by[b], cfg, osm_file)
+            cfg.setdefault('obstacles', []).extend(extra)
+        except Exception as e:
+            osm_stats[(a, b)] = {'error': str(e)[:200]}
+            print(f'WARNING OSM building lookup failed for {a}-{b}: {e}', file=sys.stderr)
     for a, b in pairs:
         print(f'analysing {a} -> {b} ...', file=sys.stderr)
         links.append(analyse_link(by[a], by[b], cfg, catalog, args.offline, (a, b) in ptmp))
         links[-1]['existing'] = (a, b) in existing or (b, a) in existing
+        if (a, b) in osm_stats:
+            links[-1]['osm'] = osm_stats[(a, b)]
     star = None
     if hub and len(pairs) > 1:
         star = analyse_star(by[hub], [p[1] for p in pairs], cfg, catalog, links)

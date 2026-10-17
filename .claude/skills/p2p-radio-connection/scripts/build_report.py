@@ -427,10 +427,24 @@ def build(R, prices, brief=None):
 
     # ---------------- checklist + assumptions
     terrain_warn = '' if all(l['terrain_ok'] for l in links) else f'<li>{need("ارتفاع زمین از سرویس‌های آنلاین دریافت نشد؛ اعداد با ارتفاع دستی یا صفر حساب شده‌اند")}</li>'
+    osm_lines = ''
+    for l in links:
+        st = l.get('osm')
+        if not st:
+            continue
+        pair = f'{e(name(l["a"]))} تا {e(name(l["b"]))}'
+        if 'error' in st:
+            osm_lines += f'<li><b>ساختمان‌های مسیر {pair}:</b> {need("دادهٔ OpenStreetMap دریافت نشد")}</li>'
+        else:
+            unknown = st['buildings_in_corridor'] - st['with_height']
+            osm_lines += (f'<li><b>ساختمان‌های مسیر {pair} (OpenStreetMap):</b> {fa(st["buildings_in_corridor"])} ساختمان در مسیر، '
+                          f'{fa(st["in_clearance_zone"])} مورد وارد مسیر سیگنال می‌شود'
+                          + (f'؛ ارتفاع {fa(unknown)} ساختمان ثبت نشده و با فرض {fa(l["clutter_m"])} متر حساب شده' if unknown else '') + '.</li>')
     checks = f'''<section class="sec" id="checks" aria-labelledby="h-checks"><div class="wrap">
 <h2 id="h-checks" data-reveal>قبل از خرید و نصب</h2>
 <div class="prose" data-reveal><ul>
 {terrain_warn}
+{osm_lines}
 <li><b>بازدید میدانی:</b> دید مستقیم را از بام تأیید کنید.</li>
 <li><b>اسکن تداخل</b> و انتخاب کانال خلوت (۲۰ مگاهرتز در شهر).</li>
 <li><b>مقررات:</b> باند و EIRP طبق ضوابط سازمان تنظیم مقررات.</li>

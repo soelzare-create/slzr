@@ -29,6 +29,15 @@ The calculator tries every whole-metre pair of masts, up to the limit. It keeps 
 - Antenna height above ground = `building_m` + mast.
 - An existing mast is subtracted, so the report shows how many metres are actually new.
 
+## Buildings in the corridor (OpenStreetMap)
+
+The radio corridor is the strip along the path that is as wide as the first Fresnel zone at mid-path, plus 30 m.
+
+- For each OSM building in the corridor, the height comes from the `height` tag, or from `building:levels` × 3.2 m.
+- A building beside the line at lateral offset `x` intrudes into the clearance zone (radius `rr = 0.6·F1`) only if `x < rr`.
+- It is then entered as a centre-line obstacle of height `h + rr − √(rr² − x²)`, which keeps the same clearance test.
+- A footprint that straddles the line is treated as `x = 0`.
+
 ## Explaining it in plain Persian
 
 | Term | How to say it |
