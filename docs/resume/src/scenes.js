@@ -15,11 +15,11 @@
 
   /* ---------- act 1: network -> three key projects -> Tourior's branches ---------- */
   var c1 = $('cam'), copy = $('storyCopy');
-  var F0 = [700, 470], F1 = [600, 470], F2 = [420, 640];
+  var F0 = [680, 460], F1 = [590, 460], F2 = [330, 630];
   E.act('hero', [.3, .65], {
     frame: function (p) {
-      var v = view(820), t1 = U.ease(U.seg(p, .1, .3)), t2 = U.ease(U.seg(p, .5, .82));
-      var s = U.elerp(1, 1.12, t1) * U.elerp(1, 1.85, t2);
+      var v = view(940), t1 = U.ease(U.seg(p, .1, .3)), t2 = U.ease(U.seg(p, .5, .82));
+      var s = U.elerp(1, 1.06, t1) * U.elerp(1, 1.9, t2);
       var fx = U.lerp(U.lerp(F0[0], F1[0], t1), F2[0], t2), fy = U.lerp(U.lerp(F0[1], F1[1], t1), F2[1], t2);
       c1.setAttribute('transform', cam(v, s, fx, fy));
       var f = 1 - U.seg(p, .04, .14); copy.style.opacity = f; copy.style.visibility = f < .01 ? 'hidden' : 'visible';
@@ -27,7 +27,15 @@
     reset: function () { c1.removeAttribute('transform'); copy.removeAttribute('style'); }
   });
 
-  /* ---------- act 2: three domains converge, then the four-step method ---------- */
+
+  /* ---------- act 2: Kala-Val, real plan then VLANs then support ---------- */
+  var kvo = [].slice.call(document.querySelectorAll('#kalaval .ov'));
+  E.act('kalaval', [.25, .5, .75], {
+    scene: function (sc) { kvo.forEach(function (o) { o.classList.toggle('on', +o.getAttribute('data-s') === sc); }); },
+    reset: function () { kvo.forEach(function (o) { o.classList.remove('on'); }); }
+  });
+
+  /* ---------- act 3: three domains converge, then the four-step method ---------- */
   var c2 = $('cam2'), c3 = $('cam3'), vs = ['v1', 'v2', 'v3'].map($), line = $('mLine'), dot = $('mDot');
   var nodes = [].slice.call(document.querySelectorAll('#method .m-node'));
   var X = nodes.map(function (n) { return +n.querySelector('circle').getAttribute('cx'); });

@@ -2,14 +2,21 @@
 Run: python3 build.py   NOTE: rebuilding overwrites edits saved from the in-page editor (copy them into body.html first)."""
 import json, math, random, re
 from pathlib import Path
+import render as R
 
 HERE = Path(__file__).parent
 ROOT = HERE.parent
 rd = lambda p: (HERE / p).read_text(encoding="utf-8")
 
-# ---------- act 1: node network with the three key projects ----------
-KEYS = [("k-k", "کالا-وال", 560, 300, "below"), ("k-a", "آرتمیس", 800, 540, "below"), ("k-t", "توریور", 420, 620, "above")]
+# ---------- act 1: node network with the ten clients (three flagships are larger) ----------
+# (id, label, x, y, label position, flagship)
+KEYS = [("k-k", "کالا وال", 520, 250, "below", True), ("k-a", "آرتمیس", 820, 520, "below", True), ("k-t", "توریور", 330, 610, "above", True),
+        ("k-r", "راگا مارکت", 210, 330, "below", False), ("k-al", "کاشی آلسن", 760, 190, "above", False), ("k-rj", "رویال جین", 960, 330, "below", False),
+        ("k-g", "گاراژ ۵۱", 600, 770, "below", False), ("k-rb", "کلینیک رابین", 640, 420, "below", False), ("k-az", "کلینیک آرزو", 960, 700, "below", False),
+        ("k-b", "به‌سرما", 190, 150, "below", False)]
 T = KEYS[2]
+KEY_LINKS = [("k-b", "k-k"), ("k-k", "k-al"), ("k-al", "k-rj"), ("k-k", "k-rb"), ("k-rb", "k-a"), ("k-rj", "k-a"), ("k-a", "k-az"),
+             ("k-a", "k-g"), ("k-g", "k-t"), ("k-t", "k-r"), ("k-r", "k-b"), ("k-r", "k-k"), ("k-rb", "k-t")]
 BR_ANGLES = [200, 160, 120, 90, 60, 20, -20]   # degrees, SVG y-down; the top stays clear for the label
 BR_DONE = 5
 BR_R = 125
@@ -22,7 +29,7 @@ def network():
     while len(pts) < 150:
         x, y = rnd.uniform(-420, 2020), rnd.uniform(-160, 1060)
         # keep the key nodes and the branch ring readable
-        if any(math.hypot(x - kx, y - ky) < 95 for _, _, kx, ky, _ in KEYS):
+        if any(math.hypot(x - kx, y - ky) < 95 for _, _, kx, ky, _, _ in KEYS):
             continue
         if math.hypot(x - T[2], y - T[3]) < BR_R + 60:
             continue
@@ -37,10 +44,11 @@ def network():
                 lines.append(f'<line class="net-l" x1="{x1:.0f}" y1="{y1:.0f}" x2="{pts[j][0]:.0f}" y2="{pts[j][1]:.0f}"/>')
     nodes = "".join(f'<circle class="net-n" cx="{x:.0f}" cy="{y:.0f}" r="{rnd.choice((2.5, 3, 4)):.1f}"/>' for x, y in pts)
     # faint links from each key node to its nearest background nodes, so keys sit inside the network
-    for _, _, kx, ky, _ in KEYS:
+    for _, _, kx, ky, _, _ in KEYS:
         for d, (x, y) in sorted((math.hypot(kx - x, ky - y), (x, y)) for x, y in pts)[:3]:
             lines.append(f'<line class="net-l" x1="{kx}" y1="{ky}" x2="{x:.0f}" y2="{y:.0f}"/>')
-    key_l = "".join(f'<line class="key-l" x1="{a[2]}" y1="{a[3]}" x2="{b[2]}" y2="{b[3]}"/>' for a, b in ((KEYS[0], KEYS[1]), (KEYS[1], KEYS[2]), (KEYS[2], KEYS[0])))
+    K = {k[0]: k for k in KEYS}
+    key_l = "".join(f'<line class="key-l" x1="{K[a][2]}" y1="{K[a][3]}" x2="{K[b][2]}" y2="{K[b][3]}"/>' for a, b in KEY_LINKS)
     br = []
     for i, ang in enumerate(BR_ANGLES):
         r = math.radians(ang)
@@ -50,10 +58,11 @@ def network():
         br.append(f'<g class="br {"done" if done else "wait"}"><line x1="{T[2]}" y1="{T[3]}" x2="{x:.0f}" y2="{y:.0f}"/>'
                   f'<circle cx="{x:.0f}" cy="{y:.0f}" r="16"/>{inner}</g>')
     keys = []
-    for kid, name, x, y, pos in KEYS:
-        ty = y + 62 if pos == "below" else y - 44
-        keys.append(f'<g class="key" id="{kid}"><circle class="halo" cx="{x}" cy="{y}" r="34"/><circle class="ring" cx="{x}" cy="{y}" r="24"/>'
-                    f'<circle class="core" cx="{x}" cy="{y}" r="11"/><text x="{x}" y="{ty}" text-anchor="middle">{name}</text></g>')
+    for kid, name, x, y, pos, big in KEYS:
+        r0, r1, r2, off = (34, 24, 11, 62) if big else (22, 15, 7, 44)
+        ty = y + off if pos == "below" else y - off + 18
+        keys.append(f'<g class="key{" big" if big else ""}" id="{kid}"><circle class="halo" cx="{x}" cy="{y}" r="{r0}"/><circle class="ring" cx="{x}" cy="{y}" r="{r1}"/>'
+                    f'<circle class="core" cx="{x}" cy="{y}" r="{r2}"/><text x="{x}" y="{ty}" text-anchor="middle">{name}</text></g>')
     return "".join(lines) + nodes + key_l + "".join(br) + "".join(keys)
 
 
@@ -96,7 +105,7 @@ def icon(name):
     return f'<svg class="ic" viewBox="0 0 256 256" aria-hidden="true">{inner}</svg>'
 
 
-body = rd("body.html").replace("{{NETWORK}}", network()).replace("{{VENN}}", venn()).replace("{{METHOD}}", method())
+body = rd("body.html").replace("{{NETWORK}}", network()).replace("{{VENN}}", venn()).replace("{{METHOD}}", method()).replace("{{PROJECTS}}", R.projects()).replace("{{VLAN}}", R.vlan_svg())
 body = re.sub(r"\{\{ICON:([a-z-]+)\}\}", lambda m: icon(m.group(1)), body)
 assert "{{" not in body, re.findall(r"\{\{[^}]*\}\}", body)
 
@@ -114,6 +123,9 @@ ld = {"@context": "https://schema.org", "@graph": [
 ]}
 FAV = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23153A62'/%3E"
        "%3Cpath d='M9 9l14 14M23 9L9 23' stroke='%237FB0DF' stroke-width='3.4' stroke-linecap='round'/%3E%3C/svg%3E")
+import base64
+# fonts load from file:// only when embedded (Chrome blocks file-origin font fetches)
+FONT_URI = "url(data:font/woff2;base64," + base64.b64encode((ROOT / "assets" / "Vazirmatn-VF.woff2").read_bytes()).decode() + ")"
 head = f"""<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
@@ -125,11 +137,10 @@ head = f"""<!doctype html>
 <meta property="og:type" content="website"><meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:locale" content="fa_IR">
 <meta name="theme-color" content="#07152A"><meta name="color-scheme" content="light dark">
 <link rel="icon" href="{FAV}">
-<link rel="preload" href="assets/Vazirmatn-VF.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 <style>
 {rd("engine/base.css")}
-{rd("site.css")}
+{rd("site.css").replace('url("assets/Vazirmatn-VF.woff2")', FONT_URI)}
 </style>
 <script>document.documentElement.classList.add('js');if(location.protocol==='file:'||/[?&]edit|#edit/.test(location.search+location.hash))document.documentElement.classList.add('can-edit');</script>
 </head>
