@@ -51,7 +51,13 @@ def e(s):
     return html.escape(str(s), quote=True)
 
 
+BRAND = {}
+CUSTOMER = False   # set by --brand: customer-facing copy, no internal markers, sources or shop prices
+
+
 def need(text):
+    if CUSTOMER:
+        return ''
     return f'<span class="need">[NEED: {e(text)}]</span>'
 
 
@@ -377,8 +383,12 @@ def build(R, prices, brief=None):
                 c, cp = cat[o['cpe']], P.get(o['cpe'])
                 client = (f'<p class="why">کلاینت در {e(name(l["b"]))}: <span class="ltr">{e(c["brand"])} {e(c["model"])}</span></p>'
                           + (f'<p class="price">{e(cp["price"])} <small>{e(cp.get("unit", ""))}</small></p>' if cp else f'<p class="price">{need("قیمت روز کلاینت")}</p>'))
-            price = (f'<p class="price">{e(p["price"])} <small>{e(p.get("unit", ""))}</small></p>'
-                     f'<p class="src">منبع: <a href="{e(p["source"])}" rel="noopener" target="_blank">{e(p.get("shop") or "لینک")}</a></p>') if p else f'<p class="price">{need("قیمت روز")}</p>'
+            if CUSTOMER:
+                client = client.split('<p class="price">')[0]
+                price = ''
+            else:
+                price = (f'<p class="price">{e(p["price"])} <small>{e(p.get("unit", ""))}</small></p>'
+                         f'<p class="src">منبع: <a href="{e(p["source"])}" rel="noopener" target="_blank">{e(p.get("shop") or "لینک")}</a></p>') if p else f'<p class="price">{need("قیمت روز")}</p>'
             if o.get('margin_db') is None:
                 spec = f'<li>باند ۶۰ گیگاهرتز{" + پشتیبان ۵" if m.get("backup_5ghz") else ""}</li><li>ظرفیت واقعی تا {fa(o["max_mbps"])} مگابیت</li><li>برد مناسب تا {km(m["range_km"]*1000)}</li>'
             else:
@@ -392,7 +402,7 @@ def build(R, prices, brief=None):
         title = f'{e(name(l["a"]))} ↔ {e(name(l["b"]))}'
         body = ''.join(cards) if cards else '<p>هیچ رادیویی با این فاصله و حاشیهٔ اطمینان مناسب نیست؛ نقطهٔ واسط لازم است.</p>'
         gear.append(f'<div class="linkgear"><h3 class="lg-t">{title} · {km(l["distance_m"])}</h3><div class="cards">{body}</div></div>')
-    price_note = f'قیمت‌ها به تاریخ {fa(pdate)} از فروشگاه‌های ایرانی جست‌وجو شده‌اند و با نوسان ارز تغییر می‌کنند.' if pdate else 'قیمت روز هنوز وارد نشده است.'
+    price_note = 'قیمت تجهیزات و اجرا در پیش‌فاکتور جداگانه اعلام می‌شود.' if CUSTOMER else f'قیمت‌ها به تاریخ {fa(pdate)} از فروشگاه‌های ایرانی جست‌وجو شده‌اند و با نوسان ارز تغییر می‌کنند.' if pdate else 'قیمت روز هنوز وارد نشده است.'
 
     star_html = ''
     st = R.get('star')
@@ -452,6 +462,13 @@ def build(R, prices, brief=None):
 </ul>
 <p class="assume">فرض‌ها: فرکانس {fa(R["freq_ghz"])} گیگاهرتز، ضریب انحنا k={fa(L0["k"])}، هدف پاک‌بودن {fa(round(L0["clearance_target"]*100))}٪ منطقهٔ فرنل، منبع ارتفاع: <span class="ltr">{e(L0["terrain_source"])}</span>، حساسیت گیرنده‌ها مقادیر معمول 802.11ac است؛ پیش از خرید با دیتاشیت تطبیق دهید.</p></div></div></section>'''
 
+    if CUSTOMER and BRAND.get('steps'):
+        steps = ''.join(f'<li class="mstep" data-reveal><b>{fa(i + 1)}. {e(t)}</b><span>{e(d)}</span></li>' for i, (t, d) in enumerate(BRAND['steps']))
+        checks = f'''<section class="sec" id="checks" aria-labelledby="h-checks"><div class="wrap">
+<h2 id="h-checks" data-reveal>روش اجرا</h2>
+<ol class="mstrip">{steps}</ol>
+<p class="assume" data-reveal>ارتفاع‌ها برای ساختمان‌های فعلی و ساختمان‌های میان‌راه حدود {fa(L0["clutter_m"])} متر محاسبه شده و در مرحلهٔ شناخت با بازدید میدانی قطعی می‌شود.</p></div></section>'''
+
     summary_items = ''.join(
         f'<li>{e(name(l["a"]))} تا {e(name(l["b"]))}: {km(l["distance_m"])}، اختلاف ارتفاع زمین {fa(abs(l["ground_diff_m"]), 1)} متر، '
         + (f'دکل {fa(l["mast_a_m"])} و {fa(l["mast_b_m"])} متر روی بام، آزیموت {fa(round(l["azimuth_ab"]))}° و {fa(round(l["azimuth_ba"]))}°.' if l['feasible'] else 'بدون دید مستقیم؛ نقطهٔ واسط لازم است.')
@@ -474,12 +491,20 @@ def build(R, prices, brief=None):
 <p class="sub" data-reveal>{price_note}</p>
 {"".join(gear)}</div></section>'''
 
+    if BRAND:
+        logo = ASSETS / 'brand' / BRAND['logo'] if BRAND.get('logo') else None
+        wordmark = (f'<img src="data:image/svg+xml;base64,{base64.b64encode(logo.read_bytes()).decode()}" alt="{e(BRAND["name"])}">'
+                    if logo and logo.exists() else e(BRAND['name']))
+        footer = (f'<div class="contact"><b>{e(BRAND["name"])} · {e(BRAND.get("tagline", ""))}</b>'
+                  + ''.join(f'<span>{e(c)}</span>' for c in BRAND.get('contact', [])) + f'<span>{fa(R["generated"])}</span></div>')
+    else:
+        wordmark, footer = 'لینک رادیویی', f'تهیه‌شده با اسکیل P2P Radio Connection · {fa(R["generated"])}'
     nav = '<a href="#p0">پروفایل مسیر</a>' + ('<a href="#budget">بودجهٔ لینک</a>' if bal else '') + '<a href="#gear">تجهیزات</a><a href="#install">نصب</a>'
     return TEMPLATE.format(
         title=e(R['project']), desc=e(f'طرح لینک رادیویی {R["project"]}: فاصله، ارتفاع دکل، بودجهٔ لینک و تجهیزات پیشنهادی.'),
         font=base64.b64encode((ASSETS / 'fonts' / 'Vazirmatn-wght.woff2').read_bytes()).decode(),
         base_css=(ASSETS / 'engine' / 'base.css').read_text(encoding='utf-8'),
-        scene_css='\n'.join(css_rules), nav=nav, story='\n'.join(story),
+        scene_css='\n'.join(css_rules), nav=nav, brand_css=BRAND.get('css', ''), wordmark=wordmark, footer=footer, story='\n'.join(story),
         sections=compare_html + gear_html + star_html + install + checks + what, date=fa(R['generated']),
         gsap=(ASSETS / 'vendor' / 'gsap.min.js').read_text(encoding='utf-8'),
         st=(ASSETS / 'vendor' / 'ScrollTrigger.min.js').read_text(encoding='utf-8'),
@@ -501,7 +526,7 @@ TEMPLATE = '''<!doctype html>
 {base_css}
 </style>
 <style>
-:root{{--font:"Vazirmatn",system-ui,sans-serif;--brand:#3DDC97;--brand-ink:#06130D;--alert:#FF6B5B;--st-bg:#071018;--st-surface:#0E1A24}}
+:root{{--sig:61,220,151;--font:"Vazirmatn",system-ui,sans-serif;--brand:#3DDC97;--brand-ink:#06130D;--alert:#FF6B5B;--st-bg:#071018;--st-surface:#0E1A24}}
 .grid{{stroke:rgba(238,242,248,.05);stroke-width:1}}
 .link{{stroke:var(--brand);stroke-width:4;stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset 1.1s var(--ease-in-out)}}
 .link.bad{{stroke:var(--alert)}}
@@ -525,8 +550,8 @@ TEMPLATE = '''<!doctype html>
 .mast{{stroke:var(--st-ink);stroke-width:5;stroke-linecap:round;transform-box:fill-box;transform-origin:50% 100%;transition:transform 1s var(--ease-out)}}
 .ant{{fill:var(--brand)}}
 .los{{stroke:var(--brand);stroke-width:2.5;stroke-dasharray:1;transition:stroke-dashoffset .9s var(--ease-in-out)}}
-.fresnel{{fill:rgba(61,220,151,.12);stroke:rgba(61,220,151,.5);stroke-width:1}}
-.fresnel6{{fill:rgba(61,220,151,.22)}}
+.fresnel{{fill:rgba(var(--sig),.12);stroke:rgba(var(--sig),.5);stroke-width:1}}
+.fresnel6{{fill:rgba(var(--sig),.22)}}
 .crit{{fill:none;stroke:#F2C14E;stroke-width:3}}
 .clab{{fill:#F2C14E;font:800 17px var(--font);paint-order:stroke;stroke:var(--st-bg);stroke-width:6px}}
 .bar.pos{{fill:var(--brand)}}.bar.neg{{fill:var(--alert)}}
@@ -538,6 +563,13 @@ TEMPLATE = '''<!doctype html>
 .mbr{{stroke:#F2C14E;stroke-width:3}}.ml{{fill:#F2C14E;font:900 22px var(--font)}}
 svg [class*=" s"],svg [class^="s"]{{transition:opacity 420ms var(--ease-out),stroke-dashoffset 1s var(--ease-in-out),transform 1s var(--ease-out)}}
 {scene_css}
+.wm img{{height:30px;width:auto;display:block;filter:brightness(0) invert(1)}}
+.topbar:not(.ondark) .wm img{{filter:none}}
+.mstrip{{list-style:none;padding:0;margin:1.6rem 0 0;display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}}
+.mstep{{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem;display:grid;gap:.35rem}}
+.mstep b{{color:var(--accent-text);font-size:1.05rem}}.mstep span{{font-size:.95rem}}
+.contact{{display:grid;gap:.2rem;font-size:.92rem}}.contact b{{color:var(--ink)}}
+{brand_css}
 .sub{{max-width:70ch;margin-top:.8rem;color:var(--ink-3)}}
 .linkgear{{margin-top:2.6rem}}.lg-t{{font-size:1.2rem;margin-bottom:1rem}}
 .cards{{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}}
@@ -565,7 +597,7 @@ th{{background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink);fon
 <body>
 <a class="skip" href="#what">رفتن به خلاصهٔ متنی</a>
 <header class="topbar" id="topbar"><div class="wrap">
-  <a href="#map" class="wm">لینک رادیویی</a>
+  <a href="#map" class="wm">{wordmark}</a>
   <nav class="nav" aria-label="بخش‌ها">{nav}</nav>
   <a class="btn btn-brand btn-sm" href="#gear">تجهیزات</a>
 </div><div class="progress" aria-hidden="true"><i id="prog"></i></div></header>
@@ -573,7 +605,7 @@ th{{background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink);fon
 {story}
 {sections}
 </main>
-<footer class="foot"><div class="wrap">تهیه‌شده با اسکیل P2P Radio Connection · {date}</div></footer>
+<footer class="foot"><div class="wrap">{footer}</div></footer>
 </div>
 <script>{gsap}</script>
 <script>{st}</script>
@@ -604,11 +636,16 @@ def main():
     ap.add_argument('results')
     ap.add_argument('-o', '--out', default='report.html')
     ap.add_argument('--prices')
+    ap.add_argument('--brand', help='brand json (e.g. assets/brand/daranx.json): logo, colours, contact; makes a customer-facing report')
     ap.add_argument('--brief', help='answer-first summary: headline, verdict, stats, primary_link, primary_model, compare')
     a = ap.parse_args()
     R = json.loads(Path(a.results).read_text(encoding='utf-8'))
     prices = json.loads(Path(a.prices).read_text(encoding='utf-8')) if a.prices else None
     brief = json.loads(Path(a.brief).read_text(encoding='utf-8')) if a.brief else None
+    global BRAND, CUSTOMER
+    if a.brand:
+        bp = Path(a.brand) if Path(a.brand).exists() else ASSETS / 'brand' / a.brand
+        BRAND, CUSTOMER = json.loads(bp.read_text(encoding='utf-8')), True
     out = build(R, prices, brief)
     Path(a.out).write_text(out, encoding='utf-8')
     print(f'wrote {a.out} ({len(out)//1024} KB)')

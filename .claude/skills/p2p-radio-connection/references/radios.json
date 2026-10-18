@@ -69,7 +69,7 @@
      "search": "Ubiquiti LiteAP AC LAP-GPS"},
     {"id": "mikrotik-mantbox19s", "brand": "MikroTik", "model": "mANTBox 19s (sector 120°)", "band": "5", "roles": ["ap"], "ecosystem": "mikrotik",
      "gain_dbi": 19, "tx_dbm": 25, "std": "ac", "max_width": 80, "max_mcs": 9, "real_mbps": 300, "port": "1G+SFP", "range_km": 10,
-     "beam_deg": 120, "tier": "mid", "price_rank": 4, "temp": "-40..+70", "notes": "Integrated 120° sector; use with LHG / SXTsq clients.",
+     "beam_deg": 120, "tier": "mid", "price_rank": 4, "temp": "-40..+70", "notes": "سکتور یکپارچه ۱۲۰ درجه؛ با کلاینت LHG یا SXTsq.",
      "search": "MikroTik mANTBox 19s RB921GS-5HPacD-19S"},
     {"id": "ubnt-rocket-prism-120", "brand": "Ubiquiti", "model": "Rocket 5AC Prism + AM-5G19-120", "band": "5", "roles": ["ap"], "ecosystem": "ubnt-airmax",
      "gain_dbi": 19, "tx_dbm": 27, "cable_loss_db": 0.5, "std": "ac", "max_width": 80, "max_mcs": 9, "real_mbps": 450, "port": "1G", "range_km": 15,

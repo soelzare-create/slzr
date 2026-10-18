@@ -155,6 +155,14 @@ Look at the screenshots and fix any label that sits on a shape.
 
 Deliver the HTML file to the user: send it as a file and/or publish it as an artifact if those tools exist. Then give a short summary in chat.
 
+### Customer version
+
+For a report that goes to the customer, add `--brand daranx.json` (any brand JSON in `assets/brand/` or a path).
+- The page gets that company's logo, colours, contact block and its method steps («روش اجرا»).
+- It hides everything internal: `[NEED]` markers, shop links, market prices and the engineering checklist.
+- Prices belong in a separate quotation, and the report says so.
+- Write the customer brief in the customer's terms: the result and the future value (e.g. room for new branches), not the saving over the alternative we rejected.
+
 ## 6. The chat summary
 
 Short, answer first (see the 15–20 second rule). Aim for under ~12 lines:
