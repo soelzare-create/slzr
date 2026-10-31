@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "apps.sales",
     "apps.technical",
     "apps.management",
+    "apps.tasks",
 ]
 
 MIDDLEWARE = [
@@ -212,3 +213,11 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
     SECURE_HSTS_PRELOAD = _env_bool("SECURE_HSTS_PRELOAD", False)
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# --- Tasks / Telegram bot (apps.tasks.telegram) ------------------------------
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "").lstrip("@")
+TELEGRAM_API_BASE = os.getenv("TELEGRAM_API_BASE", "https://api.telegram.org")
+TELEGRAM_PROXY = os.getenv("TELEGRAM_PROXY", "")
+TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+TELEGRAM_SEND_ASYNC = _env_bool("TELEGRAM_SEND_ASYNC", True)

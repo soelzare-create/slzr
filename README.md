@@ -62,6 +62,36 @@ cd backend && python manage.py migrate && python manage.py seed
 python manage.py release_reservations   # cron/Celery beat هر ۱۵ دقیقه
 ```
 
+### کارها (Tasks) + ربات تلگرام
+
+صفحهٔ «کارها» برای همهٔ کاربران است: یک جملهٔ ساده بنویسید و Enter بزنید. سیستم مشتری،
+نوع کار و مسئول (`@اسم`) را خودش تشخیص می‌دهد. اگر کسی منشن نشود، کار به مدیریت می‌رسد.
+برای پیام تلگرام، این مقادیر را در `.env` بگذارید:
+
+```bash
+TELEGRAM_BOT_TOKEN=123456:ABC...          # از @BotFather
+TELEGRAM_BOT_USERNAME=daranx_tasks_bot
+TELEGRAM_WEBHOOK_SECRET=یک-رشتهٔ-تصادفی-طولانی
+TELEGRAM_PROXY=                            # اگر سرور به تلگرام دسترسی ندارد، مثلاً http://127.0.0.1:8118
+TELEGRAM_API_BASE=https://api.telegram.org # یا آدرس یک relay
+```
+
+اجرای ربات، یکی از این دو روش:
+
+```bash
+python manage.py telegram_poll                       # ساده: یک پروسهٔ همیشه‌روشن، بدون نیاز به HTTPS عمومی
+python manage.py telegram_webhook https://your.domain # یا webhook (نیازمند HTTPS عمومی)
+```
+
+با روش webhook، این دستور را هم هر ۱۰ دقیقه از cron اجرا کنید (روش polling خودش انجامش می‌دهد):
+
+```bash
+python manage.py task_jobs   # ارسال مجدد پیام‌های در صف + یادآوری کارهای ۲۴ ساعت دست‌نخورده
+```
+
+هر کاربر یک بار دکمهٔ «اتصال تلگرام من» را در صفحهٔ کارها می‌زند و در ربات «اشتراک شماره» را
+لمس می‌کند. اتصال با همان شماره‌ای است که با آن وارد سیستم می‌شود.
+
 ### تست و لینت
 
 ```bash
@@ -132,7 +162,7 @@ slzr/
 ├── CLAUDE.md            # راهنمای فاز فعلی (اسپک)
 ├── backend/
 │   ├── daranx/          # پیکربندی پروژه + api_urls
-│   └── apps/            # core, accounts, accounting, procurement, sales, technical, management
+│   └── apps/            # core, accounts, accounting, procurement, sales, technical, management, tasks
 │   └── tests/           # تست‌های pytest (قانون ۵٪، ماشین وضعیت، RBAC، اسناد)
 └── frontend/            # React + RTL (Vite)
 ```

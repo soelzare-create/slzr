@@ -5,7 +5,9 @@ import { api } from "./api";
 import { Avatar, Icon } from "./ui.jsx";
 
 const NAV = [
-  { to: "/", label: "داشبورد", icon: "dashboard", perm: null },
+  { to: "/tasks", label: "کارها", icon: "target", perm: null },
+  { to: "/", label: "داشبورد", icon: "dashboard", perm: null, mgmtOnly: true },
+  { to: "/dashboard", label: "داشبورد", icon: "dashboard", perm: null, staffOnly: true },
   { to: "/parties", label: "مشتری‌ها", icon: "users", perm: null },
   { to: "/proformas", label: "پیش‌فاکتورها", icon: "proforma", perm: "sales.view" },
   { to: "/purchases", label: "خریدها", icon: "cart", perm: "procurement.view" },
@@ -25,12 +27,16 @@ const ROLE_LABEL = {
 export default function Layout({ children }) {
   const { user, logout, can } = useAuth();
   const [unread, setUnread] = useState(0);
+  const [openTasks, setOpenTasks] = useState(0);
 
   useEffect(() => {
     api.get("/notifications/unread_count").then((d) => setUnread(d.count)).catch(() => {});
+    api.get("/tasks/summary").then((d) => setOpenTasks(d.mine_open)).catch(() => {});
   }, []);
 
-  const items = NAV.filter((n) => (!n.perm || can(n.perm)) && (!n.adminOnly || user?.is_system_admin));
+  const isMgmt = user?.is_system_admin || (user?.department_codes || []).includes("management");
+  const items = NAV.filter((n) => (!n.perm || can(n.perm)) && (!n.adminOnly || user?.is_system_admin)
+    && (!n.mgmtOnly || isMgmt) && (!n.staffOnly || !isMgmt));
   const dept = (user?.department_codes || [])[0];
   const roleLabel = user?.is_system_admin ? "ادمین سیستم" : (ROLE_LABEL[dept] || "کاربر");
 
@@ -47,6 +53,7 @@ export default function Layout({ children }) {
               <Icon name={n.icon} />
               <span>{n.label}</span>
               {n.to === "/notifications" && unread > 0 && <span className="count">{unread}</span>}
+              {n.to === "/tasks" && openTasks > 0 && <span className="count">{openTasks}</span>}
             </NavLink>
           ))}
         </nav>

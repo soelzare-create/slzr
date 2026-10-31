@@ -30,6 +30,7 @@ from apps.core.api import (
 from apps.management.api import DashboardView
 from apps.procurement.api import PurchaseViewSet
 from apps.sales.api import InvoiceViewSet, ProformaViewSet
+from apps.tasks.api import TaskViewSet, TelegramStatusView, TelegramWebhookView
 from apps.technical.api import DirectInvoiceView
 
 router = DefaultRouter(trailing_slash=False)
@@ -46,6 +47,7 @@ router.register("accounts", AccountViewSet, basename="account")
 router.register("journal", JournalEntryViewSet, basename="journal")
 router.register("expenses", ExpenseViewSet, basename="expense")
 router.register("payments", PaymentViewSet, basename="payment")
+router.register("tasks", TaskViewSet, basename="task")
 
 urlpatterns = [
     # Auth
@@ -54,6 +56,9 @@ urlpatterns = [
     path("auth/me", me_view),
     # Technical direct (service/support) invoices
     path("technical/invoices", DirectInvoiceView.as_view()),
+    # Tasks — Telegram bot
+    path("telegram/status", TelegramStatusView.as_view()),
+    path("telegram/webhook", TelegramWebhookView.as_view()),
     # Reports
     path("reports/ledger", LedgerView.as_view()),
     path("reports/balance-sheet", BalanceSheetView.as_view()),
