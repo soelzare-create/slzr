@@ -62,6 +62,36 @@ cd backend && python manage.py migrate && python manage.py seed
 python manage.py release_reservations   # cron/Celery beat هر ۱۵ دقیقه
 ```
 
+### کارها (Tasks) + ربات بله
+
+صفحهٔ «کارها» برای همهٔ کاربران است: یک جملهٔ ساده بنویسید و Enter بزنید. سیستم مشتری،
+نوع کار و مسئول (`@اسم`) را خودش تشخیص می‌دهد. اگر کسی منشن نشود، کار به مدیریت می‌رسد.
+پیام‌ها در **بله** ارسال می‌شوند (از سرور داخل ایران مستقیم در دسترس است).
+
+**راه‌اندازی یک‌باره روی هاست cPanel (بدون SSH):**
+
+1. در بله به `@botfather` پیام بدهید، یک ربات بسازید و توکن آن را بگیرید.
+2. در cPanel → Setup Python App → Environment variables این‌ها را اضافه کنید و اپ را Restart کنید:
+   ```
+   BALE_BOT_TOKEN=توکن ربات
+   BALE_BOT_USERNAME=نام کاربری ربات بدون @
+   BALE_WEBHOOK_SECRET=یک رشتهٔ تصادفی طولانی (فقط حروف و عدد)
+   ```
+3. یک بار این آدرس را در مرورگر باز کنید تا بله پیام‌ها را به سایت بفرستد (جای `<...>` را پر کنید):
+   ```
+   https://tapi.bale.ai/bot<TOKEN>/setWebhook?url=https://app.daranx.com/api/bale/webhook/<SECRET>
+   ```
+   پاسخ باید `"ok":true` باشد.
+4. در cPanel → Cron Jobs، هر ۱۰ دقیقه (برای یادآوری ۲۴ ساعته و ارسال مجدد پیام‌های در صف):
+   ```bash
+   cd ~/<مسیر اپ> && <مسیر python محیط مجازی> manage.py task_jobs
+   ```
+
+روی سروری که SSH دارد، به‌جای مراحل ۳ و ۴ می‌شود `python manage.py bale_poll` را به‌صورت یک
+پروسهٔ همیشه‌روشن اجرا کرد (یا `python manage.py bale_webhook https://your.domain`).
+
+هر کاربر یک بار در صفحهٔ کارها روی «اتصال بلهٔ من» می‌زند و کد ۶ رقمی را برای ربات می‌فرستد.
+
 ### تست و لینت
 
 ```bash
@@ -132,7 +162,7 @@ slzr/
 ├── CLAUDE.md            # راهنمای فاز فعلی (اسپک)
 ├── backend/
 │   ├── daranx/          # پیکربندی پروژه + api_urls
-│   └── apps/            # core, accounts, accounting, procurement, sales, technical, management
+│   └── apps/            # core, accounts, accounting, procurement, sales, technical, management, tasks
 │   └── tests/           # تست‌های pytest (قانون ۵٪، ماشین وضعیت، RBAC، اسناد)
 └── frontend/            # React + RTL (Vite)
 ```

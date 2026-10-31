@@ -16,6 +16,7 @@ import Notifications from "./pages/Notifications.jsx";
 import Users from "./pages/Users.jsx";
 import DocumentPrint from "./print/DocumentPrint.jsx";
 import CompanySettings from "./pages/CompanySettings.jsx";
+import Tasks from "./pages/Tasks.jsx";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -32,11 +33,21 @@ function ProtectedBare({ children }) {
   return children;
 }
 
+// Landing page: management & system admin get the dashboard, everyone else
+// lands straight on the tasks page (کارها).
+function Home() {
+  const { user } = useAuth();
+  const isMgmt = user?.is_system_admin || (user?.department_codes || []).includes("management");
+  return isMgmt ? <Dashboard /> : <Navigate to="/tasks" replace />;
+}
+
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Protected><Dashboard /></Protected>} />
+      <Route path="/" element={<Protected><Home /></Protected>} />
+      <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
+      <Route path="/tasks" element={<Protected><Tasks /></Protected>} />
       <Route path="/proformas" element={<Protected><Proformas /></Protected>} />
       <Route path="/purchases" element={<Protected><Purchases /></Protected>} />
       <Route path="/invoices" element={<Protected><Invoices /></Protected>} />

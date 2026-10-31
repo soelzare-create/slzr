@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "apps.sales",
     "apps.technical",
     "apps.management",
+    "apps.tasks",
 ]
 
 MIDDLEWARE = [
@@ -212,3 +213,10 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
     SECURE_HSTS_PRELOAD = _env_bool("SECURE_HSTS_PRELOAD", False)
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# --- Tasks / Bale (بله) bot (apps.tasks.bale) --------------------------------
+BALE_BOT_TOKEN = os.getenv("BALE_BOT_TOKEN", "")
+BALE_BOT_USERNAME = os.getenv("BALE_BOT_USERNAME", "").lstrip("@")
+BALE_API_BASE = os.getenv("BALE_API_BASE", "https://tapi.bale.ai")
+BALE_WEBHOOK_SECRET = os.getenv("BALE_WEBHOOK_SECRET", "")
+BALE_SEND_ASYNC = _env_bool("BALE_SEND_ASYNC", True)

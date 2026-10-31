@@ -62,6 +62,7 @@ class Command(BaseCommand):
         systems = self._seed_systems()
         perms = self._seed_permissions(systems)
         self._seed_roles(systems, perms)
+        self._seed_tasks()
         self._seed_admin()
         self._seed_accounts()
         self._seed_company()
@@ -132,6 +133,14 @@ class Command(BaseCommand):
         # Accounting cross-department read (Section 3, decision #9): read all invoices.
         acc_role = Role.objects.get(code="accounting_manager")
         self._grant(acc_role, [perms["sales.view_all"], perms["technical.view_all"]])
+
+    def _seed_tasks(self) -> None:
+        # Tasks (کارها) are open to every user; only "see everything" is a
+        # permission — held by management.
+        system, _ = System.objects.get_or_create(code="tasks", defaults={"name": "کارها"})
+        perm, _ = Permission.objects.get_or_create(
+            system=system, action="view_all", defaults={"code": "tasks.view_all"})
+        self._grant(Role.objects.get(code="management"), [perm])
 
     def _grant(self, role, permissions) -> None:
         for perm in permissions:

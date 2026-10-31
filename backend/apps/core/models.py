@@ -155,6 +155,7 @@ class Notification(TimeStampedModel):
         RESERVATION_RELEASED = "RESERVATION_RELEASED", "آزادسازی رزرو"
         UNFULFILLABLE = "UNFULFILLABLE", "تأمین‌نشدنی"
         SUPPORT_DUE = "SUPPORT_DUE", "یادآوری پشتیبانی"
+        TASK = "TASK", "کار"
         GENERAL = "GENERAL", "عمومی"
 
     recipient = models.ForeignKey(

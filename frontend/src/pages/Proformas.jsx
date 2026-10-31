@@ -24,6 +24,16 @@ export default function Proformas() {
     }
   }, []); // eslint-disable-line
 
+  // Deep link from a task (کارها): ?open=ID opens that proforma for editing.
+  useEffect(() => {
+    const oid = params.get("open");
+    if (!oid || loading) return;
+    const p = data.find((x) => String(x.id) === oid);
+    if (p) startEdit(p);
+    params.delete("open");
+    setParams(params, { replace: true });
+  }, [loading, data]); // eslint-disable-line
+
   function blank() { return { customer: "", notes: "", lines: [emptyLine()] }; }
   function emptyLine() { return { item: "", description: "", quantity: 1, unit_price: 0 }; }
   function setLine(i, patch) {
