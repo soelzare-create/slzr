@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Task, TaskEvent, TelegramLink, TelegramMessage
+from .models import BaleLink, BaleMessage, Task, TaskEvent
 
 
 class TaskEventInline(admin.TabularInline):
@@ -16,10 +16,10 @@ class TaskAdmin(admin.ModelAdmin):
     inlines = [TaskEventInline]
 
 
-admin.site.register(TelegramLink)
+admin.site.register(BaleLink)
 
 
-@admin.register(TelegramMessage)
-class TelegramMessageAdmin(admin.ModelAdmin):
+@admin.register(BaleMessage)
+class BaleMessageAdmin(admin.ModelAdmin):
     list_display = ["id", "chat_id", "status", "attempts", "created_at"]
     list_filter = ["status"]

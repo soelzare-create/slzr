@@ -214,10 +214,9 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = _env_bool("SECURE_HSTS_PRELOAD", False)
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# --- Tasks / Telegram bot (apps.tasks.telegram) ------------------------------
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "").lstrip("@")
-TELEGRAM_API_BASE = os.getenv("TELEGRAM_API_BASE", "https://api.telegram.org")
-TELEGRAM_PROXY = os.getenv("TELEGRAM_PROXY", "")
-TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
-TELEGRAM_SEND_ASYNC = _env_bool("TELEGRAM_SEND_ASYNC", True)
+# --- Tasks / Bale (بله) bot (apps.tasks.bale) --------------------------------
+BALE_BOT_TOKEN = os.getenv("BALE_BOT_TOKEN", "")
+BALE_BOT_USERNAME = os.getenv("BALE_BOT_USERNAME", "").lstrip("@")
+BALE_API_BASE = os.getenv("BALE_API_BASE", "https://tapi.bale.ai")
+BALE_WEBHOOK_SECRET = os.getenv("BALE_WEBHOOK_SECRET", "")
+BALE_SEND_ASYNC = _env_bool("BALE_SEND_ASYNC", True)

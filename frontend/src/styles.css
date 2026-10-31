@@ -201,3 +201,4 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
   .sidebar { display: none; }
   .content { padding: 14px; }
 }
+.link-code { font-size: 34px; font-weight: 700; letter-spacing: 6px; text-align: center; background: #f3f6ff; border: 1px dashed #cdd9f5; border-radius: 14px; padding: 16px; margin: 12px 0; color: var(--brand); direction: ltr; }

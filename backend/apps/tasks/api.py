@@ -1,6 +1,7 @@
 """Tasks API: one text box in, everything else happens server-side."""
 from __future__ import annotations
 
+import hmac
 import json
 import logging
 
@@ -15,8 +16,8 @@ from rest_framework.response import Response
 
 from apps.core.models import Party
 
-from . import parsing, services, telegram
-from .models import Task, TaskEvent, TelegramLink
+from . import bale, parsing, services
+from .models import BaleLink, Task, TaskEvent
 
 log = logging.getLogger(__name__)
 
@@ -152,10 +153,10 @@ class TaskViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Creat
     @action(detail=False, methods=["get"])
     def people(self, request):
         User = get_user_model()
-        linked = set(TelegramLink.objects.values_list("user_id", flat=True))
+        linked = set(BaleLink.objects.values_list("user_id", flat=True))
         mgmt = {u.pk for u in services.management_users()}
         return Response([
-            {"id": u.pk, "full_name": u.full_name, "telegram": u.pk in linked,
+            {"id": u.pk, "full_name": u.full_name, "bale": u.pk in linked,
              "management": u.pk in mgmt}
             for u in User.objects.filter(is_active=True).order_by("full_name")
         ])
@@ -209,32 +210,32 @@ class TaskViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.Creat
                          "task": TaskDetailSerializer(Task.objects.get(pk=task.pk)).data})
 
 
-class TelegramStatusView(views.APIView):
-    """Is Telegram configured, and is the current user connected?"""
+class BaleStatusView(views.APIView):
+    """Is Bale configured, is the current user connected, and their link code."""
 
     def get(self, request):
-        username = settings.TELEGRAM_BOT_USERNAME
+        linked = BaleLink.objects.filter(user=request.user).exists()
         return Response({
-            "enabled": telegram.enabled(),
-            "linked": TelegramLink.objects.filter(user=request.user).exists(),
-            "link_url": f"https://t.me/{username}?start=connect" if username else "",
+            "enabled": bale.enabled(),
+            "linked": linked,
+            "bot_url": bale.bot_url(),
+            "code": "" if linked or not bale.enabled() else bale.link_code_for(request.user),
         })
 
 
-class TelegramWebhookView(views.APIView):
-    """Telegram → us. Authenticated by the secret-token header, not JWT."""
+class BaleWebhookView(views.APIView):
+    """Bale → us. Authenticated by the secret in the URL path, not JWT."""
 
     authentication_classes: list = []
     permission_classes = [AllowAny]
 
-    def post(self, request):
-        secret = settings.TELEGRAM_WEBHOOK_SECRET
-        if not (telegram.enabled() and secret) or \
-                request.headers.get("X-Telegram-Bot-Api-Secret-Token") != secret:
+    def post(self, request, secret: str):
+        expected = settings.BALE_WEBHOOK_SECRET
+        if not (bale.enabled() and expected and hmac.compare_digest(secret, expected)):
             return Response(status=status.HTTP_404_NOT_FOUND)
         try:
             update = request.data if isinstance(request.data, dict) else json.loads(request.body)
-            telegram.handle_update(update)
-        except Exception:  # noqa: BLE001 — always 200 so Telegram doesn't retry forever
-            log.exception("telegram update failed")
+            bale.handle_update(update)
+        except Exception:  # noqa: BLE001 — always 200 so Bale doesn't retry forever
+            log.exception("bale update failed")
         return Response({"ok": True})

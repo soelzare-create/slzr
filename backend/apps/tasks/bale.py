@@ -1,19 +1,22 @@
-"""Telegram bot: delivery (outbox + retry) and handling of incoming updates.
+"""Bale (بله) bot: delivery (outbox + retry) and handling of incoming updates.
 
-Works with either a webhook (``/api/telegram/webhook``) or long polling
-(``manage.py telegram_poll``). Uses only the standard library.
+Bale's bot API mirrors Telegram's (sendMessage, inline keyboards, callback
+queries, getUpdates, setWebhook) and is reachable from servers inside Iran.
+Works with a webhook (``/api/bale/webhook/<secret>``) or long polling
+(``manage.py bale_poll``). Uses only the standard library.
 
 Settings (env):
-  TELEGRAM_BOT_TOKEN       bot token from @BotFather (empty = Telegram disabled)
-  TELEGRAM_BOT_USERNAME    bot username without @, for the "connect" link
-  TELEGRAM_API_BASE        default https://api.telegram.org (or a relay)
-  TELEGRAM_PROXY           optional http(s) proxy for reaching Telegram
-  TELEGRAM_WEBHOOK_SECRET  secret header Telegram sends with webhook calls
+  BALE_BOT_TOKEN       bot token from @botfather in Bale (empty = Bale disabled)
+  BALE_BOT_USERNAME    bot username without @, for the "connect" link
+  BALE_API_BASE        default https://tapi.bale.ai
+  BALE_WEBHOOK_SECRET  random string, part of the webhook URL
 """
 from __future__ import annotations
 
 import json
 import logging
+import re
+import secrets
 import threading
 import urllib.error
 import urllib.request
@@ -22,68 +25,71 @@ from django.conf import settings
 from django.db import close_old_connections, transaction
 from django.utils import timezone
 
-from .models import Task, TelegramLink, TelegramMessage
+from .models import BaleLink, BaleLinkCode, BaleMessage, Task
 
 log = logging.getLogger(__name__)
 
 MAX_ATTEMPTS = 10
+LINK_CODE_TTL_MINUTES = 30
 STATUS_ICON = {Task.Status.OPEN: "🟡", Task.Status.IN_PROGRESS: "🔵", Task.Status.DONE: "🟢"}
 KIND_ICON = {Task.Kind.FAULT: "🔧", Task.Kind.SUPPORT: "🛟", Task.Kind.PROJECT: "📐",
              Task.Kind.INSTALL: "🧰"}
+_DIGITS = str.maketrans({**{c: str(i) for i, c in enumerate("۰۱۲۳۴۵۶۷۸۹")},
+                         **{c: str(i) for i, c in enumerate("٠١٢٣٤٥٦٧٨٩")}})
 
 
-class TelegramError(Exception):
+class BaleError(Exception):
     pass
 
 
 def enabled() -> bool:
-    return bool(settings.TELEGRAM_BOT_TOKEN)
+    return bool(settings.BALE_BOT_TOKEN)
+
+
+def bot_url() -> str:
+    username = settings.BALE_BOT_USERNAME
+    return f"https://ble.ir/{username}" if username else ""
 
 
 # --- Low-level API ------------------------------------------------------------
 def api_call(method: str, payload: dict | None = None, timeout: int = 10) -> dict:
-    url = f"{settings.TELEGRAM_API_BASE.rstrip('/')}/bot{settings.TELEGRAM_BOT_TOKEN}/{method}"
+    url = f"{settings.BALE_API_BASE.rstrip('/')}/bot{settings.BALE_BOT_TOKEN}/{method}"
     data = json.dumps(payload or {}).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-    handlers = []
-    if settings.TELEGRAM_PROXY:
-        handlers.append(urllib.request.ProxyHandler(
-            {"http": settings.TELEGRAM_PROXY, "https": settings.TELEGRAM_PROXY}))
-    opener = urllib.request.build_opener(*handlers)
     try:
-        with opener.open(req, timeout=timeout) as resp:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         try:
             body = json.loads(exc.read().decode("utf-8"))
         except Exception:  # noqa: BLE001
-            raise TelegramError(f"HTTP {exc.code}") from exc
+            raise BaleError(f"HTTP {exc.code}") from exc
     except Exception as exc:  # noqa: BLE001 — network errors of every flavour
-        raise TelegramError(str(exc)) from exc
+        raise BaleError(str(exc)) from exc
     if not body.get("ok"):
-        raise TelegramError(body.get("description") or "unknown error")
+        raise BaleError(body.get("description") or "unknown error")
     return body.get("result") or {}
 
 
 # --- Outbox -------------------------------------------------------------------
-def queue(chat_id: int, text: str, reply_markup: dict | None = None) -> TelegramMessage | None:
+def queue(chat_id: int, text: str, reply_markup: dict | None = None) -> BaleMessage | None:
     """Queue a message and try to deliver it right after the transaction commits."""
     if not enabled():
         return None
-    msg = TelegramMessage.objects.create(chat_id=chat_id, text=text, reply_markup=reply_markup)
+    msg = BaleMessage.objects.create(chat_id=chat_id, text=text, reply_markup=reply_markup)
     transaction.on_commit(lambda: _deliver_soon(msg.pk))
     return msg
 
 
 def queue_for_user(user, text: str, reply_markup: dict | None = None):
-    link = TelegramLink.objects.filter(user=user).first() if user else None
+    link = BaleLink.objects.filter(user=user).first() if user else None
     if link:
         return queue(link.chat_id, text, reply_markup)
     return None
 
 
 def _deliver_soon(pk: int) -> None:
-    if getattr(settings, "TELEGRAM_SEND_ASYNC", True):
+    if getattr(settings, "BALE_SEND_ASYNC", True):
         def run():
             try:
                 deliver(pk)
@@ -95,7 +101,7 @@ def _deliver_soon(pk: int) -> None:
 
 
 def deliver(pk: int) -> bool:
-    msg = TelegramMessage.objects.filter(pk=pk, status=TelegramMessage.Status.PENDING).first()
+    msg = BaleMessage.objects.filter(pk=pk, status=BaleMessage.Status.PENDING).first()
     if not msg:
         return False
     payload = {"chat_id": msg.chat_id, "text": msg.text}
@@ -104,14 +110,14 @@ def deliver(pk: int) -> bool:
     msg.attempts += 1
     try:
         api_call("sendMessage", payload)
-    except TelegramError as exc:
+    except BaleError as exc:
         msg.last_error = str(exc)[:500]
         if msg.attempts >= MAX_ATTEMPTS:
-            msg.status = TelegramMessage.Status.FAILED
+            msg.status = BaleMessage.Status.FAILED
         msg.save(update_fields=["attempts", "last_error", "status", "updated_at"])
-        log.warning("telegram send failed (%s): %s", msg.pk, exc)
+        log.warning("bale send failed (%s): %s", msg.pk, exc)
         return False
-    msg.status = TelegramMessage.Status.SENT
+    msg.status = BaleMessage.Status.SENT
     msg.sent_at = timezone.now()
     msg.save(update_fields=["attempts", "status", "sent_at", "updated_at"])
     return True
@@ -120,9 +126,54 @@ def deliver(pk: int) -> bool:
 def deliver_pending() -> int:
     if not enabled():
         return 0
-    ids = TelegramMessage.objects.filter(status=TelegramMessage.Status.PENDING) \
+    ids = BaleMessage.objects.filter(status=BaleMessage.Status.PENDING) \
         .values_list("id", flat=True)[:100]
     return sum(1 for pk in list(ids) if deliver(pk))
+
+
+# --- Linking --------------------------------------------------------------------
+def link_code_for(user) -> str:
+    """A fresh 6-digit code the user sends to the bot (valid 30 minutes)."""
+    existing = BaleLinkCode.objects.filter(user=user).first()
+    fresh_after = timezone.now() - timezone.timedelta(minutes=LINK_CODE_TTL_MINUTES - 5)
+    if existing and existing.updated_at >= fresh_after:
+        return existing.code
+    while True:
+        code = f"{secrets.randbelow(900000) + 100000}"
+        if not BaleLinkCode.objects.filter(code=code).exclude(user=user).exists():
+            break
+    BaleLinkCode.objects.update_or_create(user=user, defaults={"code": code})
+    return code
+
+
+def _user_for_code(code: str):
+    cutoff = timezone.now() - timezone.timedelta(minutes=LINK_CODE_TTL_MINUTES)
+    row = BaleLinkCode.objects.select_related("user") \
+        .filter(code=code, updated_at__gte=cutoff, user__is_active=True).first()
+    if not row:
+        return None
+    user = row.user
+    row.delete()  # single use
+    return user
+
+
+def _link(chat_id: int, sender: dict, user) -> None:
+    BaleLink.objects.filter(chat_id=chat_id).exclude(user=user).delete()
+    BaleLink.objects.update_or_create(
+        user=user, defaults={"chat_id": chat_id, "username": sender.get("username") or ""})
+    _reply(chat_id, f"✅ {user.full_name} عزیز، اکانت شما وصل شد.\n"
+                    "از این به بعد کارهایی که به شما ارجاع می‌شود همین‌جا می‌آید.", MAIN_KEYBOARD)
+
+
+def normalize_phone(raw: str) -> list[str]:
+    digits = "".join(ch for ch in str(raw).translate(_DIGITS) if ch.isdigit())
+    if digits.startswith("0098"):
+        digits = digits[4:]
+    elif digits.startswith("98") and len(digits) == 12:
+        digits = digits[2:]
+    if digits.startswith("0"):
+        digits = digits[1:]
+    return [f"0{digits}", digits, f"+98{digits}", f"98{digits}"]
 
 
 # --- Message rendering ----------------------------------------------------------
@@ -150,25 +201,14 @@ def task_buttons(task: Task) -> dict | None:
 
 
 # --- Incoming updates -----------------------------------------------------------
-def normalize_phone(raw: str) -> list[str]:
-    digits = "".join(ch for ch in str(raw) if ch.isdigit())
-    if digits.startswith("0098"):
-        digits = digits[4:]
-    elif digits.startswith("98") and len(digits) == 12:
-        digits = digits[2:]
-    if digits.startswith("0"):
-        digits = digits[1:]
-    return [f"0{digits}", digits, f"+98{digits}", f"98{digits}"]
-
-
 def _reply(chat_id: int, text: str, reply_markup: dict | None = None) -> None:
     payload = {"chat_id": chat_id, "text": text}
     if reply_markup:
         payload["reply_markup"] = reply_markup
     try:
         api_call("sendMessage", payload)
-    except TelegramError as exc:
-        log.warning("telegram reply failed: %s", exc)
+    except BaleError as exc:
+        log.warning("bale reply failed: %s", exc)
 
 
 ASK_CONTACT = {
@@ -176,6 +216,9 @@ ASK_CONTACT = {
     "resize_keyboard": True, "one_time_keyboard": True,
 }
 MAIN_KEYBOARD = {"keyboard": [[{"text": "کارهای من"}]], "resize_keyboard": True}
+WELCOME = ("سلام! برای وصل شدن به سیستم کارهای داران ایکس، کد ۶ رقمی‌ای را که در صفحهٔ «کارها» "
+           "نمایش داده شده همین‌جا بفرستید، یا شماره‌ی موبایلتان را با دکمه‌ی زیر به اشتراک بگذارید.")
+CODE_RE = re.compile(r"^(?:/start\s+)?(\d{6})$")
 
 
 def handle_update(update: dict) -> None:
@@ -186,46 +229,48 @@ def handle_update(update: dict) -> None:
 
 
 def _handle_message(message: dict) -> None:
-    chat_id = message.get("chat", {}).get("id")
-    if not chat_id or message.get("chat", {}).get("type") != "private":
+    chat = message.get("chat") or {}
+    chat_id = chat.get("id")
+    if not chat_id or chat.get("type", "private") != "private":
         return
-    sender = message.get("from", {})
-    link = TelegramLink.objects.select_related("user").filter(chat_id=chat_id).first()
+    sender = message.get("from") or {}
+    text = (message.get("text") or "").translate(_DIGITS).strip()
+
+    m = CODE_RE.match(text)
+    if m:
+        user = _user_for_code(m.group(1))
+        if user:
+            _link(chat_id, sender, user)
+        else:
+            _reply(chat_id, "این کد معتبر نیست یا منقضی شده. صفحهٔ «کارها» را تازه کنید و "
+                            "کد جدید را بفرستید.")
+        return
 
     contact = message.get("contact")
     if contact:
-        if contact.get("user_id") != sender.get("id"):
-            _reply(chat_id, "لطفاً شماره‌ی خودتان را با دکمه‌ی زیر بفرستید.", ASK_CONTACT)
+        # Only the sender's own number (shared with the button) is trusted.
+        if not contact.get("user_id") or contact.get("user_id") != sender.get("id"):
+            _reply(chat_id, "لطفاً به‌جای آن، کد ۶ رقمی صفحهٔ «کارها» را بفرستید.")
             return
-        _link_by_phone(chat_id, sender, contact.get("phone_number", ""))
+        from django.contrib.auth import get_user_model
+        user = get_user_model().objects.filter(
+            phone__in=normalize_phone(contact.get("phone_number", "")), is_active=True).first()
+        if user:
+            _link(chat_id, sender, user)
+        else:
+            _reply(chat_id, "این شماره در سیستم داران ایکس ثبت نشده است. کد ۶ رقمی صفحهٔ «کارها» "
+                            "را بفرستید یا با مدیر سیستم تماس بگیرید.", {"remove_keyboard": True})
         return
 
+    link = BaleLink.objects.select_related("user").filter(chat_id=chat_id).first()
     if not link:
-        _reply(chat_id, "سلام! برای وصل شدن به سیستم کارهای داران ایکس، شماره‌ی موبایلتان "
-                        "را با دکمه‌ی زیر بفرستید.", ASK_CONTACT)
+        _reply(chat_id, WELCOME, ASK_CONTACT)
         return
-
-    text = (message.get("text") or "").strip()
     if text in {"کارهای من", "/tasks"}:
         _send_my_tasks(chat_id, link.user)
     else:
         _reply(chat_id, f"{link.user.full_name} عزیز، اکانت شما وصل است ✓\n"
                         "کارهای جدید همین‌جا برایتان می‌آید.", MAIN_KEYBOARD)
-
-
-def _link_by_phone(chat_id: int, sender: dict, phone: str) -> None:
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    user = User.objects.filter(phone__in=normalize_phone(phone), is_active=True).first()
-    if not user:
-        _reply(chat_id, "این شماره در سیستم داران ایکس ثبت نشده است. با مدیر سیستم تماس بگیرید.",
-               {"remove_keyboard": True})
-        return
-    TelegramLink.objects.filter(chat_id=chat_id).exclude(user=user).delete()
-    TelegramLink.objects.update_or_create(
-        user=user, defaults={"chat_id": chat_id, "username": sender.get("username") or ""})
-    _reply(chat_id, f"✅ {user.full_name} عزیز، اکانت شما وصل شد.\n"
-                    "از این به بعد کارهایی که به شما ارجاع می‌شود همین‌جا می‌آید.", MAIN_KEYBOARD)
 
 
 def _send_my_tasks(chat_id: int, user) -> None:
@@ -244,12 +289,12 @@ def _handle_callback(cq: dict) -> None:
     cq_id = cq.get("id")
     chat_id = (cq.get("message") or {}).get("chat", {}).get("id")
     message_id = (cq.get("message") or {}).get("message_id")
-    link = TelegramLink.objects.select_related("user").filter(chat_id=chat_id).first()
+    link = BaleLink.objects.select_related("user").filter(chat_id=chat_id).first()
 
     def answer(text: str) -> None:
         try:
             api_call("answerCallbackQuery", {"callback_query_id": cq_id, "text": text})
-        except TelegramError:
+        except BaleError:
             pass
 
     if not link:
@@ -278,5 +323,6 @@ def _handle_callback(cq: dict) -> None:
         payload["reply_markup"] = markup
     try:
         api_call("editMessageText", payload)
-    except TelegramError:
-        pass
+    except BaleError:
+        # Older clients / API variants: fall back to a fresh message.
+        _reply(chat_id, task_card(task), markup)

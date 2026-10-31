@@ -62,35 +62,35 @@ cd backend && python manage.py migrate && python manage.py seed
 python manage.py release_reservations   # cron/Celery beat هر ۱۵ دقیقه
 ```
 
-### کارها (Tasks) + ربات تلگرام
+### کارها (Tasks) + ربات بله
 
 صفحهٔ «کارها» برای همهٔ کاربران است: یک جملهٔ ساده بنویسید و Enter بزنید. سیستم مشتری،
 نوع کار و مسئول (`@اسم`) را خودش تشخیص می‌دهد. اگر کسی منشن نشود، کار به مدیریت می‌رسد.
-برای پیام تلگرام، این مقادیر را در `.env` بگذارید:
+پیام‌ها در **بله** ارسال می‌شوند (از سرور داخل ایران مستقیم در دسترس است).
 
-```bash
-TELEGRAM_BOT_TOKEN=123456:ABC...          # از @BotFather
-TELEGRAM_BOT_USERNAME=daranx_tasks_bot
-TELEGRAM_WEBHOOK_SECRET=یک-رشتهٔ-تصادفی-طولانی
-TELEGRAM_PROXY=                            # اگر سرور به تلگرام دسترسی ندارد، مثلاً http://127.0.0.1:8118
-TELEGRAM_API_BASE=https://api.telegram.org # یا آدرس یک relay
-```
+**راه‌اندازی یک‌باره روی هاست cPanel (بدون SSH):**
 
-اجرای ربات، یکی از این دو روش:
+1. در بله به `@botfather` پیام بدهید، یک ربات بسازید و توکن آن را بگیرید.
+2. در cPanel → Setup Python App → Environment variables این‌ها را اضافه کنید و اپ را Restart کنید:
+   ```
+   BALE_BOT_TOKEN=توکن ربات
+   BALE_BOT_USERNAME=نام کاربری ربات بدون @
+   BALE_WEBHOOK_SECRET=یک رشتهٔ تصادفی طولانی (فقط حروف و عدد)
+   ```
+3. یک بار این آدرس را در مرورگر باز کنید تا بله پیام‌ها را به سایت بفرستد (جای `<...>` را پر کنید):
+   ```
+   https://tapi.bale.ai/bot<TOKEN>/setWebhook?url=https://app.daranx.com/api/bale/webhook/<SECRET>
+   ```
+   پاسخ باید `"ok":true` باشد.
+4. در cPanel → Cron Jobs، هر ۱۰ دقیقه (برای یادآوری ۲۴ ساعته و ارسال مجدد پیام‌های در صف):
+   ```bash
+   cd ~/<مسیر اپ> && <مسیر python محیط مجازی> manage.py task_jobs
+   ```
 
-```bash
-python manage.py telegram_poll                       # ساده: یک پروسهٔ همیشه‌روشن، بدون نیاز به HTTPS عمومی
-python manage.py telegram_webhook https://your.domain # یا webhook (نیازمند HTTPS عمومی)
-```
+روی سروری که SSH دارد، به‌جای مراحل ۳ و ۴ می‌شود `python manage.py bale_poll` را به‌صورت یک
+پروسهٔ همیشه‌روشن اجرا کرد (یا `python manage.py bale_webhook https://your.domain`).
 
-با روش webhook، این دستور را هم هر ۱۰ دقیقه از cron اجرا کنید (روش polling خودش انجامش می‌دهد):
-
-```bash
-python manage.py task_jobs   # ارسال مجدد پیام‌های در صف + یادآوری کارهای ۲۴ ساعت دست‌نخورده
-```
-
-هر کاربر یک بار دکمهٔ «اتصال تلگرام من» را در صفحهٔ کارها می‌زند و در ربات «اشتراک شماره» را
-لمس می‌کند. اتصال با همان شماره‌ای است که با آن وارد سیستم می‌شود.
+هر کاربر یک بار در صفحهٔ کارها روی «اتصال بلهٔ من» می‌زند و کد ۶ رقمی را برای ربات می‌فرستد.
 
 ### تست و لینت
 

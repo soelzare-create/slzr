@@ -5,7 +5,7 @@ import { useAuth } from "../auth.jsx";
 import { Avatar, Icon, Modal } from "../ui.jsx";
 
 // Tasks (کارها): one text box. Type a sentence, press Enter — the server works
-// out customer / kind / assignee and pushes it to the assignee on Telegram.
+// out customer / kind / assignee and pushes it to the assignee on Bale (بله).
 
 const KINDS = [
   { v: "FAULT", label: "خرابی", color: "red" },
@@ -35,7 +35,8 @@ export default function Tasks() {
   const { user } = useAuth();
   const [people, setPeople] = useState([]);
   const [summary, setSummary] = useState({});
-  const [tg, setTg] = useState(null);
+  const [bale, setBale] = useState(null);
+  const [showLink, setShowLink] = useState(false);
   const [scope, setScope] = useState("mine");
   const [status, setStatus] = useState("active");
   const [list, setList] = useState([]);
@@ -55,7 +56,7 @@ export default function Tasks() {
   useEffect(() => { loadList(); }, [scope, status]); // eslint-disable-line
   useEffect(() => {
     api.get("/tasks/people").then(setPeople).catch(() => {});
-    api.get("/telegram/status").then(setTg).catch(() => {});
+    api.get("/bale/status").then(setBale).catch(() => {});
   }, []);
 
   function replace(task) {
@@ -82,13 +83,13 @@ export default function Tasks() {
           <h1 className="page-title">کارها</h1>
           <div className="page-sub">هر خرابی، پشتیبانی، نصب یا پروژه‌ای که مشتری اعلام کرد را همین‌جا بنویسید.</div>
         </div>
-        {tg?.enabled && !tg.linked && tg.link_url && (
-          <a className="btn sm" href={tg.link_url} target="_blank" rel="noreferrer"
-            title="یک بار وصل کنید تا کارهای شما در تلگرام بیاید">
-            اتصال تلگرام من
-          </a>
+        {bale?.enabled && !bale.linked && (
+          <button className="btn sm primary" onClick={() => setShowLink(true)}
+            title="یک بار وصل کنید تا کارهای شما در بله بیاید">
+            اتصال بلهٔ من
+          </button>
         )}
-        {tg?.linked && <span className="badge green"><Icon name="check" size={13} /> تلگرام وصل است</span>}
+        {bale?.linked && <span className="badge green"><Icon name="check" size={13} /> بله وصل است</span>}
       </div>
 
       <Composer people={people} me={user} onCreated={onCreated} />
@@ -119,6 +120,24 @@ export default function Tasks() {
             <div className="empty">{status === "DONE" ? "هنوز کاری انجام نشده." : "کار بازی نیست 🎉"}</div>
           )}
         </div>
+      )}
+
+      {showLink && bale && (
+        <Modal title="اتصال به بله" icon="bell" onClose={() => {
+          setShowLink(false);
+          api.get("/bale/status").then(setBale).catch(() => {});
+        }}>
+          <div style={{ lineHeight: 2.1, fontSize: 14 }}>
+            ۱. ربات داران ایکس را در بله باز کنید
+            {bale.bot_url && <> — <a href={bale.bot_url} target="_blank" rel="noreferrer">{bale.bot_url.replace("https://", "")}</a></>}
+            <br />۲. این کد را برایش بفرستید:
+          </div>
+          <div className="link-code num">{bale.code.split("").map((d) => Number(d).toLocaleString("fa-IR")).join(" ")}</div>
+          <div className="muted" style={{ fontSize: 12.5 }}>کد تا ۳۰ دقیقه معتبر است. بعد از وصل شدن، کارهای شما در بله می‌آید و دکمه‌های «شروع کردم» و «انجام شد» همان‌جاست.</div>
+          <div className="flex" style={{ marginTop: 16, justifyContent: "flex-end" }}>
+            {bale.bot_url && <a className="btn primary" href={bale.bot_url} target="_blank" rel="noreferrer">باز کردن بله</a>}
+          </div>
+        </Modal>
       )}
 
       {openId && (
@@ -221,7 +240,7 @@ function Composer({ people, me, onCreated }) {
           display={assigneeName}
           onChange={(v) => setOver({ ...over, assignee: v === MGMT ? MGMT : Number(v) })}
           options={[{ v: MGMT, label: "مدیریت (سهیل و عماد)" },
-            ...people.map((p) => ({ v: String(p.id), label: p.full_name + (p.telegram ? "" : " · بدون تلگرام") }))]} />
+            ...people.map((p) => ({ v: String(p.id), label: p.full_name + (p.bale ? "" : " · بدون بله") }))]} />
         </>}
         {!text.trim() && <span className="muted" style={{ fontSize: 12 }}>Enter = ثبت · با @ به همکار ارجاع بدهید · بدون @ به مدیریت می‌رسد</span>}
         <button className="btn primary" style={{ marginInlineStart: "auto" }} disabled={!text.trim() || busy} onClick={submit}>

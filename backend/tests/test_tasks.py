@@ -1,4 +1,4 @@
-"""Tasks (کارها): one-sentence capture, routing, Telegram, proforma link."""
+"""Tasks (کارها): one-sentence capture, routing, Bale bot, proforma link."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,11 +8,13 @@ from django.utils import timezone
 
 from apps.core.models import Notification, Party
 from apps.sales.models import Proforma
-from apps.tasks import parsing, services, telegram
-from apps.tasks.models import Task, TelegramLink, TelegramMessage
+from apps.tasks import bale, parsing, services
+from apps.tasks.models import BaleLink, BaleMessage, Task
 
 # Real commits, so after-commit notifications actually fire.
 pytestmark = pytest.mark.django_db(transaction=True)
+
+HOOK = "/api/bale/webhook/s3cret"
 
 
 @pytest.fixture
@@ -32,17 +34,17 @@ def alpha(db):
 
 @pytest.fixture
 def tg(settings, monkeypatch):
-    """Telegram enabled, delivered synchronously, API calls recorded."""
-    settings.TELEGRAM_BOT_TOKEN = "123:abc"
-    settings.TELEGRAM_SEND_ASYNC = False
-    settings.TELEGRAM_WEBHOOK_SECRET = "s3cret"
+    """Bale enabled, delivered synchronously, API calls recorded."""
+    settings.BALE_BOT_TOKEN = "123:abc"
+    settings.BALE_SEND_ASYNC = False
+    settings.BALE_WEBHOOK_SECRET = "s3cret"
     calls = []
 
     def fake(method, payload=None, timeout=10):
         calls.append((method, payload or {}))
         return {}
 
-    monkeypatch.setattr(telegram, "api_call", fake)
+    monkeypatch.setattr(bale, "api_call", fake)
     return calls
 
 
@@ -62,7 +64,7 @@ def test_parse_understands_one_sentence(people, alpha):
 
 
 def test_create_via_api_routes_and_notifies(people, alpha, api, tg):
-    TelegramLink.objects.create(user=people["emad"], chat_id=555)
+    BaleLink.objects.create(user=people["emad"], chat_id=555)
     api.force_authenticate(people["ali"])
     with_cb = api.post("/api/tasks", {"text": "شرکت آلفا سرور خاموشه @عماد"}, format="json")
     assert with_cb.status_code == 201, with_cb.content
@@ -70,8 +72,8 @@ def test_create_via_api_routes_and_notifies(people, alpha, api, tg):
     assert task.number == "T-0001"
     assert (task.customer, task.assignee, task.kind) == (alpha, people["emad"], Task.Kind.FAULT)
     assert Notification.objects.filter(recipient=people["emad"], kind="TASK").exists()
-    msg = TelegramMessage.objects.get()
-    assert msg.chat_id == 555 and msg.status == TelegramMessage.Status.SENT
+    msg = BaleMessage.objects.get()
+    assert msg.chat_id == 555 and msg.status == BaleMessage.Status.SENT
     assert "T-0001" in msg.text
     assert msg.reply_markup["inline_keyboard"][0][0]["callback_data"] == f"task:{task.pk}:start"
 
@@ -151,56 +153,69 @@ def test_reminder_after_24h(people, tg):
     assert Notification.objects.filter(recipient=people["ali"], message__contains="یادآوری").exists()
 
 
-def test_telegram_failure_never_breaks_task(people, settings, monkeypatch):
-    settings.TELEGRAM_BOT_TOKEN = "123:abc"
-    settings.TELEGRAM_SEND_ASYNC = False
+def test_bale_failure_never_breaks_task(people, settings, monkeypatch):
+    settings.BALE_BOT_TOKEN = "123:abc"
+    settings.BALE_SEND_ASYNC = False
 
     def boom(*a, **k):
-        raise telegram.TelegramError("network down")
+        raise bale.BaleError("network down")
 
-    monkeypatch.setattr(telegram, "api_call", boom)
-    TelegramLink.objects.create(user=people["ali"], chat_id=1)
+    monkeypatch.setattr(bale, "api_call", boom)
+    BaleLink.objects.create(user=people["ali"], chat_id=1)
     task = services.create_task(text="x", actor=people["soheil"], assignee=people["ali"])
     assert Task.objects.filter(pk=task.pk).exists()
-    msg = TelegramMessage.objects.get()
-    assert msg.status == TelegramMessage.Status.PENDING and msg.attempts == 1
+    msg = BaleMessage.objects.get()
+    assert msg.status == BaleMessage.Status.PENDING and msg.attempts == 1
 
 
 def test_link_account_by_shared_contact(people, api, tg):
     update = {"message": {"chat": {"id": 777, "type": "private"}, "from": {"id": 42},
                           "contact": {"user_id": 42, "phone_number": "+989120000003"}}}
-    r = api.post("/api/telegram/webhook", update, format="json",
-                 HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="s3cret")
+    r = api.post(HOOK, update, format="json")
     assert r.status_code == 200
-    assert TelegramLink.objects.get(chat_id=777).user == people["ali"]
+    assert BaleLink.objects.get(chat_id=777).user == people["ali"]
     # someone else's contact is refused
     bad = {"message": {"chat": {"id": 778, "type": "private"}, "from": {"id": 43},
                        "contact": {"user_id": 99, "phone_number": "09120000004"}}}
-    api.post("/api/telegram/webhook", bad, format="json",
-             HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="s3cret")
-    assert not TelegramLink.objects.filter(chat_id=778).exists()
+    api.post(HOOK, bad, format="json")
+    assert not BaleLink.objects.filter(chat_id=778).exists()
     # wrong secret
-    assert api.post("/api/telegram/webhook", update, format="json").status_code == 404
+    assert api.post("/api/bale/webhook/wrong", update, format="json").status_code == 404
 
 
-def test_done_button_in_telegram(people, api, tg):
-    TelegramLink.objects.create(user=people["ali"], chat_id=900)
+def test_done_button_in_bale(people, api, tg):
+    BaleLink.objects.create(user=people["ali"], chat_id=900)
     task = services.create_task(text="خرابی", actor=people["soheil"], assignee=people["ali"])
     update = {"callback_query": {"id": "cb1", "data": f"task:{task.pk}:done",
                                  "message": {"chat": {"id": 900}, "message_id": 5}}}
-    api.post("/api/telegram/webhook", update, format="json",
-             HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="s3cret")
+    api.post(HOOK, update, format="json")
     task.refresh_from_db()
     assert task.status == Task.Status.DONE
     assert any(m == "editMessageText" for m, _ in tg)
 
 
 def test_done_button_refused_for_stranger(people, api, tg):
-    TelegramLink.objects.create(user=people["sara"], chat_id=901)
+    BaleLink.objects.create(user=people["sara"], chat_id=901)
     task = services.create_task(text="خرابی", actor=people["soheil"], assignee=people["ali"])
     update = {"callback_query": {"id": "cb2", "data": f"task:{task.pk}:done",
                                  "message": {"chat": {"id": 901}, "message_id": 6}}}
-    api.post("/api/telegram/webhook", update, format="json",
-             HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN="s3cret")
+    api.post(HOOK, update, format="json")
     task.refresh_from_db()
     assert task.status == Task.Status.OPEN
+
+
+def test_link_account_with_one_time_code(people, api, tg):
+    api.force_authenticate(people["sara"])
+    st = api.get("/api/bale/status").data
+    assert st["enabled"] and not st["linked"] and len(st["code"]) == 6
+    # Persian digits are accepted, and "/start <code>" too
+    fa_code = st["code"].translate(str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹"))
+    update = {"message": {"chat": {"id": 321, "type": "private"}, "from": {"id": 9},
+                          "text": fa_code}}
+    api.post(HOOK, update, format="json")
+    assert BaleLink.objects.get(chat_id=321).user == people["sara"]
+    assert api.get("/api/bale/status").data["linked"] is True
+    # single use
+    update["message"]["chat"]["id"] = 322
+    api.post(HOOK, update, format="json")
+    assert not BaleLink.objects.filter(chat_id=322).exists()

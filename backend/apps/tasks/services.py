@@ -1,7 +1,7 @@
 """Task service layer: every state change goes through here.
 
 Each mutation is atomic, logged to ``AuditLog`` and recorded on the task
-timeline. Notifications (dashboard + Telegram) are sent after commit and can
+timeline. Notifications (dashboard + Bale) are sent after commit and can
 never make a task write fail.
 """
 from __future__ import annotations
@@ -16,7 +16,7 @@ from django.utils import timezone
 from apps.core.models import Item, Notification, Party
 from apps.core.services import log_action, notify
 
-from . import parsing, telegram
+from . import bale, parsing
 from .models import Task, TaskEvent
 
 log = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ def _recipients(task: Task):
 
 
 def _send(users, task: Task, headline: str, buttons: bool = True) -> None:
-    """Dashboard + Telegram for each user. Runs after commit; never raises."""
+    """Dashboard + Bale for each user. Runs after commit; never raises."""
     def run():
         for user in users:
             if not user:
@@ -79,8 +79,8 @@ def _send(users, task: Task, headline: str, buttons: bool = True) -> None:
             try:
                 notify(user, Notification.Kind.TASK, f"{headline} — {task.number}: {task.text[:120]}",
                        source_ref=f"tasks.task:{task.pk}")
-                telegram.queue_for_user(user, telegram.task_card(task, headline),
-                                        telegram.task_buttons(task) if buttons else None)
+                bale.queue_for_user(user, bale.task_card(task, headline),
+                                        bale.task_buttons(task) if buttons else None)
             except Exception:  # noqa: BLE001 — notifications must not break anything
                 log.exception("task notification failed")
     transaction.on_commit(run)

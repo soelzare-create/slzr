@@ -2,7 +2,7 @@
 
 A customer reports a fault / support need / new project to a colleague; the
 colleague types one sentence, the system works out the rest (customer, kind,
-assignee) and pushes the task to the assignee on Telegram.
+assignee) and pushes the task to the assignee on Bale (بله).
 """
 from __future__ import annotations
 
@@ -81,11 +81,11 @@ class TaskEvent(TimeStampedModel):
         ordering = ["created_at", "id"]
 
 
-class TelegramLink(TimeStampedModel):
-    """A user's Telegram chat, linked once by sharing their phone with the bot."""
+class BaleLink(TimeStampedModel):
+    """A user's Bale chat, linked once (one-time code or shared phone number)."""
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                                related_name="telegram")
+                                related_name="bale")
     chat_id = models.BigIntegerField(unique=True)
     username = models.CharField(max_length=64, blank=True)
 
@@ -93,8 +93,16 @@ class TelegramLink(TimeStampedModel):
         return f"{self.user_id} → {self.chat_id}"
 
 
-class TelegramMessage(TimeStampedModel):
-    """Outbox: Telegram delivery is retried, never on the critical path."""
+class BaleLinkCode(TimeStampedModel):
+    """Short-lived code the user sends to the bot to link their account."""
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                related_name="bale_link_code")
+    code = models.CharField(max_length=8, unique=True)
+
+
+class BaleMessage(TimeStampedModel):
+    """Outbox: Bale delivery is retried, never on the critical path."""
 
     class Status(models.TextChoices):
         PENDING = "PENDING", "در صف"
