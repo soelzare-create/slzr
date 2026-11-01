@@ -1,0 +1,7 @@
+requests>=2.28
+openpyxl>=3.1
+Pillow>=10.0
+# optional, only for --cutout (background removal):
+# rembg[cpu]
+# scipy
+# numpy
