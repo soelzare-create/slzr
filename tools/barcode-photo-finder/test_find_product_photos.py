@@ -126,3 +126,13 @@ def test_end_to_end_excel(tmp_path, monkeypatch):
     assert len(load_workbook(out)["محصولات و عکس"]._images) == 1
     cache = json.load(open(tmp_path / "out_cache.json", encoding="utf-8"))
     assert len(cache) == 2
+
+
+def test_auto_input(tmp_path):
+    (tmp_path / "products.xlsx").write_bytes(b"x")
+    (tmp_path / "products-with-photos.xlsx").write_bytes(b"x")
+    (tmp_path / "~$products.xlsx").write_bytes(b"x")
+    assert fp.auto_input(str(tmp_path)).endswith("products.xlsx")
+    (tmp_path / "other.xlsx").write_bytes(b"x")
+    with pytest.raises(SystemExit):
+        fp.auto_input(str(tmp_path))

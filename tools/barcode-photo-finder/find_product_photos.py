@@ -664,9 +664,25 @@ def build_excel(out: str, headers: list[str], data: list[list], results: list[Re
     return n_img
 
 
+def auto_input(folder: str | None = None) -> str:
+    """No file given (run.bat double-clicked): use the only input Excel next to the script."""
+    folder = folder or os.path.dirname(os.path.abspath(__file__))
+    found = sorted(f for f in os.listdir(folder)
+                   if f.lower().endswith((".xlsx", ".xlsm")) and not f.startswith("~$")
+                   and "-with-photos" not in f)
+    if len(found) == 1:
+        print(f"فایل ورودی: {found[0]}")
+        return os.path.join(folder, found[0])
+    if not found:
+        sys.exit("هیچ فایل اکسلی کنار اسکریپت نیست. فایل اکسل را در همین پوشه بگذارید.")
+    sys.exit("چند فایل اکسل در پوشه هست؛ فایل موردنظر را روی run.bat بکشید و رها کنید:\n  "
+             + "\n  ".join(found))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="بارکدها را از اکسل می‌خواند، عکس کالا را پیدا می‌کند و اکسل خروجی با عکس می‌سازد.")
-    ap.add_argument("input", help="فایل اکسل ورودی (ستون بارکد لازم است)")
+    ap.add_argument("input", nargs="?",
+                    help="فایل اکسل ورودی (ستون بارکد لازم است). اگر ندهید، تنها فایل اکسلِ کنار اسکریپت برداشته می‌شود")
     ap.add_argument("-o", "--output", help="فایل اکسل خروجی (پیش‌فرض: <ورودی>-with-photos.xlsx)")
     ap.add_argument("--sheet", help="نام شیت (پیش‌فرض: اولین شیت)")
     ap.add_argument("--barcode-col", help="نام ستون بارکد (پیش‌فرض: «بارکد»)")
@@ -683,6 +699,8 @@ def main(argv=None):
     ap.add_argument("--thumb", type=int, default=120, help="ارتفاع عکس داخل اکسل به پیکسل (پیش‌فرض 120)")
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args(argv)
+    if not a.input:
+        a.input = auto_input()
 
     sources = [s.strip() for s in a.sources.split(",") if s.strip()]
     bad = [s for s in sources if s not in SOURCES]
