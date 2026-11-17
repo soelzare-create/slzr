@@ -176,7 +176,8 @@ wants to send a proposal by link.
    from a public GitHub repo (`soelzare-create/DaranX-Website`, push to `main`
    → FTP deploy to `public_html`). Never put a readable proposal there. Seal it:
    `node scripts/seal.mjs proposal.html <site>/proposals/<client>-<code>/index.html`
-   prints a key; the link to send is
+   prints a key (pass an existing key as a third argument to re-seal an update
+   without changing the link); the link to send is
    `https://www.daranx.com/proposals/<client>-<code>/#k=<key>`. The page is
    AES-GCM encrypted and decrypts in the browser; the key exists only in the
    link (browsers never send `#…` to a server), so git and the host hold only
