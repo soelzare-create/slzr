@@ -172,7 +172,20 @@ wants to send a proposal by link.
    `assets/proposals-index.html` (saved as `index.html`: a neutral branded page
    for anyone who opens `/proposals/` directly). Both are uploaded once; later
    proposals only add a new `<client>-<code>/` folder.
-5. **Hand-off.** Zip the `proposals/` folder (first time) or only the new
+5. **Encrypt when the hosting repo is public.** The DaranX website deploys
+   from a public GitHub repo (`soelzare-create/DaranX-Website`, push to `main`
+   → FTP deploy to `public_html`). Never put a readable proposal there. Seal it:
+   `node scripts/seal.mjs proposal.html <site>/proposals/<client>-<code>/index.html`
+   prints a key; the link to send is
+   `https://www.daranx.com/proposals/<client>-<code>/#k=<key>`. The page is
+   AES-GCM encrypted and decrypts in the browser; the key exists only in the
+   link (browsers never send `#…` to a server), so git and the host hold only
+   ciphertext. Keep the key out of git and out of commit messages; give it to
+   the user once. Re-sealing an updated proposal makes a new key (a new link).
+   Verify before pushing: open the sealed page over `http://localhost` with the
+   key, and check that a plain-text search of the sealed file finds no client
+   name or price.
+6. **Hand-off.** Zip the `proposals/` folder (first time) or only the new
    client folder (later), and give the user:
    - the zip, to upload in cPanel → File Manager → `public_html` → Upload →
      Extract (turn on *Show Hidden Files* to see `.htaccess`);
@@ -180,7 +193,7 @@ wants to send a proposal by link.
    - a reminder that the validity period (e.g. «اعتبار ۲۴ ساعت») starts when
      the link is sent, and that anyone holding the link can open it (for
      sensitive offers, add a password with cPanel → Directory Privacy).
-6. **Never commit client proposals** (prices, names) to a public repository.
+7. **Never commit readable client proposals** (prices, names) to a public repository.
    Updating a live proposal = replace that folder's `index.html`; the link
    stays the same.
 
