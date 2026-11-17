@@ -37,6 +37,11 @@ confident, and honest.
 - **Voice:** formal Persian, business language (هزینه، ریسک، پایداری،
   بهره‌وری، امنیت، توسعه). Never invent metrics, logos, awards, or client
   names. If a number isn't given, describe the value qualitatively.
+- **Logo link:** the DaranX logo in the top bar always links to the company
+  website, `https://www.daranx.com`, and opens it in a new tab
+  (`target="_blank" rel="noopener"`, `aria-label="سایت DaranX"`), so the
+  document stays open for the reader. Returning to the top of the document is
+  done from the nav (e.g. «نمای کلی»), never from the logo.
 - **Contact block (use verbatim):** ۰۲۱-۸۸۹۶۴۱۱۶ · ۸۸۹۶۶۹۰۴ · ۰۹۳۵-۹۳۷۰۹۱۰ —
   تهران، میدان فاطمی، نبش چهلستون، ساختمان چهلستون، طبقه ۲، واحد ۲۰۲ —
   www.DaranX.com
@@ -139,7 +144,8 @@ Non-negotiables:
    - 390×844, first screen and a full-page capture: no horizontal overflow
      (`scrollWidth - innerWidth === 0`), readable tables;
    - dark theme first screen;
-   - with reduced motion emulated: everything visible.
+   - with reduced motion emulated: everything visible;
+   - clicking the top-bar logo opens `https://www.daranx.com` in a new tab.
    If Playwright's bundled browser is missing, launch the preinstalled Chromium
    with `--headless=new`.
 

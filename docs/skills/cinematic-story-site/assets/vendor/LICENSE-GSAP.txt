@@ -1,0 +1,1 @@
+GSAP 3.15.0 and ScrollTrigger (https://gsap.com). Distributed under the GSAP Standard "No Charge" License, free for commercial use: https://gsap.com/standard-license
