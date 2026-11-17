@@ -149,6 +149,41 @@ Non-negotiables:
    If Playwright's bundled browser is missing, launch the preinstalled Chromium
    with `--headless=new`.
 
+## Publishing to the website (private client link)
+
+Client proposals are shared as a private link under the DaranX website:
+`https://www.daranx.com/proposals/<client>-<code>/`. Do this whenever the user
+wants to send a proposal by link.
+
+1. **Make it one file.** The page must work alone on the server: inline the
+   font and logo as `data:` URIs (or copy the `assets/` folder into the same
+   folder). No other external files.
+2. **Private-link name.** Folder `proposals/<client>-<code>/index.html`, where
+   `<client>` is a short Latin name (e.g. `rahmati`) and `<code>` is 10 random
+   lowercase letters/digits from a secure generator
+   (`python3 -c "import secrets,string;a=string.ascii_lowercase+string.digits;print(''.join(secrets.choice(a) for _ in range(10)))"`).
+   Never use a guessable code.
+3. **Head tags.** Keep `<meta name="robots" content="noindex,nofollow">`, and
+   add `og:type`, `og:title` (document type + client name) and `og:description`
+   (one line) so the WhatsApp/Telegram preview card reads well.
+4. **Folder protection.** The `proposals/` folder carries
+   `assets/proposals.htaccess` (saved as `.htaccess`: no directory listing,
+   `X-Robots-Tag: noindex`, `Referrer-Policy: no-referrer`, HTTPS redirect) and
+   `assets/proposals-index.html` (saved as `index.html`: a neutral branded page
+   for anyone who opens `/proposals/` directly). Both are uploaded once; later
+   proposals only add a new `<client>-<code>/` folder.
+5. **Hand-off.** Zip the `proposals/` folder (first time) or only the new
+   client folder (later), and give the user:
+   - the zip, to upload in cPanel → File Manager → `public_html` → Upload →
+     Extract (turn on *Show Hidden Files* to see `.htaccess`);
+   - the final link, ready to send;
+   - a reminder that the validity period (e.g. «اعتبار ۲۴ ساعت») starts when
+     the link is sent, and that anyone holding the link can open it (for
+     sensitive offers, add a password with cPanel → Directory Privacy).
+6. **Never commit client proposals** (prices, names) to a public repository.
+   Updating a live proposal = replace that folder's `index.html`; the link
+   stays the same.
+
 ## Document skeleton (recommended order)
 
 1. **Hero = whole picture (§1)** — replaces the old cover page.
